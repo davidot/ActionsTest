@@ -5,6 +5,7 @@ jobs:
   build-compile-test:
     name: Build, compile test on ${{ matrix.config.os }} with ${{ matrix.config.compiler }} ${{ matrix.build_type }} build
     strategy:
+      fail-fast: false # temporary TODO FIXME: remove this
       matrix:
         build_type: [Debug, Release]
         config:
@@ -33,7 +34,7 @@ jobs:
       - name: Install Dependencies (Windows)
         if: startsWith(matrix.config.os, 'windows')
         run: |
-          pip install -y ninja
+          pip install ninja
 
       - name: Configure MSVC console (Windows)
         if:  startsWith(matrix.config.os, 'windows')
@@ -52,15 +53,9 @@ jobs:
             cd ${{ env.build_folder_location }}
             cmake .. -G Ninja -DCMAKE_CXX_COMPILER=${{ matrix.config.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
       - name: Build
-        run: |
-            cd ${{ env.build_folder_location }}
-            time cmake --build .
+        run: cmake --build ${{ env.build_folder_location }}
       - name: Run
         run: |
             cd ${{ env.build_folder_location }}
             time ./ActionsTest
-      - name: Check clang
-        run: clang++-9 --version
-      - name: Check clang 2
-        run: clang++-10 --version
 
