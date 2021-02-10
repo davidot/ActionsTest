@@ -1,0 +1,8 @@
+name: compile-and-run
+on: [push]
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gcc --version
