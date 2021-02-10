@@ -3,7 +3,7 @@ on: [push]
 
 jobs:
   build-compile-test:
-    name: Build, compile test on ${{ matrix.config.os }} with ${{ matrix.config.compiler }} ${{ matrix.build_type }} build
+    name: Build & Run on ${{ matrix.config.os }} with ${{ matrix.config.compiler }} (${{ matrix.build_type }} build)
     strategy:
       fail-fast: false # temporary TODO FIXME: remove this
       matrix:
