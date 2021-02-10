@@ -10,19 +10,42 @@ jobs:
         config:
           - {
               compiler: g++-10,
-              os: ubuntu-20.04
+              os: ubuntu-20.04,
             }
           - {
               compiler: clang++-10,
-              os: ubuntu-20.04
+              os: ubuntu-20.04,
+            }
+          - {
+              name: "Windows MSVC",
+              os: windows-2019,
             }
     env:
       build_folder_location: build-${{ matrix.build_type }}-${{ matrix.config.compiler }}
     runs-on: ${{ matrix.config.os }}
     steps:
       - uses: actions/checkout@v2
-      - run: sudo apt-get install ninja-build
-      - run: gcc --version && g++ --version && ninja --version
+
+      - name: Install Dependencies (Ubuntu)
+        if: startsWith(matrix.config.os, 'ubuntu')
+        run: sudo apt-get install ninja-build
+
+      - name: Install Dependencies (Windows)
+        if: startsWith(matrix.config.os, 'windows')
+        run: |
+          pip install -y ninja
+
+      - name: Configure MSVC console (Windows)
+        if:  startsWith(matrix.config.os, 'windows')
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Set environment for MSVC (Windows)
+        if:  startsWith(matrix.config.os, 'windows')
+        run: |
+          # Set these env vars so cmake picks the correct compiler
+          echo "CXX=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "CC=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Setup build
         run: |
             mkdir -p ${{ env.build_folder_location }}
