@@ -51,7 +51,7 @@ jobs:
         run: |
             mkdir -p ${{ env.build_folder_location }}
             cd ${{ env.build_folder_location }}
-            cmake .. -G Ninja -DCMAKE_CXX_COMPILER=${{ matrix.config.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+            cmake .. -G Ninja -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
       - name: Build
         run: cmake --build ${{ env.build_folder_location }}
       - name: Run
