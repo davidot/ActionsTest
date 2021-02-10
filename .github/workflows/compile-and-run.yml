@@ -22,7 +22,7 @@ jobs:
               os: windows-2019,
             }
     env:
-      build_folder_location: build-${{ matrix.build_type }}
+      build_folder_location: build
     runs-on: ${{ matrix.config.os }}
     steps:
       - uses: actions/checkout@v2
