@@ -3,17 +3,17 @@ on: [push]
 
 jobs:
   build-compile-test:
-    name: Build, compile test on ${{ matrix.config.os }} with ${{ matrix.config.compiler }}
+    name: Build, compile test on ${{ matrix.config.os }} with ${{ matrix.config.compiler }} ${{ matrix.build_type }} build
     strategy:
       matrix:
-        build_type: ["Debug", "Release"]
+        build_type: [Debug, Release]
         config:
           - {
-              compiler: "g++-10"
+              compiler: g++-10,
               os: ubuntu-20.04
             }
           - {
-              compiler: "clang++-10"
+              compiler: clang++-10,
               os: ubuntu-20.04
             }
     env:
