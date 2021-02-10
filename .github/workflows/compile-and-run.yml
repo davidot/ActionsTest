@@ -2,17 +2,23 @@ name: compile-and-run
 on: [push]
 
 jobs:
-  check-versions:
+  build-compile-test:
+    name: Build, compile test on ${{ matrix.config.os }} with ${{ matrix.config.compiler }}
     strategy:
       matrix:
-        include:
-          - cpp-compiler: g++-10
-            c-compiler: gcc-10
-          - cpp-compiler: clang++-10
-            c-compiler: clang-10
+        build_type: [Debug, Release]
+        config:
+          - {
+              compiler: g++-10
+              os: ubuntu-20.04
+            }
+          - {
+              compiler: clang++-10
+              os: ubuntu-20.04
+            }
     env:
       build_folder_location: build
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.config.os }}
     steps:
       - uses: actions/checkout@v2
       - run: sudo apt-get install ninja-build
@@ -29,7 +35,7 @@ jobs:
       - name: Run
         run: |
             cd ${{ env.build_folder_location }}
-            ./ActionsTest
+            time ./ActionsTest
       - name: Check clang
         run: clang++-9 --version
       - name: Check clang 2
