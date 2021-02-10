@@ -8,3 +8,6 @@ jobs:
       - uses: actions/checkout@v2
       - run: ls
       - run: gcc-10 --version && cmake --version
+      - name: Use GCC 10 instead
+        run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+      - run: gcc --version && g++ --version
