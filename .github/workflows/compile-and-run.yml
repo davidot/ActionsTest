@@ -18,7 +18,7 @@ jobs:
               os: ubuntu-20.04,
             }
           - {
-              name: "Windows MSVC",
+              compiler: cl.exe,
               os: windows-2019,
             }
     env:
@@ -40,12 +40,12 @@ jobs:
         if:  startsWith(matrix.config.os, 'windows')
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Set environment for MSVC (Windows)
-        if:  startsWith(matrix.config.os, 'windows')
-        run: |
-          # Set these env vars so cmake picks the correct compiler
-          echo "CXX=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "CC=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+#      - name: Set environment for MSVC (Windows)
+#        if:  startsWith(matrix.config.os, 'windows')
+#        run: |
+#          # Set these env vars so cmake picks the correct compiler
+#          echo "CXX=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+#          echo "CC=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Setup build
         run: |
@@ -55,7 +55,6 @@ jobs:
       - name: Build
         run: cmake --build ${{ env.build_folder_location }}
       - name: Run
-        run: |
-            cd ${{ env.build_folder_location }}
-            time ./ActionsTest
+        run: ${{ env.build_folder_location }}/ActionsTest
+
 
