@@ -8,8 +8,6 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-#      - name: Use GCC 10 instead
-#        run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
       - run: sudo apt-get install ninja-build
       - run: gcc --version && g++ --version && ninja --version
       - name: Setup build
@@ -25,3 +23,8 @@ jobs:
         run: |
             cd ${{ env.build_folder_location }}
             ./ActionsTest
+      - name: Check clang
+        run: clang++-9 --version
+      - name: Check clang 2
+        run: clang++-10 --version
+
