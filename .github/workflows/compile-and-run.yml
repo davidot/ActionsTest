@@ -21,6 +21,14 @@ jobs:
               compiler: cl.exe,
               os: windows-2019,
             }
+          - {
+              compiler: clang++-11,
+              os: macos-latest,
+            }
+          - {
+              compiler: g++-10,
+              os: macos-latest,
+            }
     env:
       build_folder_location: build
     runs-on: ${{ matrix.config.os }}
@@ -36,16 +44,14 @@ jobs:
         run: |
           pip install ninja
 
+      - name: Install Dependencies (macOS)
+        if: startsWith(matrix.config.os, 'macos')
+        run: |
+          brew install ninja
+
       - name: Configure MSVC console (Windows)
         if:  startsWith(matrix.config.os, 'windows')
         uses: ilammy/msvc-dev-cmd@v1
-
-#      - name: Set environment for MSVC (Windows)
-#        if:  startsWith(matrix.config.os, 'windows')
-#        run: |
-#          # Set these env vars so cmake picks the correct compiler
-#          echo "CXX=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-#          echo "CC=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Setup build
         run: |
