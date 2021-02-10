@@ -22,7 +22,7 @@ jobs:
               os: windows-2019,
             }
           - {
-              compiler: clang++-11,
+              compiler: clang++,
               os: macos-latest,
             }
           - {
