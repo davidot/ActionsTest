@@ -7,4 +7,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: ls
-      - run: gcc --version && cmake --version
+      - run: gcc-10 --version && cmake --version
