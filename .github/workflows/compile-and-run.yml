@@ -3,6 +3,13 @@ on: [push]
 
 jobs:
   check-versions:
+    strategy:
+      matrix:
+        include:
+          - cpp-compiler: g++-10
+            c-compiler: gcc-10
+          - cpp-compiler: clang++-10
+            c-compiler: clang-10
     env:
       build_folder_location: build
     runs-on: ubuntu-20.04
@@ -14,7 +21,7 @@ jobs:
         run: |
             mkdir -p ${{ env.build_folder_location }}
             cd ${{ env.build_folder_location }}
-            cmake .. -G Ninja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+            cmake .. -G Ninja -DCMAKE_C_COMPILER=${{ matrix.c-compiler }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp-compiler }}
       - name: Build
         run: |
             cd ${{ env.build_folder_location }}
