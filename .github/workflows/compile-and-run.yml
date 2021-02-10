@@ -17,7 +17,7 @@ jobs:
               os: ubuntu-20.04
             }
     env:
-      build_folder_location: build
+      build_folder_location: build-${{ matrix.build_type }}-${{ matrix.config.compiler }}
     runs-on: ${{ matrix.config.os }}
     steps:
       - uses: actions/checkout@v2
@@ -27,11 +27,11 @@ jobs:
         run: |
             mkdir -p ${{ env.build_folder_location }}
             cd ${{ env.build_folder_location }}
-            cmake .. -G Ninja -DCMAKE_C_COMPILER=${{ matrix.c-compiler }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp-compiler }}
+            cmake .. -G Ninja -DCMAKE_CXX_COMPILER=${{ matrix.config.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
       - name: Build
         run: |
             cd ${{ env.build_folder_location }}
-            cmake --build .
+            time cmake --build .
       - name: Run
         run: |
             cd ${{ env.build_folder_location }}
