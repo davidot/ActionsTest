@@ -41,7 +41,8 @@ jobs:
             }
         runall:
           - ${{ contains('refs/heads/main refs/heads/develop', github.ref) || contains(github.event.head_commit.message, '.full-ci') }}
-        runmac: ${{ contains(github.event.head_commit.message, '.mac-ci') }}
+        runmac:
+          - ${{ contains(github.event.head_commit.message, '.mac-ci') }}
         exclude:
           - {config: {always: false}, runall: false}
         include:
