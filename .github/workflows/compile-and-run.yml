@@ -12,41 +12,40 @@ jobs:
           - {
               compiler: g++-10,
               os: ubuntu-20.04,
-              always: true,
-              mac: false
+              os-base: ''
             }
           - {
               compiler: clang++-10,
               os: ubuntu-20.04,
-              always: false,
-              mac: false
+              os-base: 'ubuntu'
             }
           - {
               compiler: cl.exe,
               os: windows-2019,
-              always: false,
-              mac: false
+              os-base: 'windows'
             }
           - {
               compiler: clang++,
               os: macos-latest,
-              always: false,
-              mac: true
+              os-base: 'mac'
             }
           - {
               compiler: g++-10,
               os: macos-latest,
-              always: false,
-              mac: true
+              os-base: 'mac'
             }
         runall:
-          - ${{ contains('refs/heads/main refs/heads/develop', github.ref) || contains(github.event.head_commit.message, '.full-ci') }}
+          - ${{ contains('refs/heads/mains refs/heads/develops', github.ref) || contains(github.event.head_commit.message, '.full-ci') }}
         runmac:
           - ${{ contains(github.event.head_commit.message, '.mac-ci') }}
+        runwindows:
+          - ${{ contains(github.event.head_commit.message, '.win-ci') }}
+        runubuntu:
+          - ${{ contains(github.event.head_commit.message, '.clang-ci') }}
         exclude:
-          - {config: {always: false}, runall: false}
-        include:
-          - {config: {mac: true}, runmac: true}
+          - {config: {os-base: 'mac'}, runall: false, runmac: false}
+          - {config: {os-base: 'windows'}, runall: false, runwindows: false}
+          - {config: {os-base: 'ubuntu'}, runall: false, runubuntu: false}
     env:
       build_folder_location: build
     runs-on: ${{ matrix.config.os }}
