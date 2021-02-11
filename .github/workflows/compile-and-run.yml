@@ -26,13 +26,13 @@ jobs:
             }
           - {
               compiler: clang++,
-              os: "macos-latest",
-              always: ${{ contains(github.event.head_commit.message, '.mac-ci') }}
+              os: macos-latest,
+              always: ${{ contains(github.event.head_commit.message, '.mac-ci') || false }}
             }
           - {
               compiler: g++-10,
-              os: "macos-latest",
-              always: ${{ contains(github.event.head_commit.message, '.mac-ci') }}
+              os: macos-latest,
+              always: ${{ contains(github.event.head_commit.message, '.mac-ci') || false }}
             }
         runall:
           - ${{ contains('refs/heads/main refs/heads/develop', github.ref) || contains(github.event.head_commit.message, '.full-ci') }}
