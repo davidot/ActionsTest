@@ -1,5 +1,5 @@
 name: compile-and-run
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build-compile-test:
@@ -33,6 +33,10 @@ jobs:
       build_folder_location: build
     runs-on: ${{ matrix.config.os }}
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
       - uses: actions/checkout@v2
 
       - name: Install Dependencies (Ubuntu)
