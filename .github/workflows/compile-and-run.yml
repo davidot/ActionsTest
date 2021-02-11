@@ -37,8 +37,7 @@ jobs:
         runall:
           - ${{ contains('refs/heads/main refs/heads/develop', github.ref) || contains(github.event.head_commit.message, 'ALL CI') }}
         exclude:
-          - config.always: false
-            runall: false
+          - {config: {always: false}, runall: false}
     env:
       build_folder_location: build
     runs-on: ${{ matrix.config.os }}
