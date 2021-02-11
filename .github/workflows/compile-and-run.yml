@@ -21,18 +21,18 @@ jobs:
             }
           - {
               compiler: cl.exe,
-              os: windows-2019,
-              always: ${{ contains(github.event.head_commit.message, '.windows-ci') }},
+              os: "windows-2019",
+              always: ${{ contains(github.event.head_commit.message, '.windows-ci') }}
             }
           - {
               compiler: clang++,
-              os: macos-latest,
-              always: ${{ contains(github.event.head_commit.message, '.mac-ci') }},
+              os: "macos-latest",
+              always: ${{ contains(github.event.head_commit.message, '.mac-ci') }}
             }
           - {
               compiler: g++-10,
-              os: macos-latest,
-              always: ${{ contains(github.event.head_commit.message, '.mac-ci') }},
+              os: "macos-latest",
+              always: ${{ contains(github.event.head_commit.message, '.mac-ci') }}
             }
         runall:
           - ${{ contains('refs/heads/main refs/heads/develop', github.ref) || contains(github.event.head_commit.message, '.full-ci') }}
