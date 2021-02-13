@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   build-compile-test:
-    name: Build & Run on ${{ matrix.config.os }} with ${{ matrix.config.compiler }} (${{ matrix.build_type }} build)
+    name: Build & Test on ${{ matrix.config.os }} with ${{ matrix.config.compiler }} (${{ matrix.build_type }} build)
     strategy:
       fail-fast: false # temporary TODO FIXME: remove this
       matrix:
@@ -77,7 +77,6 @@ jobs:
             cmake .. -G Ninja -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
       - name: Build
         run: cmake --build ${{ env.build_folder_location }}
-      - name: Run
-        run: ${{ env.build_folder_location }}/ActionsTest
-
+      - name: Run tests
+        run: ctest --output-on-failure .
 

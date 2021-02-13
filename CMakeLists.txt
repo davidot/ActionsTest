@@ -28,3 +28,9 @@ target_link_libraries(ActionsMain PRIVATE Actions)
 
 add_executable(ActionsTest test/main.cpp test/ActionTest.cpp)
 target_link_libraries(ActionsTest PRIVATE Catch2::Catch2 Actions)
+
+enable_testing()
+
+add_test(NAME UnitTests COMMAND ActionsTest)
+
+add_test(NAME StartUpTest COMMAND ActionsMain)
