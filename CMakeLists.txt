@@ -4,4 +4,27 @@ project(ActionsTest LANGUAGES CXX
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(ActionsTest src/main.cpp)
+include(FetchContent)
+
+fetchcontent_declare(
+        catch
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v2.13.1
+)
+
+FetchContent_GetProperties(catch)
+if (NOT catch_POPULATED)
+    FetchContent_Populate(catch)
+    add_subdirectory(${catch_SOURCE_DIR} ${catch_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif ()
+
+
+add_library(Actions src/Action.cpp)
+target_include_directories(Actions INTERFACE src/)
+
+add_executable(ActionsMain src/main.cpp)
+target_link_libraries(ActionsMain PRIVATE Actions)
+
+
+add_executable(ActionsTest test/main.cpp test/ActionTest.cpp)
+target_link_libraries(ActionsTest PRIVATE Catch2::Catch2 Actions)
