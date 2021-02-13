@@ -78,5 +78,5 @@ jobs:
       - name: Build
         run: cmake --build ${{ env.build_folder_location }}
       - name: Run tests
-        run: ctest --output-on-failure .
+        run: ctest --output-on-failure ${{ env.build_folder_location }}
 
