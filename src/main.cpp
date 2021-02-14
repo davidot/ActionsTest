@@ -2,7 +2,7 @@
 #include "Action.h"
 
 int main() {
-    Action a {};
+    Action a {3};
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }
