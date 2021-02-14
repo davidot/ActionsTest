@@ -1,51 +1,51 @@
 name: compile-and-run
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   build-compile-test:
     name: Build & Test on ${{ matrix.config.os }} with ${{ matrix.config.compiler }} (${{ matrix.build_type }} build)
     strategy:
-      fail-fast: false # temporary TODO FIXME: remove this
+      fail-fast: false
       matrix:
-        build_type: [Debug, Release]
+        build_type: [ Debug, Release ]
         config:
           - {
-              compiler: g++-10,
-              os: ubuntu-20.04,
-              os-base: ''
-            }
+            compiler: g++-10,
+            os: ubuntu-20.04,
+            os-base: ''
+          }
           - {
-              compiler: clang++-10,
-              os: ubuntu-20.04,
-              os-base: 'ubuntu'
-            }
+            compiler: clang++-10,
+            os: ubuntu-20.04,
+            os-base: 'ubuntu'
+          }
           - {
-              compiler: cl.exe,
-              os: windows-2019,
-              os-base: 'windows'
-            }
+            compiler: cl.exe,
+            os: windows-2019,
+            os-base: 'windows'
+          }
           - {
-              compiler: clang++,
-              os: macos-latest,
-              os-base: 'mac'
-            }
+            compiler: clang++,
+            os: macos-latest,
+            os-base: 'mac'
+          }
           - {
-              compiler: g++-10,
-              os: macos-latest,
-              os-base: 'mac'
-            }
+            compiler: g++-10,
+            os: macos-latest,
+            os-base: 'mac'
+          }
         runall:
-          - ${{ contains('refs/heads/mains refs/heads/develops', github.ref) || contains(github.event.head_commit.message, '.full-ci') }}
+          - ${{ contains('refs/heads/mains refs/heads/develops', github.ref) || contains(github.event.head_commit.message, 'ci') }}
         runmac:
-          - ${{ contains(github.event.head_commit.message, '.mac-ci') }}
+          - ${{ contains(github.event.head_commit.message, 'mac') }}
         runwindows:
-          - ${{ contains(github.event.head_commit.message, '.win-ci') }}
+          - ${{ contains(github.event.head_commit.message, 'windows') }}
         runubuntu:
-          - ${{ contains(github.event.head_commit.message, '.clang-ci') }}
+          - ${{ contains(github.event.head_commit.message, 'clang') }}
         exclude:
-          - {config: {os-base: 'mac'}, runall: false, runmac: false}
-          - {config: {os-base: 'windows'}, runall: false, runwindows: false}
-          - {config: {os-base: 'ubuntu'}, runall: false, runubuntu: false}
+          - { config: { os-base: 'mac' }, runall: false, runmac: false }
+          - { config: { os-base: 'windows' }, runall: false, runwindows: false }
+          - { config: { os-base: 'ubuntu' }, runall: false, runubuntu: false }
     env:
       build_folder_location: build
     runs-on: ${{ matrix.config.os }}
@@ -67,14 +67,14 @@ jobs:
           brew install ninja
 
       - name: Configure MSVC console (Windows)
-        if:  startsWith(matrix.config.os, 'windows')
+        if: startsWith(matrix.config.os, 'windows')
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Setup build
         run: |
-            mkdir -p ${{ env.build_folder_location }}
-            cd ${{ env.build_folder_location }}
-            cmake .. -G Ninja -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          mkdir -p ${{ env.build_folder_location }}
+          cd ${{ env.build_folder_location }}
+          cmake .. -G Ninja -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
       - name: Build
         run: cmake --build ${{ env.build_folder_location }}
       - name: Run tests
