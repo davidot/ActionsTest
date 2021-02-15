@@ -1,42 +1,57 @@
 #include "Piece.h"
-#include <cassert>
 
 namespace Chess {
-    Piece::Piece(Piece::Type tp, Piece::Color c) : _type(tp), _color(c) {
+
+#define ENUM_TO_INT(val) static_cast<Piece::IntType>(val)
+
+    constexpr Piece::IntType typeMask = 0b1111;
+    constexpr Piece::IntType whiteMask = ENUM_TO_INT(Piece::Color::White);
+    constexpr Piece::IntType colorMask = whiteMask | ENUM_TO_INT(Piece::Color::Black);
+
+    Piece::Piece(Piece::Type tp, Piece::Color c) {
+        _val = ENUM_TO_INT(tp)
+               | ENUM_TO_INT(c);
     }
 
-    Piece::IntType Piece::toInt() {
-        return static_cast<IntType>(_type)
-               | static_cast<IntType>(_color);
+    Piece::IntType Piece::toInt() const {
+        return _val;
+    }
+
+    Piece::Type Piece::type() const {
+        return static_cast<Piece::Type>(_val & typeMask);
+    }
+
+    Piece::Color Piece::color() const {
+        return static_cast<Piece::Color>(_val & colorMask);
     }
 
     constexpr const auto caseDiff = 'a' - 'A';
 
-    char Piece::toFEN() {
+    char Piece::toFEN() const {
         char c;
-        switch (_type) {
-            case Pawn:
+        switch (type()) {
+            case Type::Pawn:
                 c = 'p';
                 break;
-            case Rook:
+            case Type::Rook:
                 c = 'r';
                 break;
-            case Knight:
+            case Type::Knight:
                 c = 'n';
                 break;
-            case Bishop:
+            case Type::Bishop:
                 c = 'b';
                 break;
-            case Queen:
+            case Type::Queen:
                 c = 'q';
                 break;
-            case King:
+            case Type::King:
                 c = 'k';
                 break;
             default:
                 c = '?';
         }
-        if (_color == Color::White) {
+        if (_val & whiteMask) {
             c -= caseDiff;
         }
         return c;
@@ -77,19 +92,17 @@ namespace Chess {
         if (lower) {
             c -= caseDiff;
         }
-        return static_cast<IntType>(typeFromFEN(c)) | static_cast<IntType>(lower ? Color::Black : Color::White);
+        return ENUM_TO_INT(typeFromFEN(c)) | ENUM_TO_INT(lower ? Color::Black : Color::White);
     }
 
     Piece Piece::fromInt(IntType i) {
-        constexpr auto wVal = static_cast<uint16_t>(Piece::Color::White);
-        auto c = (i & wVal) != 0 ? Piece::Color::White : Piece::Color::Black;
-        return Piece(static_cast<Piece::Type>(i & 0b111), c);
+        auto c = (i & whiteMask) != 0 ? Piece::Color::White : Piece::Color::Black;
+        return Piece(static_cast<Piece::Type>(i & typeMask), c);
 
     }
 
     bool Piece::operator==(const Piece &rhs) const {
-        return _type == rhs._type &&
-               _color == rhs._color;
+        return _val == rhs._val;
     }
 
     bool Piece::operator!=(const Piece &rhs) const {
@@ -108,24 +121,44 @@ namespace Chess {
 
     const char* pieceName(Piece::Type t) {
         switch (t) {
-            case Piece::Pawn:
+            case Piece::Type::Pawn:
                 return "Pawn";
-            case Piece::Rook:
+            case Piece::Type::Rook:
                 return "Rook";
-            case Piece::Knight:
+            case Piece::Type::Knight:
                 return "Knight";
-            case Piece::Bishop:
+            case Piece::Type::Bishop:
                 return "Bishop";
-            case Piece::Queen:
+            case Piece::Type::Queen:
                 return "Queen";
-            case Piece::King:
+            case Piece::Type::King:
                 return "King";
         }
         return "?";
     }
 
     std::ostream &operator<<(std::ostream &os, const Piece &piece) {
-        os << colorName(piece._color) << ' ' << pieceName(piece._type);
+        os << colorName(piece.color()) << ' ' << pieceName(piece.type());
         return os;
+    }
+
+    bool Piece::isPawn() const {
+        return (_val & typeMask) == ENUM_TO_INT(Piece::Type::Pawn);
+    }
+    bool Piece::canKnightJump() const {
+        constexpr const auto knightMask = ENUM_TO_INT(Piece::Type::Knight);
+        return (_val & typeMask) == knightMask;
+    }
+    bool Piece::canMoveDiagonally() const {
+        constexpr const IntType diagMask = ENUM_TO_INT(Piece::Type::Bishop) & ENUM_TO_INT(Piece::Type::Queen) & ENUM_TO_INT(Piece::Type::King);
+        return (_val & typeMask & diagMask) != 0;
+    }
+    bool Piece::canMoveAxisAligned() const {
+        constexpr const IntType axisMask = ENUM_TO_INT(Piece::Type::Rook) & ENUM_TO_INT(Piece::Type::Queen) & ENUM_TO_INT(Piece::Type::King);
+        return (_val & typeMask & axisMask) != 0;
+    }
+    bool Piece::canMoveUnlimited() const {
+        constexpr const IntType unlimMask = ENUM_TO_INT(Piece::Type::Bishop) & ENUM_TO_INT(Piece::Type::Rook) & ENUM_TO_INT(Piece::Type::Queen);
+        return (_val & typeMask & unlimMask) != 0;
     }
 }

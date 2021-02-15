@@ -10,25 +10,31 @@ namespace Chess {
 
         using IntType = uint8_t;
 
-        enum Type : IntType {
-            Pawn = 0u,
-            Rook = 1u,
-            Knight = 2u,
-            Bishop = 3u,
-            Queen = 4u,
-            King = 5u
+        enum class Type : IntType {
+            Pawn = 0b0000,
+            King = 0b0011,
+            Knight = 0b1000,
+            Bishop = 0b0101,
+            Rook = 0b0110,
+            Queen = 0b0111,
         };
 
         enum class Color : IntType {
-            White = 0x8,
-            Black = 0x10
+            White = 0b00010000,
+            Black = 0b00100000
         };
 
         Piece(Type tp, Color c);
 
-        IntType toInt();
+        [[nodiscard]] IntType toInt() const;
 
-        char toFEN();
+        [[nodiscard]] char toFEN() const;
+
+        bool isPawn() const;
+        bool canKnightJump() const;
+        bool canMoveDiagonally() const;
+        bool canMoveAxisAligned() const;
+        bool canMoveUnlimited() const;
 
         static Piece fromFEN(char c);
 
@@ -43,8 +49,10 @@ namespace Chess {
         friend std::ostream &operator<<(std::ostream &os, const Piece &piece);
 
     private:
-        Type _type;
-        Color _color;
+        IntType _val;
+
+        [[nodiscard]] Piece::Type type() const;
+        [[nodiscard]] Piece::Color color() const;
     };
 }
 

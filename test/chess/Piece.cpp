@@ -46,5 +46,81 @@ TEST_CASE("Pieces") {
         }
     }
 
+    SECTION("Pieces have correct properties") {
+        auto col = GENERATE(ALL_COLORS);
+
+
+        SECTION("Pawn is not special at all") {
+            Piece piece(Pt::Pawn, col);
+            CAPTURE(piece);
+
+            REQUIRE_FALSE(piece.canKnightJump());
+            REQUIRE_FALSE(piece.canMoveDiagonally());
+            REQUIRE_FALSE(piece.canMoveAxisAligned());
+            REQUIRE_FALSE(piece.canMoveUnlimited());
+
+            REQUIRE(piece.isPawn());
+        }
+
+        SECTION("King can move all around but not unlimited") {
+            Piece piece(Pt::King, col);
+            CAPTURE(piece);
+
+            REQUIRE_FALSE(piece.canKnightJump());
+            REQUIRE_FALSE(piece.isPawn());
+            REQUIRE_FALSE(piece.canMoveUnlimited());
+
+            REQUIRE(piece.canMoveAxisAligned());
+            REQUIRE(piece.canMoveDiagonally());
+        }
+
+        SECTION("Knights can only move in jump") {
+            Piece piece(Pt::Knight, col);
+            CAPTURE(piece);
+
+            REQUIRE_FALSE(piece.isPawn());
+            REQUIRE_FALSE(piece.canMoveUnlimited());
+            REQUIRE_FALSE(piece.canMoveAxisAligned());
+            REQUIRE_FALSE(piece.canMoveDiagonally());
+
+            REQUIRE(piece.canKnightJump());
+        }
+
+        SECTION("Rooks can move axis aligned and unlimited") {
+            Piece piece(Pt::Rook, col);
+            CAPTURE(piece);
+
+            REQUIRE_FALSE(piece.canKnightJump());
+            REQUIRE_FALSE(piece.isPawn());
+            REQUIRE_FALSE(piece.canMoveDiagonally());
+
+            REQUIRE(piece.canMoveUnlimited());
+            REQUIRE(piece.canMoveAxisAligned());
+        }
+
+        SECTION("Bishop can move diagonally and unlimited") {
+            Piece piece(Pt::Bishop, col);
+            CAPTURE(piece);
+
+            REQUIRE_FALSE(piece.canKnightJump());
+            REQUIRE_FALSE(piece.isPawn());
+            REQUIRE_FALSE(piece.canMoveAxisAligned());
+
+            REQUIRE(piece.canMoveDiagonally());
+            REQUIRE(piece.canMoveUnlimited());
+        }
+
+        SECTION("Queen can move diagonally, axis aligned and unlimited") {
+            Piece piece(Pt::Queen, col);
+            CAPTURE(piece);
+
+            REQUIRE_FALSE(piece.canKnightJump());
+            REQUIRE_FALSE(piece.isPawn());
+
+            REQUIRE(piece.canMoveAxisAligned());
+            REQUIRE(piece.canMoveDiagonally());
+            REQUIRE(piece.canMoveUnlimited());
+        }
+    }
 
 }
