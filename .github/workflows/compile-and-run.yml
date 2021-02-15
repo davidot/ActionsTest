@@ -3,6 +3,7 @@ on:
   push:
     paths-ignore:
       - '**/*.md'
+      - ${{ github.ref }}
   pull_request:
   workflow_dispatch:
 

@@ -16,4 +16,5 @@ Goals include but are not limited to:
 - [x] multiple build options and compilers
 - [ ] ccache
 - [ ] other caches?
-
+- [ ] Ignoring markdown (documentation) changes only  
+   This does lead to "missing" builds so may not actually be great (maybe ignore on `devel` / `main`?) 
