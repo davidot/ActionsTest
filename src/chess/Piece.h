@@ -7,7 +7,10 @@ namespace Chess {
 
     class Piece {
     public:
-        enum Type : uint8_t {
+
+        using IntType = uint8_t;
+
+        enum Type : IntType {
             Pawn = 0u,
             Rook = 1u,
             Knight = 2u,
@@ -16,22 +19,22 @@ namespace Chess {
             King = 5u
         };
 
-        enum class Color : uint8_t {
+        enum class Color : IntType {
             White = 0x8,
-            Black = 0xF
+            Black = 0x10
         };
 
         Piece(Type tp, Color c);
 
-        uint16_t toInt();
+        IntType toInt();
 
         char toFEN();
 
         static Piece fromFEN(char c);
 
-        static uint16_t intFromFEN(char c);
+        static IntType intFromFEN(char c);
 
-        static Piece fromInt(uint16_t);
+        static Piece fromInt(IntType);
 
         bool operator==(const Piece &rhs) const;
 
