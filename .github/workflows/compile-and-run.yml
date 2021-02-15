@@ -1,5 +1,10 @@
 name: compile-and-run
-on: [ push, pull_request ]
+on:
+  push:
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   build-compile-test:
