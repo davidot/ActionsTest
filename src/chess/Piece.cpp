@@ -9,20 +9,20 @@ namespace Chess {
     constexpr Piece::IntType colorMask = whiteMask | ENUM_TO_INT(Piece::Color::Black);
 
     Piece::Piece(Piece::Type tp, Piece::Color c) {
-        _val = ENUM_TO_INT(tp)
+        m_val = ENUM_TO_INT(tp)
                | ENUM_TO_INT(c);
     }
 
     Piece::IntType Piece::toInt() const {
-        return _val;
+        return m_val;
     }
 
     Piece::Type Piece::type() const {
-        return static_cast<Piece::Type>(_val & typeMask);
+        return static_cast<Piece::Type>(m_val & typeMask);
     }
 
     Piece::Color Piece::color() const {
-        return static_cast<Piece::Color>(_val & colorMask);
+        return static_cast<Piece::Color>(m_val & colorMask);
     }
 
     constexpr const auto caseDiff = 'a' - 'A';
@@ -51,7 +51,7 @@ namespace Chess {
             default:
                 c = '?';
         }
-        if (_val & whiteMask) {
+        if (m_val & whiteMask) {
             c -= caseDiff;
         }
         return c;
@@ -102,7 +102,7 @@ namespace Chess {
     }
 
     bool Piece::operator==(const Piece &rhs) const {
-        return _val == rhs._val;
+        return m_val == rhs.m_val;
     }
 
     bool Piece::operator!=(const Piece &rhs) const {
@@ -143,22 +143,22 @@ namespace Chess {
     }
 
     bool Piece::isPawn() const {
-        return (_val & typeMask) == ENUM_TO_INT(Piece::Type::Pawn);
+        return (m_val & typeMask) == ENUM_TO_INT(Piece::Type::Pawn);
     }
     bool Piece::canKnightJump() const {
         constexpr const auto knightMask = ENUM_TO_INT(Piece::Type::Knight);
-        return (_val & typeMask) == knightMask;
+        return (m_val & typeMask) == knightMask;
     }
     bool Piece::canMoveDiagonally() const {
         constexpr const IntType diagMask = ENUM_TO_INT(Piece::Type::Bishop) & ENUM_TO_INT(Piece::Type::Queen) & ENUM_TO_INT(Piece::Type::King);
-        return (_val & typeMask & diagMask) != 0;
+        return (m_val & typeMask & diagMask) != 0;
     }
     bool Piece::canMoveAxisAligned() const {
         constexpr const IntType axisMask = ENUM_TO_INT(Piece::Type::Rook) & ENUM_TO_INT(Piece::Type::Queen) & ENUM_TO_INT(Piece::Type::King);
-        return (_val & typeMask & axisMask) != 0;
+        return (m_val & typeMask & axisMask) != 0;
     }
     bool Piece::canMoveUnlimited() const {
         constexpr const IntType unlimMask = ENUM_TO_INT(Piece::Type::Bishop) & ENUM_TO_INT(Piece::Type::Rook) & ENUM_TO_INT(Piece::Type::Queen);
-        return (_val & typeMask & unlimMask) != 0;
+        return (m_val & typeMask & unlimMask) != 0;
     }
 }

@@ -49,7 +49,7 @@ namespace Chess {
         friend std::ostream &operator<<(std::ostream &os, const Piece &piece);
 
     private:
-        IntType _val;
+        IntType m_val;
 
         [[nodiscard]] Piece::Type type() const;
         [[nodiscard]] Piece::Color color() const;
