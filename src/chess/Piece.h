@@ -30,11 +30,11 @@ namespace Chess {
 
         [[nodiscard]] char toFEN() const;
 
-        bool isPawn() const;
-        bool canKnightJump() const;
-        bool canMoveDiagonally() const;
-        bool canMoveAxisAligned() const;
-        bool canMoveUnlimited() const;
+        [[nodiscard]] bool isPawn() const;
+        [[nodiscard]] bool canKnightJump() const;
+        [[nodiscard]] bool canMoveDiagonally() const;
+        [[nodiscard]] bool canMoveAxisAligned() const;
+        [[nodiscard]] bool canMoveUnlimited() const;
 
         static Piece fromFEN(char c);
 
