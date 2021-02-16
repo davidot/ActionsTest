@@ -19,14 +19,14 @@ if (NOT catch_POPULATED)
 endif ()
 
 
-add_library(Actions src/Action.cpp src/chess/Piece.cpp src/chess/Piece.h)
+add_library(Actions src/Action.cpp src/chess/Piece.cpp src/chess/Piece.h src/chess/Board.cpp src/chess/Board.h)
 target_include_directories(Actions INTERFACE src/)
 
 add_executable(ActionsMain src/main.cpp)
 target_link_libraries(ActionsMain PRIVATE Actions)
 
 
-add_executable(ActionsTest test/main.cpp test/ActionTest.cpp test/chess/Piece.cpp)
+add_executable(ActionsTest test/main.cpp test/ActionTest.cpp test/chess/Piece.cpp test/chess/Board.cpp)
 target_link_libraries(ActionsTest PRIVATE Catch2::Catch2 Actions)
 
 enable_testing()
