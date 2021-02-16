@@ -16,6 +16,7 @@ TEST_CASE("Pieces") {
         CAPTURE(piece);
 
         REQUIRE(piece == piece);
+        REQUIRE_FALSE(piece != piece);
 
         uint16_t intVal = piece.toInt();
         REQUIRE(intVal >= 0);
@@ -39,6 +40,7 @@ TEST_CASE("Pieces") {
             REQUIRE(piece1.toInt() == piece2.toInt());
             REQUIRE(piece1.toFEN() == piece2.toFEN());
         } else {
+            REQUIRE(piece1 != piece2);
             CAPTURE(piece1, piece2);
 
             REQUIRE(piece1.toInt() != piece2.toInt());

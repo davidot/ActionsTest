@@ -6,7 +6,8 @@ namespace Chess {
 
     constexpr Piece::IntType typeMask = 0b1111;
     constexpr Piece::IntType whiteMask = ENUM_TO_INT(Piece::Color::White);
-    constexpr Piece::IntType colorMask = whiteMask | ENUM_TO_INT(Piece::Color::Black);
+    constexpr Piece::IntType blackMask = ENUM_TO_INT(Piece::Color::Black);
+    constexpr Piece::IntType colorMask = whiteMask | blackMask;
 
     Piece::Piece(Piece::Type tp, Piece::Color c) {
         m_val = ENUM_TO_INT(tp)
@@ -31,28 +32,28 @@ namespace Chess {
         char c;
         switch (type()) {
             case Type::Pawn:
-                c = 'p';
+                c = 'P';
                 break;
             case Type::Rook:
-                c = 'r';
+                c = 'R';
                 break;
             case Type::Knight:
-                c = 'n';
+                c = 'N';
                 break;
             case Type::Bishop:
-                c = 'b';
+                c = 'B';
                 break;
             case Type::Queen:
-                c = 'q';
+                c = 'Q';
                 break;
             case Type::King:
-                c = 'k';
+                c = 'K';
                 break;
             default:
                 c = '?';
         }
-        if (m_val & whiteMask) {
-            c -= caseDiff;
+        if (m_val & blackMask) {
+            c += caseDiff;
         }
         return c;
     }
@@ -116,7 +117,6 @@ namespace Chess {
             case Piece::Color::Black:
                 return "Black";
         }
-        return "?";
     }
 
     const char* pieceName(Piece::Type t) {
@@ -134,7 +134,6 @@ namespace Chess {
             case Piece::Type::King:
                 return "King";
         }
-        return "?";
     }
 
     std::ostream &operator<<(std::ostream &os, const Piece &piece) {
