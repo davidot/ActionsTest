@@ -1,14 +1,13 @@
 #include <catch2/catch.hpp>
 #include <chess/Piece.h>
 
-TEST_CASE("Pieces") {
+TEST_CASE("Pieces", "[chess][base]") {
 
     using namespace Chess;
     using Pt = Piece::Type;
-    using Pc = Piece::Color;
 
 #define ALL_TYPES Pt::Pawn, Pt::Rook, Pt::Knight, Pt::Bishop, Pt::Queen, Pt::King
-#define ALL_COLORS Pc::White, Pc::Black
+#define ALL_COLORS Color::White, Color::Black
 
     SECTION("Can create all piece and read/write them from FEN") {
         Piece piece(GENERATE(ALL_TYPES), GENERATE(ALL_COLORS));
@@ -30,6 +29,7 @@ TEST_CASE("Pieces") {
         REQUIRE(piece == Piece::fromFEN(fenVal));
         REQUIRE(intVal == Piece::intFromFEN(fenVal));
         REQUIRE(piece == Piece::fromInt(intVal));
+        REQUIRE(Piece::isPiece(intVal));
     }
 
     SECTION("No two pieces can have the same FEN or INT value") {
@@ -124,5 +124,34 @@ TEST_CASE("Pieces") {
             REQUIRE(piece.canMoveUnlimited());
         }
     }
+
+    // some hacky stuff to not have to hardcode the color mask here
+    Piece::IntType colorMask = 0
+            | Piece(Pt::Pawn, Color::White).toInt() & Piece(Pt::Knight, Color::White).toInt()
+            | Piece(Pt::Pawn, Color::Black).toInt() & Piece(Pt::Knight, Color::Black).toInt();
+
+    SECTION("Pieces can be validated") {
+
+        // basic tests
+        REQUIRE_FALSE(Piece::isPiece(0));
+        REQUIRE_FALSE(Piece::isPiece(Piece::none()));
+        REQUIRE_FALSE(Piece::isPiece(~colorMask));
+        REQUIRE_FALSE(Piece::isPiece(colorMask));
+
+        Piece::IntType type = GENERATE(range(0b0000, 0b1111));
+        Piece::IntType topBits = GENERATE(range(0b00, 0b11)) << 6u;
+
+        // note: not actually valid pieces but not things it should check
+        SECTION("Generated valid values") {
+            Piece::IntType col = GENERATE(0b10000, 0b100000);
+            REQUIRE(Piece::isPiece(topBits | col | type));
+        }
+
+        SECTION("Generated wrong values") {
+            Piece::IntType wrongColor = GENERATE(0b000000, 0b110000);
+            REQUIRE_FALSE(Piece::isPiece(topBits | wrongColor | type));
+        }
+    }
+
 
 }

@@ -2,14 +2,23 @@
 
 namespace Chess {
 
-#define ENUM_TO_INT(val) static_cast<Piece::IntType>(val)
+    Color opposite(Color c) {
+        switch (c) {
+            case Color::White:
+                return Color::Black;
+            case Color::Black:
+                return Color::White;
+        }
+    }
 
+#define ENUM_TO_INT(val) static_cast<Piece::IntType>(val)
     constexpr Piece::IntType typeMask = 0b1111;
-    constexpr Piece::IntType whiteMask = ENUM_TO_INT(Piece::Color::White);
-    constexpr Piece::IntType blackMask = ENUM_TO_INT(Piece::Color::Black);
+    constexpr Piece::IntType whiteMask = ENUM_TO_INT(Color::White);
+    constexpr Piece::IntType blackMask = ENUM_TO_INT(Color::Black);
+
     constexpr Piece::IntType colorMask = whiteMask | blackMask;
 
-    Piece::Piece(Piece::Type tp, Piece::Color c) {
+    Piece::Piece(Piece::Type tp, Color c) {
         m_val = ENUM_TO_INT(tp)
                | ENUM_TO_INT(c);
     }
@@ -22,8 +31,8 @@ namespace Chess {
         return static_cast<Piece::Type>(m_val & typeMask);
     }
 
-    Piece::Color Piece::color() const {
-        return static_cast<Piece::Color>(m_val & colorMask);
+    Color Piece::color() const {
+        return static_cast<Color>(m_val & colorMask);
     }
 
     constexpr const auto caseDiff = 'a' - 'A';
@@ -81,7 +90,7 @@ namespace Chess {
     Piece Piece::fromFEN(char c) {
         // This does assume ascii...
         bool lower = c >= 'a';
-        Piece::Color col = lower ? Color::Black : Color::White;
+        Color col = lower ? Color::Black : Color::White;
         if (lower) {
             c -= caseDiff;
         }
@@ -97,7 +106,7 @@ namespace Chess {
     }
 
     Piece Piece::fromInt(IntType i) {
-        auto c = (i & whiteMask) != 0 ? Piece::Color::White : Piece::Color::Black;
+        auto c = (i & whiteMask) != 0 ? Color::White : Color::Black;
         return Piece(static_cast<Piece::Type>(i & typeMask), c);
 
     }
@@ -110,13 +119,14 @@ namespace Chess {
         return !(rhs == *this);
     }
 
-    const char* colorName(Piece::Color c) {
+    const char* colorName(Color c) {
         switch (c) {
-            case Piece::Color::White:
+            case Color::White:
                 return "White";
-            case Piece::Color::Black:
+            case Color::Black:
                 return "Black";
         }
+        return "?";
     }
 
     const char* pieceName(Piece::Type t) {
@@ -134,6 +144,7 @@ namespace Chess {
             case Piece::Type::King:
                 return "King";
         }
+        return "?";
     }
 
     std::ostream &operator<<(std::ostream &os, const Piece &piece) {
@@ -160,4 +171,24 @@ namespace Chess {
         constexpr const IntType unlimMask = ENUM_TO_INT(Piece::Type::Bishop) & ENUM_TO_INT(Piece::Type::Rook) & ENUM_TO_INT(Piece::Type::Queen);
         return (m_val & typeMask & unlimMask) != 0;
     }
+
+    bool Piece::isPiece(Piece::IntType val) {
+        return ((val & whiteMask) ^ ((val & blackMask) >> 1)) != 0;
+    }
+
+    Piece::IntType Piece::none() {
+        return 0;
+    }
+
+    Color Piece::colorFromInt(Piece::IntType val) {
+        //ASSERT(isPiece(val));
+        switch (val & colorMask) {
+            case whiteMask:
+                return Color::White;
+            case blackMask:
+                return Color::Black;
+        }
+        return Color::White;
+    }
+
 }

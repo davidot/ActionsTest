@@ -29,17 +29,27 @@ namespace Chess {
 
         bool undoMove(Move);
 
-        [[nodiscard]] Piece::Color colorToMove() const;
+        [[nodiscard]] Color colorToMove() const;
 
         [[nodiscard]] bool hasValidPosition() const;
 
-        [[nodiscard]] uint32_t countPieces(Piece::Color) const;
+        [[nodiscard]] uint32_t countPieces(Color) const;
+
+        std::optional<Piece> pieceAt(std::string_view);
+
+        std::optional<Piece> pieceAt(uint8_t column, uint8_t row);
+
+        std::optional<Piece> pieceAt(uint16_t index);
+
+        void setPiece(uint16_t index, std::optional<Piece> piece);
 
     private:
-        Board(uint8_t size);
+        explicit Board(uint8_t size);
 
         uint8_t m_size;
         std::vector<Piece::IntType> m_pieces;
+
+        uint16_t m_numPieces[2] = {0, 0};
 
     };
 

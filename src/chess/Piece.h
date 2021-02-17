@@ -5,10 +5,21 @@
 
 namespace Chess {
 
+#define INTTYPE uint8_t
+
+    enum class Color : INTTYPE {
+        White = 0b00010000,
+        Black = 0b00100000
+    };
+
+    Color opposite(Color c);
+
     class Piece {
     public:
 
-        using IntType = uint8_t;
+        using IntType = INTTYPE;
+
+#undef INTTYPE
 
         enum class Type : IntType {
             Pawn = 0b0000,
@@ -19,10 +30,6 @@ namespace Chess {
             Queen = 0b0111,
         };
 
-        enum class Color : IntType {
-            White = 0b00010000,
-            Black = 0b00100000
-        };
 
         Piece(Type tp, Color c);
 
@@ -48,12 +55,21 @@ namespace Chess {
 
         friend std::ostream &operator<<(std::ostream &os, const Piece &piece);
 
-    private:
-        IntType m_val;
+        [[nodiscard]] Color color() const;
 
         [[nodiscard]] Piece::Type type() const;
-        [[nodiscard]] Piece::Color color() const;
+
+        [[nodiscard]] static bool isPiece(IntType val);
+
+        [[nodiscard]] static Color colorFromInt(IntType val);
+
+        [[nodiscard]] static IntType none();
+
+    private:
+        IntType m_val;
     };
+
+
 }
 
 
