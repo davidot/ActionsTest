@@ -1,4 +1,5 @@
 #include "Board.h"
+#include "../util/StringUtil.h"
 
 namespace Chess {
 
@@ -49,15 +50,76 @@ namespace Chess {
     }
 
     Board Board::standardBoard() {
-        return Board::fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        return std::move(Board::fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").extract());
     }
 
-    Board Board::fromFEN(std::string_view, bool extended) {
-        return Board(0);
+    std::optional<std::string> Board::parseFENBoard(std::string_view view) {
+        auto next = view.begin();
+
+        uint32_t index = 0;
+        uint32_t row = 1;
+
+        while (next != view.end()) {
+            if (index == m_size * row) {
+                if (*next != '/') {
+                    return "Must have '/' as row separators";
+                }
+            }
+            if (std::isalpha(*next)) {
+                auto piece = Piece::fromFEN(*next);
+                if (!piece) {
+                    return std::string("Unknown piece type'") + std::to_string(*next) + std::string("'");
+                }
+                setPiece(index, *piece);
+                index++;
+            }
+
+            next++;
+        }
+
+        // weirdly nullopt means no error here...
+        return std::nullopt;
+    }
+
+
+    ExpectedBoard Board::fromFEN(std::string_view str) {
+        Board b(8);
+
+        //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+
+        auto parts = util::split(str, " ");
+        if (parts.size() < 6) {
+            return "Not enough pieces in FEN";
+        }
+
+        auto error = b.parseFENBoard(parts[0]);
+        if (error) {
+            return *error;
+        }
+
+        auto& turnString = parts[1];
+
+        if (turnString == "w") {
+            b.m_next_turn = Color::White;
+        } else if (turnString == "b") {
+            b.m_next_turn = Color::Black;
+        } else {
+            return std::string("Invalid turn value: ") + std::string(turnString);
+        }
+
+
+        if (std::find(str.begin(), str.end(), 'w') == str.end()) {
+            b.m_next_turn = Color::Black;
+        }
+        return b;
     }
 
     Color Board::colorToMove() const {
-        return Color::White;
+        return m_next_turn;
+    }
+
+    uint8_t Board::size() const {
+        return m_size;
     }
 
 }

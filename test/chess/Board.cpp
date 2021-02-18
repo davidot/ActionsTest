@@ -14,6 +14,8 @@ TEST_CASE("Board", "[chess][base]") {
         CAPTURE(size);
         Board b = Board::emptyBoard(size);
 
+        CHECK(b.size() == size);
+
         CHECK(b.countPieces(Color::White) == 0);
         CHECK(b.countPieces(Color::Black) == 0);
         CHECK_FALSE(b.hasValidPosition());
@@ -173,4 +175,54 @@ TEST_CASE("Board", "[chess][base]") {
 //        }
 //    }
 
+}
+
+
+TEST_CASE("Basic FEN parsing", "[chess][parsing]") {
+    using namespace Chess;
+    SECTION("Wrong inputs") {
+        auto fails = [](std::string s) {
+            CAPTURE(s);
+            ExpectedBoard b = Board::fromFEN(s);
+            REQUIRE_FALSE(b);
+            // should have some error
+            REQUIRE_FALSE(b.error().empty());
+        };
+
+        fails("");
+        fails("bla bla");
+    }
+
+    SECTION("Empty FEN") {
+        std::string color = GENERATE("w", "b");
+        CAPTURE(color);
+        ExpectedBoard b = Board::fromFEN("8/8/8/8/8/8/8/8 " + color + " - - 0 1");
+        REQUIRE(b);
+
+        Board board = b.extract();
+        REQUIRE(board.size() == 8);
+        CHECK(board.countPieces(Color::White) == 0);
+        CHECK(board.countPieces(Color::Black) == 0);
+        CHECK_FALSE(board.hasValidPosition());
+        CHECK(board.colorToMove() == (color == "w" ? Color::White : Color::Black));
+    }
+
+    SECTION("Adds pawn in FEN") {
+        std::string pieceFEN = GENERATE("p", "P");
+        CAPTURE(pieceFEN);
+        bool isWhite = pieceFEN == "P";
+        ExpectedBoard b = Board::fromFEN(pieceFEN + "7/8/8/8/8/8/8/8 w - - 0 1");
+        REQUIRE(b);
+
+        Board board = b.extract();
+        REQUIRE(board.size() == 8);
+        CHECK(board.countPieces(Color::White) == (isWhite ? 1 : 0));
+        CHECK(board.countPieces(Color::Black) == (isWhite ? 0 : 1));
+
+        auto p =  board.pieceAt(0);
+        REQUIRE(p);
+        Piece& piece = *p;
+        REQUIRE(piece.type() == Piece::Type::Pawn);
+        REQUIRE(piece.color() == (isWhite ? Color::White : Color::Black));
+    }
 }

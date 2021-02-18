@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    message(STATUS "CCache loaded and configured")
+endif(CCACHE_FOUND)
+
 fetchcontent_declare(
         catch
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
@@ -19,14 +25,14 @@ if (NOT catch_POPULATED)
 endif ()
 
 
-add_library(Actions src/Action.cpp src/chess/Piece.cpp src/chess/Board.cpp)
+add_library(Actions src/Action.cpp src/chess/Piece.cpp src/chess/Board.cpp src/util/StringUtil.cpp)
 target_include_directories(Actions INTERFACE src/)
 
 add_executable(ActionsMain src/main.cpp)
 target_link_libraries(ActionsMain PRIVATE Actions)
 
 
-add_executable(ActionsTest test/main.cpp test/ActionTest.cpp test/chess/Piece.cpp test/chess/Board.cpp)
+add_executable(ActionsTest test/main.cpp test/ActionTest.cpp test/chess/Piece.cpp test/chess/Board.cpp test/util/StringUtil.cpp)
 target_link_libraries(ActionsTest PRIVATE Catch2::Catch2 Actions)
 
 enable_testing()

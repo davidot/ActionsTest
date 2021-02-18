@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <ostream>
+#include <optional>
 
 namespace Chess {
 
@@ -43,9 +44,9 @@ namespace Chess {
         [[nodiscard]] bool canMoveAxisAligned() const;
         [[nodiscard]] bool canMoveUnlimited() const;
 
-        static Piece fromFEN(char c);
+        static std::optional<Piece> fromFEN(char c);
 
-        static IntType intFromFEN(char c);
+        static std::optional<IntType> intFromFEN(char c);
 
         static Piece fromInt(IntType);
 

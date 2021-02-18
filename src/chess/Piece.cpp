@@ -87,20 +87,30 @@ namespace Chess {
         }
     }
 
-    Piece Piece::fromFEN(char c) {
+    // Just hardcode for now...
+    constexpr std::string_view allValues = "PRNBQK";
+
+    std::optional<Piece> Piece::fromFEN(char c) {
         // This does assume ascii...
+
         bool lower = c >= 'a';
         Color col = lower ? Color::Black : Color::White;
         if (lower) {
             c -= caseDiff;
         }
+        if (std::find(allValues.begin(), allValues.end(), c) == allValues.end()) {
+            return std::nullopt;
+        }
         return Piece(typeFromFEN(c), col);
     }
 
-    Piece::IntType Piece::intFromFEN(char c) {
+    std::optional<Piece::IntType> Piece::intFromFEN(char c) {
         bool lower = c >= 'a';
         if (lower) {
             c -= caseDiff;
+        }
+        if (std::find(allValues.begin(), allValues.end(), c) == allValues.end()) {
+            return std::nullopt;
         }
         return ENUM_TO_INT(typeFromFEN(c)) | ENUM_TO_INT(lower ? Color::Black : Color::White);
     }
@@ -153,7 +163,8 @@ namespace Chess {
     }
 
     bool Piece::isPawn() const {
-        return (m_val & typeMask) == ENUM_TO_INT(Piece::Type::Pawn);
+        constexpr const auto pawnMask = ENUM_TO_INT(Piece::Type::Pawn);
+        return (m_val & typeMask) == pawnMask;
     }
     bool Piece::canKnightJump() const {
         constexpr const auto knightMask = ENUM_TO_INT(Piece::Type::Knight);

@@ -3,6 +3,7 @@
 #include "Piece.h"
 #include <optional>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace Chess {
@@ -17,9 +18,13 @@ namespace Chess {
         uint32_t val;
     };
 
+    struct ExpectedBoard;
+
     class Board {
     public:
-        [[nodiscard]] static Board fromFEN(std::string_view, bool extended = false);
+        [[nodiscard]] static ExpectedBoard fromFEN(std::string_view);
+
+        [[nodiscard]] static ExpectedBoard fromExtendedFEN(std::string_view);
 
         [[nodiscard]] static Board standardBoard();
 
@@ -43,6 +48,8 @@ namespace Chess {
 
         void setPiece(uint16_t index, std::optional<Piece> piece);
 
+        [[nodiscard]] uint8_t size() const;
+
     private:
         explicit Board(uint8_t size);
 
@@ -51,6 +58,47 @@ namespace Chess {
 
         uint16_t m_numPieces[2] = {0, 0};
 
+        Color m_next_turn = Color::White;
+
+        std::optional<std::string> parseFENBoard(std::string_view);
+
+    };
+
+
+    struct ExpectedBoard {
+    private:
+        using T = Chess::Board;
+        std::variant<T, std::string> m_value;
+
+    public:
+        ExpectedBoard(T&& val) : m_value(std::forward<T&&>(val)) {
+        }
+
+        ExpectedBoard(std::string error) : m_value(std::move(error)) {
+        }
+
+        ExpectedBoard(const char* error) : m_value(error) {
+        }
+
+        explicit operator bool() const {
+            return m_value.index() == 0;
+        }
+
+        [[nodiscard]] const std::string& error() const{
+            //ASSERT
+            // in case it is a string we need to use the indices
+            return std::get<1>(m_value);
+        }
+
+        [[nodiscard]] T&& extract() {
+            // in case it is a string we need to use the indices
+            return std::move(std::get<0>(m_value));
+        }
+
+        [[nodiscard]] const T& value() {
+            // in case it is a string we need to use the indices
+            return std::get<0>(m_value);
+        }
     };
 
 }
