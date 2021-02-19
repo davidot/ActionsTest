@@ -118,7 +118,6 @@ namespace Chess {
     Piece Piece::fromInt(IntType i) {
         auto c = (i & whiteMask) != 0 ? Color::White : Color::Black;
         return Piece(static_cast<Piece::Type>(i & typeMask), c);
-
     }
 
     bool Piece::operator==(const Piece &rhs) const {

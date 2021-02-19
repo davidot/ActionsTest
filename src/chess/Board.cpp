@@ -1,5 +1,6 @@
 #include "Board.h"
 #include "../util/StringUtil.h"
+#include <string>
 
 namespace Chess {
 
@@ -64,6 +65,7 @@ namespace Chess {
                 if (*next != '/') {
                     return "Must have '/' as row separators";
                 }
+                next++;
             }
             if (std::isalpha(*next)) {
                 auto piece = Piece::fromFEN(*next);
@@ -107,10 +109,6 @@ namespace Chess {
             return std::string("Invalid turn value: ") + std::string(turnString);
         }
 
-
-        if (std::find(str.begin(), str.end(), 'w') == str.end()) {
-            b.m_next_turn = Color::Black;
-        }
         return b;
     }
 
