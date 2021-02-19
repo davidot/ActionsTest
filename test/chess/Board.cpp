@@ -206,6 +206,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         fails("8/8/8/8/8/8/8/4 w - - 0 1");
         fails("8/8/4/8/8/8/8/8 w - - 0 1");
         fails("44/8/8/8/8/8/8/8 w - - 0 1");
+        fails("8/8/8/8/8/8/8/44 w - - 0 1");
     }
 
     auto is_valid_board = [](ExpectedBoard& board) {
