@@ -1,6 +1,7 @@
 #include "Board.h"
 #include "../util/StringUtil.h"
 #include <string>
+#include <iostream>
 
 namespace Chess {
 
@@ -59,24 +60,46 @@ namespace Chess {
 
         uint32_t index = 0;
         uint32_t row = 1;
+        bool lastWasNum = false;
 
         while (next != view.end()) {
+            if (index >= 64) {
+                return "Board is too long already data for _" + std::to_string(index) + "_ squares";
+            }
             if (index == m_size * row) {
                 if (*next != '/') {
                     return "Must have '/' as row separators";
                 }
-                next++;
+                ++next;
+                ++row;
+                lastWasNum = false;
+                // just in case it was the final char
+                continue;
             }
             if (std::isalpha(*next)) {
                 auto piece = Piece::fromFEN(*next);
                 if (!piece) {
-                    return std::string("Unknown piece type'") + std::to_string(*next) + std::string("'");
+                    return "Unknown piece type'" + std::string(1, *next) + "'";
                 }
                 setPiece(index, *piece);
-                index++;
+                ++index;
+                lastWasNum = false;
+            } else {
+                if (!std::isdigit(*next)) {
+                    return "Invalid character '" + std::string(1, *next) + "'";
+                }
+                if (lastWasNum) {
+                    return "Multiple consecutive numbers is not allowed";
+                }
+                index += *next - '0';
+                lastWasNum = true;
             }
 
-            next++;
+            ++next;
+        }
+
+        if (index < 64) {
+            return "Not enough data to fill board only reached " + std::to_string(index);
         }
 
         // weirdly nullopt means no error here...

@@ -181,21 +181,31 @@ TEST_CASE("Board", "[chess][base]") {
 TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     using namespace Chess;
     SECTION("Wrong inputs") {
-        auto fails = [](std::string s) {
+        auto fails = [](const std::string& s) {
             CAPTURE(s);
             ExpectedBoard b = Board::fromFEN(s);
-            REQUIRE_FALSE(b);
-            // should have some error
-            REQUIRE_FALSE(b.error().empty());
+            if (b) {
+                INFO("Size " << b.value().size());
+                INFO("White pieces: #" << b.value().countPieces(Color::White));
+                INFO("Black pieces: #" << b.value().countPieces(Color::Black));
+
+                CHECK_FALSE(b);
+            } else {
+                // should have some error
+                CHECK_FALSE(b.error().empty());
+            }
+
         };
 
         fails("");
         fails("bla bla");
 
         fails("8 no other things left here");
-        fails("8/8/8/8/8/8/8/notapieceandtoolong no other things left here");
-        fails("4/8/8/8/8/8/8/8 no other things left here");
-        fails("8/8/8/8/8/8/8/4 no other things left here");
+        fails("8/8/8/8/8/8/8/notapieceandtoolong w - - 0 1");
+        fails("4/8/8/8/8/8/8/8 w - - 0 1");
+        fails("8/8/8/8/8/8/8/4 w - - 0 1");
+        fails("8/8/4/8/8/8/8/8 w - - 0 1");
+        fails("44/8/8/8/8/8/8/8 w - - 0 1");
     }
 
     auto is_valid_board = [](ExpectedBoard& board) {
