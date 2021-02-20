@@ -224,9 +224,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     };
 
     SECTION("Empty FEN") {
-        std::string color = GENERATE("w", "b");
-        CAPTURE(color);
-        ExpectedBoard b = Board::fromFEN("8/8/8/8/8/8/8/8 " + color + " - - 0 1");
+        ExpectedBoard b = Board::fromFEN("8/8/8/8/8/8/8/8 w - - 0 1");
         is_valid_board(b);
 
         Board board = b.extract();
@@ -234,6 +232,16 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CHECK(board.countPieces(Color::White) == 0);
         CHECK(board.countPieces(Color::Black) == 0);
         CHECK_FALSE(board.hasValidPosition());
+    }
+
+    SECTION("Reads color of next turn") {
+        std::string color = GENERATE("w", "b");
+        CAPTURE(color);
+        ExpectedBoard b = Board::fromFEN("8/8/8/8/8/8/8/8 " + color + " - - 0 1");
+        is_valid_board(b);
+
+        Board board = b.extract();
+        REQUIRE(board.size() == 8);
         CHECK(board.colorToMove() == (color == "w" ? Color::White : Color::Black));
     }
 
