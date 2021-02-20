@@ -91,7 +91,12 @@ namespace Chess {
                 if (lastWasNum) {
                     return "Multiple consecutive numbers is not allowed";
                 }
-                index += *next - '0';
+                auto val = *next - '0';
+                if (val > m_size) {
+                    return "Skipping more than a full row _" + std::to_string(val) + "_";
+                }
+                index += val;
+
                 lastWasNum = true;
             }
 

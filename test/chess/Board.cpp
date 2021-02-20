@@ -202,11 +202,17 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
         fails("8 no other things left here");
         fails("8/8/8/8/8/8/8/notapieceandtoolong w - - 0 1");
+        fails("8p w - - 0 1");
+        fails("9/9/9/9/9/9/9/9 w - - 0 1");
+        fails("8/8/8/8/8/8/8/8/1 w - - 0 1");
         fails("4/8/8/8/8/8/8/8 w - - 0 1");
         fails("8/8/8/8/8/8/8/4 w - - 0 1");
         fails("8/8/4/8/8/8/8/8 w - - 0 1");
         fails("44/8/8/8/8/8/8/8 w - - 0 1");
         fails("8/8/8/8/8/8/8/44 w - - 0 1");
+
+        fails("8/8/8/8/8/8/8/8 x - - 0 1");
+        fails("8/8/8/8/8/8/8/8 y - - 0 1");
     }
 
     auto is_valid_board = [](ExpectedBoard& board) {
