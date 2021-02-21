@@ -69,6 +69,8 @@ namespace Chess {
         [[nodiscard]] uint16_t columnRowToIndex(uint8_t column, uint8_t row) const;
 
         [[nodiscard]] std::optional<uint16_t> SANToIndex(std::string_view) const;
+
+        bool setAvailableCastles(std::string_view vw);
     };
 
 

@@ -1,8 +1,9 @@
 #include "Board.h"
 #include "../util/StringUtil.h"
-#include <string>
-#include <iostream>
+#include <array>
 #include <charconv>
+#include <iostream>
+#include <string>
 #include <utility>
 
 namespace Chess {
@@ -164,7 +165,7 @@ namespace Chess {
         }
         b.m_next_turn = nextTurn.value();
 
-        if (parts[2] != "-") {
+        if (!b.setAvailableCastles(parts[2])) {
             return std::string("Invalid possible castling moves value: ") + std::string(parts[2]);
         }
 
@@ -241,6 +242,37 @@ namespace Chess {
         auto row = vw[1] - '1';
 
         return columnRowToIndex(col, row);
+    }
+
+    bool Board::setAvailableCastles(std::string_view vw) {
+        if (vw.size() > 4) {
+            return false;
+        }
+        if (vw == "-") {
+            return true;
+        }
+
+        static std::array<char, 4> possiblePieces = {
+                Piece(Piece::Type::King, Color::Black).toFEN(),
+                Piece(Piece::Type::King, Color::White).toFEN(),
+                Piece(Piece::Type::Queen, Color::Black).toFEN(),
+                Piece(Piece::Type::Queen, Color::White).toFEN(),
+        };
+
+        std::array<bool, possiblePieces.size()> found{ false, false, false, false};
+
+        for (auto& c : vw) {
+            if (auto pos = std::find(possiblePieces.begin(), possiblePieces.end(), c); pos == possiblePieces.end()) {
+                return false;
+            } else {
+                auto& f = found[std::distance(possiblePieces.begin(), pos)];
+                if (f) {
+                    return false;
+                }
+                f = true;
+            }
+        }
+        return true;
     }
 
 }

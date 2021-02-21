@@ -299,6 +299,12 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("bb - - 0 1");
 
             fails("w x - 0 1");
+            fails("w xxxxx - 0 1");
+            fails("w qqqqq - 0 1");
+            fails("w KqQQk - 0 1");
+            fails("w KKQQ - 0 1");
+            fails("w pPpP - 0 1");
+            fails("w RBrb - 0 1");
 
             fails("w - x 0 1");
             fails("w - a9 0 1");
@@ -445,6 +451,28 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             }
         }
     }
+
+    SECTION("Example positions") {
+        SECTION("Start position") {
+            ExpectedBoard b = Board::fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            is_valid_board(b);
+
+            Board board = b.extract();
+            Board standard = Board::standardBoard();
+            REQUIRE(board.size() == standard.size());
+            REQUIRE(board.countPieces(Color::White) == standard.countPieces(Color::White));
+            REQUIRE(board.countPieces(Color::Black) == standard.countPieces(Color::Black));
+            // ehh not sure we want this
+            REQUIRE(board.countPieces(Color::White) == standard.countPieces(Color::Black));
+
+            for (uint32_t i = 0; i < 8; i++) {
+                for (uint32_t j = 0; j < 8; j++) {
+                    REQUIRE(board.pieceAt(j, i) == standard.pieceAt(j, i));
+                }
+            }
+        }
+    }
+
 }
 
 TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
