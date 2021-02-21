@@ -1,10 +1,9 @@
 #include <catch2/catch.hpp>
 #include <chess/Board.h>
 
-
+using namespace Chess;
 
 TEST_CASE("Board", "[chess][base]") {
-    using namespace Chess;
 
 #define GENERATE_PIECE() Piece(GENERATE(Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King), GENERATE(Color::White, Color::Black))
 #define GENERATE_PIECES_WHITE_ONLY() Piece(GENERATE(Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King), Color::White)
@@ -41,8 +40,10 @@ TEST_CASE("Board", "[chess][base]") {
         if (index >= size * size) {
             // out of bounds
             CHECK(b.countPieces(piece.color()) == 0);
+            CHECK(b.countPieces(opposite(piece.color())) == 0);
         } else {
             CHECK(b.countPieces(piece.color()) == 1);
+            CHECK(b.countPieces(opposite(piece.color())) == 0);
         }
 
         // since we only add once piece it can never be a valid position!
@@ -61,7 +62,46 @@ TEST_CASE("Board", "[chess][base]") {
             b.setPiece(index, std::nullopt);
 
             CHECK(b.countPieces(piece.color()) == 0);
+            CHECK(b.countPieces(opposite(piece.color())) == 0);
             CHECK_FALSE(b.pieceAt(index).has_value());
+        }
+    }
+
+    SECTION("Can add pieces every where using column and row") {
+        int32_t size = GENERATE(1, 8, 13, 103, 180, 255);
+        Piece piece = GENERATE_PIECE();
+        Board b = Board::emptyBoard(size);
+
+        uint32_t column = GENERATE_COPY(0u, size - 1, take(4u, random(0u, uint32_t(std::max(1, size - 2)))));
+        uint32_t row = GENERATE_COPY(0u, size - 1, take(4u, random(0u, uint32_t(std::max(1, size - 2)))));
+
+        if (size == 1 && (row > 0 || column > 0)) {
+            return;
+        }
+
+        CAPTURE(size, piece, column, row);
+
+        b.setPiece(column, row, piece);
+
+        CHECK(b.countPieces(piece.color()) == 1);
+        CHECK(b.countPieces(opposite(piece.color())) == 0);
+        REQUIRE(b.pieceAt(column, row).has_value());
+
+        // since we only add once piece it can never be a valid position!
+        CHECK_FALSE(b.hasValidPosition());
+
+        for (uint8_t c = column - 3; c < uint8_t(column + 3); c++) {
+            for (uint8_t r = row - 3; r < uint8_t(row + 3); r++) {
+                REQUIRE(b.pieceAt(c, r).has_value() == (r == row && c == column));
+            }
+        }
+
+        SECTION("Remove piece") {
+            b.setPiece(column, row, std::nullopt);
+
+            CHECK(b.countPieces(piece.color()) == 0);
+            CHECK(b.countPieces(opposite(piece.color())) == 0);
+            CHECK_FALSE(b.pieceAt(column, row).has_value());
         }
     }
 
@@ -179,7 +219,6 @@ TEST_CASE("Board", "[chess][base]") {
 
 
 TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
-    using namespace Chess;
     SECTION("Wrong inputs") {
         auto fails = [](const std::string& s) {
             CAPTURE(s);
@@ -209,7 +248,10 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         fails("8/8/8/8/8/8/8/4 w - - 0 1");
         fails("8/8/4/8/8/8/8/8 w - - 0 1");
         fails("44/8/8/8/8/8/8/8 w - - 0 1");
+        fails("45/8/8/8/8/8/8/8 w - - 0 1");
+        fails("p8/8/8/8/8/8/8/8 w - - 0 1");
         fails("8/8/8/8/8/8/8/44 w - - 0 1");
+        fails("8/8/8/8/8/8/8/p8 w - - 0 1");
 
         fails("8/8/8/8/8/8/8/8 x - - 0 1");
         fails("8/8/8/8/8/8/8/8 y - - 0 1");
@@ -266,7 +308,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CHECK(board.countPieces(Color::White) == (isWhite ? 1 : 0));
         CHECK(board.countPieces(Color::Black) == (isWhite ? 0 : 1));
 
-        auto p =  board.pieceAt(0);
+        auto p =  board.pieceAt(0, 7);
         REQUIRE(p);
         Piece& piece = *p;
         REQUIRE(piece.type() == Piece::Type::Pawn);
@@ -284,11 +326,11 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CHECK(board.countPieces(Color::White) == 1);
         CHECK(board.countPieces(Color::Black) == 1);
 
-        auto p =  board.pieceAt(0);
+        auto p =  board.pieceAt(0, 7);
         REQUIRE(p);
         Piece& piece1 = *p;
 
-        auto p2 =  board.pieceAt(1);
+        auto p2 =  board.pieceAt(1, 7);
         REQUIRE(p2);
         Piece& piece2 = *p2;
 
@@ -325,6 +367,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     }
 
     SECTION("Can read all kinds of different pieces in the same board") {
+        // Note this actually makes assumptions about the index order
         std::vector<Piece> expectedPieces = {
                 Piece(Piece::Type::Pawn, Color::Black),
                 Piece(Piece::Type::Knight, Color::Black),
@@ -344,8 +387,10 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CHECK(board.countPieces(Color::White) == 2 * 8);
         CHECK(board.countPieces(Color::Black) == 6 * 8);
 
-        for (uint32_t i = 0; i < 64; i++) {
-            REQUIRE(board.pieceAt(i) == expectedPieces[i % 8]);
+        for (uint32_t i = 0; i < 8; i++) {
+            for (uint32_t j = 0; j < 8; j++) {
+                REQUIRE(board.pieceAt(j, i) == expectedPieces[j]);
+            }
         }
     }
 }

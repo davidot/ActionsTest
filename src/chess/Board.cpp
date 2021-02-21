@@ -26,7 +26,7 @@ namespace Chess {
         return m_numPieces[colorIndex(c)];
     }
 
-    std::optional<Piece> Board::pieceAt(uint16_t index) {
+    std::optional<Piece> Board::pieceAt(uint16_t index) const {
         if (index >= m_size * m_size) {
             return std::nullopt;
         }
@@ -184,6 +184,18 @@ namespace Chess {
 
     uint8_t Board::size() const {
         return m_size;
+    }
+
+    uint16_t Board::columnRowToIndex(uint8_t column, uint8_t row) const {
+        return column + uint16_t(m_size) * (uint16_t(m_size) - 1 - row);
+    }
+
+    std::optional<Piece> Board::pieceAt(uint8_t column, uint8_t row) const {
+        return pieceAt(columnRowToIndex(column, row));
+    }
+
+    void Board::setPiece(uint8_t column, uint8_t row, std::optional<Piece> piece) {
+        setPiece(columnRowToIndex(column, row), std::move(piece));
     }
 
 }

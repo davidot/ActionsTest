@@ -40,15 +40,21 @@ namespace Chess {
 
         [[nodiscard]] uint32_t countPieces(Color) const;
 
-        std::optional<Piece> pieceAt(std::string_view);
+        std::optional<Piece> pieceAt(std::string_view) const;
 
-        std::optional<Piece> pieceAt(uint8_t column, uint8_t row);
+        std::optional<Piece> pieceAt(uint8_t column, uint8_t row) const;
 
-        std::optional<Piece> pieceAt(uint16_t index);
+        std::optional<Piece> pieceAt(uint16_t index) const;
+
+        void setPiece(std::string_view, std::optional<Piece> piece);
+
+        void setPiece(uint8_t column, uint8_t row, std::optional<Piece> piece);
 
         void setPiece(uint16_t index, std::optional<Piece> piece);
 
         [[nodiscard]] uint8_t size() const;
+
+        static std::optional<uint16_t> SANCoordToIndex(std::string_view);
 
     private:
         explicit Board(uint8_t size);
@@ -62,6 +68,7 @@ namespace Chess {
 
         std::optional<std::string> parseFENBoard(std::string_view);
 
+        uint16_t columnRowToIndex(uint8_t column, uint8_t row) const;
     };
 
 
