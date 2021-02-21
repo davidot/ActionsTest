@@ -220,7 +220,7 @@ TEST_CASE("Board", "[chess][base]") {
 
 TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     SECTION("Wrong inputs") {
-        auto fails = [](const std::string& s) {
+        auto failsBase = [](const std::string& s) {
             CAPTURE(s);
             ExpectedBoard b = Board::fromFEN(s);
             if (b) {
@@ -231,39 +231,91 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
                 CHECK_FALSE(b);
             } else {
                 // should have some error
-                CHECK_FALSE(b.error().empty());
+                REQUIRE_FALSE(b.error().empty());
+//                WARN(s << " got error: " << b.error());
             }
 
         };
 
-        fails("");
-        fails("bla bla");
+        SECTION("Completely invalid formats") {
+            failsBase("");
+            failsBase("bla bla");
+            failsBase("8 no other things left here");
+        }
 
-        fails("8 no other things left here");
-        fails("8/8/8/8/8/8/8/notapieceandtoolong w - - 0 1");
-        fails("8p w - - 0 1");
-        fails("9/9/9/9/9/9/9/9 w - - 0 1");
-        fails("8/8/8/8/8/8/8/8/1 w - - 0 1");
-        fails("4/8/8/8/8/8/8/8 w - - 0 1");
-        fails("8/8/8/8/8/8/8/4 w - - 0 1");
-        fails("8/8/4/8/8/8/8/8 w - - 0 1");
-        fails("44/8/8/8/8/8/8/8 w - - 0 1");
-        fails("45/8/8/8/8/8/8/8 w - - 0 1");
-        fails("p8/8/8/8/8/8/8/8 w - - 0 1");
-        fails("8/8/8/8/8/8/8/44 w - - 0 1");
-        fails("8/8/8/8/8/8/8/p8 w - - 0 1");
 
-        fails("8/8/8/8/8/8/8/8 x - - 0 1");
-        fails("8/8/8/8/8/8/8/8 y - - 0 1");
+        SECTION("Board layout") {
+            auto fails = [&failsBase](const std::string& s) {
+                failsBase(s + " w - - 0 1");
+            };
 
-        fails("8/8/8/8/8/8/8/8 w x - 0 1");
-        fails("8/8/8/8/8/8/8/8 w - x 0 1");
-        fails("8/8/8/8/8/8/8/8 w - - x 1");
-        fails("8/8/8/8/8/8/8/8 w - - 0 x");
-        fails("8/8/8/8/8/8/8/8 w - - 0 -1");
-        fails("8/8/8/8/8/8/8/8 w - - -1 1");
-        fails("8/8/8/8/8/8/8/8 w - - 0.3 1");
-        fails("8/8/8/8/8/8/8/8 w - - 0 0.3");
+            fails("8p");
+            fails("p");
+            fails("p/p/p/p/p/p/p/p");
+
+            fails("8/8/8/8/8/8/8/notapieceandtoolong");
+            fails("8/8/8/notapieceandtoolong/8/8/8/8");
+            fails("8/notapieceandtoolong/8/8/8/8/8/8");
+            fails("notapieceandtoolong/8/8/8/8/8/8/8");
+
+            fails("9/9/9/9/9/9/9/9");
+
+            fails("8/8/8/8/8/8/8/8/1");
+            fails("8/8/8/8/8/8/8/1/7");
+            fails("8/8/8/8/8/8/8/8/2");
+            fails("8/8/8/8/8/8/8/8/8");
+            fails("1/8/8/8/8/8/8/8/8");
+
+            fails("4/8/8/8/8/8/8/8");
+            fails("8/8/8/8/8/8/8/4");
+            fails("8/8/4/8/8/8/8/8");
+
+            fails("44/8/8/8/8/8/8/8");
+            fails("45/8/8/8/8/8/8/8");
+            fails("8/8/8/8/8/8/8/44");
+
+            fails("p8/8/8/8/8/8/8/8");
+            fails("p7p/8/8/8/8/8/8/8");
+            fails("7pp/8/8/8/8/8/8/8");
+
+            fails("pp7/8/8/8/8/8/8/8");
+            fails("8/8/8/8/8/8/8/p8");
+        }
+
+        SECTION("Metadata") {
+            auto fails = [&failsBase](const std::string& s) {
+              failsBase("8/8/8/8/8/8/8/8 " + s);
+            };
+
+            fails("x - - 0 1");
+            fails("y - - 0 1");
+            fails("white - - 0 1");
+            fails("black - - 0 1");
+            fails("imnotsurewhostartonchess?? - - 0 1");
+            fails("? - - 0 1");
+            fails("ww - - 0 1");
+            fails("bw - - 0 1");
+            fails("wb - - 0 1");
+            fails("bb - - 0 1");
+
+            fails("w x - 0 1");
+
+            fails("w - x 0 1");
+            fails("w - a9 0 1");
+            fails("w - h-1 0 1");
+            fails("w - h0 0 1");
+            fails("w - a- 0 1");
+            fails("w - -a 0 1");
+
+            fails("w - - x 1");
+            fails("w - - -1 1");
+            fails("w - - 0.3 1");
+
+            fails("w - - 0 x");
+            fails("w - - 0 -1");
+            fails("w - - 0 0.3");
+        }
+
     }
 
     auto is_valid_board = [](ExpectedBoard& board) {
@@ -393,4 +445,69 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             }
         }
     }
+}
+
+TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
+
+    Piece filledPiece = Piece::fromFEN('p').value(); // black pawn
+    Piece otherPiece = Piece(Chess::Piece::Type::Queen, Color::White); // white queen
+    REQUIRE_FALSE(filledPiece == otherPiece);
+
+    auto b = Board::fromFEN("pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp w - - 0 1");
+    REQUIRE(b);
+    Board filledBoard = b.extract();
+
+    SECTION("Correct squares") {
+        auto is_position = [&](uint8_t row, uint8_t column, const std::string& san) {
+            // since we do not actually specify the index order we have to test via a Board
+            CAPTURE(row, column, san);
+            filledBoard.setPiece(column, row, otherPiece);
+            REQUIRE(filledBoard.pieceAt(column, row) == otherPiece);
+            auto newPiece = filledBoard.pieceAt(san);
+            REQUIRE(newPiece);
+            REQUIRE(newPiece.value() == otherPiece);
+            filledBoard.setPiece(san, std::nullopt);
+            REQUIRE(filledBoard.pieceAt(column, row) == std::nullopt);
+            filledBoard.setPiece(column, row, filledPiece);
+        };
+
+        is_position(0, 0, "a1");
+        is_position(0, 1, "b1");
+        is_position(1, 0, "a2");
+        is_position(1, 2, "c2");
+        is_position(3, 3, "d4");
+        is_position(7, 7, "h8");
+        is_position(0, 7, "h1");
+    }
+
+    SECTION("Failing squares") {
+        Board empty = Board::emptyBoard();
+
+        auto is_not_a_position = [&](const std::string& san) {
+            CAPTURE(san);
+            REQUIRE_FALSE(filledBoard.pieceAt(san).has_value());
+            empty.setPiece(san, Piece(Piece::Type::Pawn, Color::Black));
+            REQUIRE(empty.countPieces(Color::Black) == 0);
+            REQUIRE(empty.countPieces(Color::White) == 0);
+        };
+
+        is_not_a_position("");
+        is_not_a_position("x");
+
+        is_not_a_position("a0");
+        is_not_a_position("a9");
+
+        is_not_a_position("h0");
+        is_not_a_position("h9");
+
+        is_not_a_position("g0");
+        is_not_a_position("g9");
+
+        is_not_a_position("0h");
+        is_not_a_position("0a");
+
+        is_not_a_position("1a");
+        is_not_a_position("1h");
+    }
+
 }

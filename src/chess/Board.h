@@ -54,8 +54,6 @@ namespace Chess {
 
         [[nodiscard]] uint8_t size() const;
 
-        static std::optional<uint16_t> SANCoordToIndex(std::string_view);
-
     private:
         explicit Board(uint8_t size);
 
@@ -68,7 +66,9 @@ namespace Chess {
 
         std::optional<std::string> parseFENBoard(std::string_view);
 
-        uint16_t columnRowToIndex(uint8_t column, uint8_t row) const;
+        [[nodiscard]] uint16_t columnRowToIndex(uint8_t column, uint8_t row) const;
+
+        [[nodiscard]] std::optional<uint16_t> SANToIndex(std::string_view) const;
     };
 
 

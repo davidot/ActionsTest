@@ -195,7 +195,42 @@ namespace Chess {
     }
 
     void Board::setPiece(uint8_t column, uint8_t row, std::optional<Piece> piece) {
-        setPiece(columnRowToIndex(column, row), std::move(piece));
+        setPiece(columnRowToIndex(column, row), piece);
+    }
+
+    std::optional<Piece> Board::pieceAt(std::string_view vw) const {
+        auto index = SANToIndex(vw);
+        if (index) {
+            return pieceAt(index.value());
+        } else {
+            return std::nullopt;
+        }
+    }
+
+    void Board::setPiece(std::string_view vw, std::optional<Piece> piece) {
+        auto index = SANToIndex(vw);
+        if (index) {
+            setPiece(index.value(), piece);
+        }
+    }
+
+    std::optional<uint16_t> Board::SANToIndex(std::string_view vw) const {
+        if (vw.size() != 2) {
+            return std::nullopt;
+        }
+
+        if (!std::islower(vw[0]) || !std::isdigit(vw[1])) {
+            return std::nullopt;
+        }
+
+        if (vw[0] > 'h' || vw[1] > '8' || vw[1] == '0') {
+            return std::nullopt;
+        }
+
+        auto col = vw[0] - 'a';
+        auto row = vw[1] - '1';
+
+        return columnRowToIndex(col, row);
     }
 
 }
