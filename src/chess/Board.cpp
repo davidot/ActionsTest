@@ -63,11 +63,9 @@ namespace Chess {
         uint32_t index = 0;
         uint32_t row = 1;
         bool lastWasNum = false;
+        uint16_t totalSize = m_size * m_size;
 
-        while (next != view.end()) {
-            if (index >= 64) {
-                return "Board is too long already data for _" + std::to_string(index) + "_ squares";
-            }
+        while (next != view.end() && index <= totalSize) {
             if (index == m_size * row) {
                 if (*next != '/') {
                     return "Must have '/' as row separators";
@@ -105,9 +103,14 @@ namespace Chess {
             ++next;
         }
 
-        if (index < 64) {
+
+        if (index > totalSize) {
+            return "Board is too long already data for _" + std::to_string(index) + "_ squares";
+        } else if (index < totalSize) {
             return "Not enough data to fill board only reached " + std::to_string(index);
         }
+
+
 
         // weirdly nullopt means no error here...
         return std::nullopt;
@@ -161,9 +164,16 @@ namespace Chess {
         }
         b.m_next_turn = nextTurn.value();
 
-        auto& castlingString = parts[2];
+        if (parts[2] != "-") {
+            return std::string("Invalid possible castling moves value: ") + std::string(parts[2]);
+        }
 
-        auto& enPassantString = parts[3];
+        if (parts[3] != "-") {
+            std::optional<uint16_t> enPassantPawn = b.SANToIndex(parts[3]);
+            if (!enPassantPawn.has_value()) {
+                return std::string("Invalid en passant value: ") + std::string(parts[3]);
+            }
+        }
 
         std::optional<uint32_t> halfMovesSinceCapture = strictParseUInt(parts[4]);
         if (!halfMovesSinceCapture.has_value()) {
@@ -172,7 +182,7 @@ namespace Chess {
 
         std::optional<uint32_t> totalFullMoves = strictParseUInt(parts[5]);
         if (!totalFullMoves.has_value()) {
-            return std::string("Invalid full moves made: ") + std::string(parts[4]);
+            return std::string("Invalid full moves made: ") + std::string(parts[5]);
         }
 
         return b;
