@@ -2,6 +2,8 @@
 #include "../util/StringUtil.h"
 #include <string>
 #include <iostream>
+#include <charconv>
+#include <utility>
 
 namespace Chess {
 
@@ -111,6 +113,32 @@ namespace Chess {
         return std::nullopt;
     }
 
+    std::optional<Color> parseTurnColor(const std::string_view& vw) {
+        if (vw.size() != 1) {
+            return std::nullopt;
+        }
+
+        if (vw[0] == 'w') {
+            return Color::White;
+        } else if (vw[0] == 'b') {
+            return Color::Black;
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<uint32_t> strictParseUInt(const std::string_view& sv) {
+        uint32_t result;
+        if(auto [p, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), result);
+                ec == std::errc()) {
+            if (p != sv.data() + sv.size()) {
+                return std::nullopt;
+            }
+            return result;
+        }
+        return std::nullopt;
+    }
+
 
     ExpectedBoard Board::fromFEN(std::string_view str) {
         Board b(8);
@@ -127,14 +155,24 @@ namespace Chess {
             return *error;
         }
 
-        auto& turnString = parts[1];
+        std::optional<Color> nextTurn = parseTurnColor(parts[1]);
+        if (!nextTurn.has_value()) {
+            return std::string("Invalid turn value: ") + std::string(parts[1]);
+        }
+        b.m_next_turn = nextTurn.value();
 
-        if (turnString == "w") {
-            b.m_next_turn = Color::White;
-        } else if (turnString == "b") {
-            b.m_next_turn = Color::Black;
-        } else {
-            return std::string("Invalid turn value: ") + std::string(turnString);
+        auto& castlingString = parts[2];
+
+        auto& enPassantString = parts[3];
+
+        std::optional<uint32_t> halfMovesSinceCapture = strictParseUInt(parts[4]);
+        if (!halfMovesSinceCapture.has_value()) {
+            return std::string("Invalid half moves since capture: ") + std::string(parts[4]);
+        }
+
+        std::optional<uint32_t> totalFullMoves = strictParseUInt(parts[5]);
+        if (!totalFullMoves.has_value()) {
+            return std::string("Invalid full moves made: ") + std::string(parts[4]);
         }
 
         return b;
