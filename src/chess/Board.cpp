@@ -3,8 +3,8 @@
 #include <array>
 #include <charconv>
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
 #include <utility>
 
 namespace Chess {
@@ -69,12 +69,16 @@ namespace Chess {
 
         while (next != view.end() && index <= totalSize) {
             if (index == m_size * row) {
+                if (index == totalSize) {
+                    if (*next == '/') {
+                        return "Must not have trailing '/'";
+                    }
+                    return "Board is too long already data for _" + std::to_string(index) + "_ squares";
+                }
                 if (*next != '/') {
                     return "Must have '/' as row separators";
                 }
-                if (index == totalSize) {
-                    return "Must not have trailing '/'";
-                }
+
                 ++next;
                 ++row;
                 lastWasNum = false;
@@ -96,7 +100,7 @@ namespace Chess {
                 if (lastWasNum) {
                     return "Multiple consecutive numbers is not allowed";
                 }
-                auto val = *next - '0';
+                uint32_t val = *next - '0';
                 if (val == 0) {
                     return "Skipping 0 is not allowed";
                 }
@@ -112,9 +116,7 @@ namespace Chess {
         }
 
 
-        if (index > totalSize) {
-            return "Board is too long already data for _" + std::to_string(index) + "_ squares";
-        } else if (index < totalSize) {
+        if (index < totalSize) {
             return "Not enough data to fill board only reached " + std::to_string(index);
         }
 
@@ -125,13 +127,10 @@ namespace Chess {
     }
 
     char turnColor(Color color) {
-        switch (color) {
-            case Color::White:
-                return 'w';
-            case Color::Black:
-                return 'b';
+        if (color == Color::White) {
+            return 'w';
         }
-        return '?';
+        return 'b';
     }
 
     std::optional<Color> parseTurnColor(const std::string_view& vw) {
@@ -263,7 +262,7 @@ namespace Chess {
             return std::nullopt;
         }
 
-        if (vw[0] > 'h' || vw[1] > '8' || vw[1] == '0') {
+        if (vw[0] > 'h' || vw[1] == '9' || vw[1] == '0') {
             return std::nullopt;
         }
 
@@ -296,6 +295,9 @@ namespace Chess {
             return true;
         }
 
+        //reset before hand
+        m_castlingRights = CastlingRight::NO_CASTLING;
+
         auto front = castleMapping.begin();
 
         for (auto& c : vw) {
@@ -304,12 +306,7 @@ namespace Chess {
                 }); pos == castleMapping.end()) {
                 return false;
             } else {
-                CastlingRight right = pos->second;
-                if ((m_castlingRights & right) != CastlingRight::NO_CASTLING) {
-                    // already have that right (Actually not possible anymore)
-                    return false;
-                }
-                m_castlingRights |= right;
+                m_castlingRights |= pos->second;
                 front = std::next(pos);
             }
         }

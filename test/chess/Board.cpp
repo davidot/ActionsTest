@@ -263,6 +263,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
             fails("9/9/9/9/9/9/9/9");
 
+            fails("8/8/8/8/8/8/8/8/");
+
             fails("8/8/8/8/8/8/8/8/1");
             fails("8/8/8/8/8/8/8/1/7");
             fails("8/8/8/8/8/8/8/8/2");
@@ -273,9 +275,17 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("8/8/8/8/8/8/8/4");
             fails("8/8/4/8/8/8/8/8");
 
+            fails("8/8/8/8/8/8/8/ppppppppp");
+            fails("8/8/8/8/8/8/8/6ppp");
+            fails("8/8/8/8/8/8/8/7pp");
+            fails("8/8/8/8/8/8/8/8p");
+
             fails("44/8/8/8/8/8/8/8");
             fails("45/8/8/8/8/8/8/8");
             fails("8/8/8/8/8/8/8/44");
+            fails("8/8/8/8/8/8/8/404");
+            fails("8/8/8/8/8/8/8/08");
+            fails("800/8/8/8/8/8/8/08");
 
             fails("p8/8/8/8/8/8/8/8");
             fails("p7p/8/8/8/8/8/8/8");
@@ -319,16 +329,24 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("w - a9 0 1");
             fails("w - h-1 0 1");
             fails("w - h0 0 1");
+            fails("w - h9 0 1");
+            fails("w - a9 0 1");
+            fails("w - g9 0 1");
+            fails("w - i6 0 1");
             fails("w - a- 0 1");
             fails("w - -a 0 1");
 
             fails("w - - x 1");
             fails("w - - -1 1");
             fails("w - - 0.3 1");
+            fails("w - - 0f 1");
+            fails("w - - 1f 1");
 
             fails("w - - 0 x");
             fails("w - - 0 -1");
             fails("w - - 0 0.3");
+            fails("w - - 0 0a");
+            fails("w - - 0 1a");
         }
 
         SECTION("Missing parts") {
