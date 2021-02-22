@@ -325,6 +325,15 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("w - - 0 0.3");
         }
 
+        SECTION("Missing parts") {
+            failsBase("  w - - 1 0");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR  - - 1 0");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w  - 1 0");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w -  1 0");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -  0");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 1 ");
+        }
+
     }
 
     auto is_valid_board = [](const std::string& str) {

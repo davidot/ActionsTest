@@ -256,7 +256,7 @@ namespace Chess {
     }
 
     bool Board::setAvailableCastles(std::string_view vw) {
-        if (vw.size() > 4) {
+        if (vw.empty() || vw.size() > 4) {
             return false;
         }
         if (vw == "-") {
