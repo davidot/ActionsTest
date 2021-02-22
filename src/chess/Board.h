@@ -83,11 +83,21 @@ namespace Chess {
 
         [[nodiscard]] uint16_t columnRowToIndex(uint8_t column, uint8_t row) const;
 
+        [[nodiscard]] std::pair<uint8_t, uint8_t> indexToColumnRow(uint16_t) const;
+
         [[nodiscard]] std::optional<uint16_t> SANToIndex(std::string_view) const;
+
+        [[nodiscard]] std::string indexToSAN(uint16_t) const;
 
         bool setAvailableCastles(std::string_view vw);
 
         CastlingRight m_castlingRights = CastlingRight::NO_CASTLING;
+
+        std::optional<uint16_t> m_enPassant = std::nullopt;
+
+        uint32_t m_fullMoveNum = 1;
+
+        uint32_t m_halfMovesSinceCaptureOrPawn = 0;
     };
 
     CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);

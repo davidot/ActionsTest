@@ -185,17 +185,21 @@ namespace Chess {
             if (!enPassantPawn.has_value()) {
                 return std::string("Invalid en passant value: ") + std::string(parts[3]);
             }
+            // TODO: check whether this is actually a valid enPassant value (i.e. there is a pawn)
+            b.m_enPassant = enPassantPawn;
         }
 
         std::optional<uint32_t> halfMovesSinceCapture = strictParseUInt(parts[4]);
         if (!halfMovesSinceCapture.has_value()) {
             return std::string("Invalid half moves since capture: ") + std::string(parts[4]);
         }
+        b.m_halfMovesSinceCaptureOrPawn = halfMovesSinceCapture.value();
 
         std::optional<uint32_t> totalFullMoves = strictParseUInt(parts[5]);
         if (!totalFullMoves.has_value()) {
             return std::string("Invalid full moves made: ") + std::string(parts[5]);
         }
+        b.m_fullMoveNum = totalFullMoves.value();
 
         return b;
     }
@@ -210,6 +214,10 @@ namespace Chess {
 
     uint16_t Board::columnRowToIndex(uint8_t column, uint8_t row) const {
         return column + uint16_t(m_size) * (uint16_t(m_size) - 1 - row);
+    }
+
+    std::pair<uint8_t, uint8_t> Board::indexToColumnRow(uint16_t index) const {
+        return std::make_pair(index % m_size, (m_size - 1) - index / m_size);
     }
 
     std::optional<Piece> Board::pieceAt(uint8_t column, uint8_t row) const {
@@ -253,6 +261,14 @@ namespace Chess {
         auto row = vw[1] - '1';
 
         return columnRowToIndex(col, row);
+    }
+
+    std::string Board::indexToSAN(uint16_t index) const {
+        auto [col, row] = indexToColumnRow(index);
+        std::string str;
+        str.push_back('a' + col);
+        str.push_back('1' + row);
+        return str;
     }
 
     static std::array<std::pair<char, CastlingRight>, 4> castleMapping = {
@@ -333,7 +349,11 @@ namespace Chess {
             }
         }
 
-        val << ' ' << turnColor(m_next_turn) << ' ' << castlingOutput(m_castlingRights) << " - 0 1";
+        val << ' ' << turnColor(m_next_turn)
+            << ' ' << castlingOutput(m_castlingRights)
+            << ' ' << (m_enPassant.has_value() ? indexToSAN(m_enPassant.value()) : "-")
+            << ' ' << m_halfMovesSinceCaptureOrPawn
+            << ' ' << m_fullMoveNum;
 
         return val.str();
     }

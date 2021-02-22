@@ -333,11 +333,18 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
         SECTION("Missing parts") {
             failsBase("  w - - 1 0");
-            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR  - - 1 0");
-            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w  - 1 0");
-            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w -  1 0");
-            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -  0");
-            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 1 ");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR  - - 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w  - 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w -  0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -  1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 ");
+        }
+
+        SECTION("Invalid en passant moves") {
+            // FIXME: these moves are really not valid and it should fail!
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a1 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - h1 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a3 0 1");
         }
 
     }
@@ -470,6 +477,34 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         REQUIRE("TODO");
     }
 
+    SECTION("En passant state") {
+        std::string enPassant = GENERATE("a1", "b1", "a2", "c2", "d4", "h8", "h1");
+        CAPTURE(enPassant);
+        std::string basePosition = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - " + enPassant + " 0 1";
+        // FIXME: these moves are really not valid and it should fail!
+        is_valid_board(basePosition);
+        // TODO verify somehow?
+        REQUIRE("TODO");
+    }
+
+    SECTION("Halfmoves since capture or pawn move") {
+        uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u);
+        CAPTURE(moves);
+        std::string basePosition = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - - " + std::to_string(moves) + " 1";
+        is_valid_board(basePosition);
+        // TODO verify somehow?
+        REQUIRE("TODO");
+    }
+
+    SECTION("Full move number") {
+        uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u, 128u, 3000u, 8849u);
+        CAPTURE(moves);
+        std::string basePosition = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - - 0 " + std::to_string(moves);
+        is_valid_board(basePosition);
+        // TODO verify somehow?
+        REQUIRE("TODO");
+    }
+
     SECTION("Example positions") {
         SECTION("Start position") {
             std::string position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -487,6 +522,26 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             for (uint32_t i = 0; i < 8; i++) {
                 for (uint32_t j = 0; j < 8; j++) {
                     REQUIRE(board.pieceAt(j, i) == standard.pieceAt(j, i));
+                }
+            }
+        }
+
+        SECTION("Empty board") {
+            Board empty = Board::emptyBoard(8);
+
+            std::string position = "8/8/8/8/8/8/8/8 w - - 0 1";
+            REQUIRE(empty.toFEN() == position);
+
+            Board board = is_valid_board(position);
+            REQUIRE(board.toFEN() == position);
+
+            REQUIRE(board.size() == empty.size());
+            REQUIRE(board.countPieces(Color::White) == empty.countPieces(Color::White));
+            REQUIRE(board.countPieces(Color::Black) == empty.countPieces(Color::Black));
+
+            for (uint32_t i = 0; i < 8; i++) {
+                for (uint32_t j = 0; j < 8; j++) {
+                    REQUIRE(board.pieceAt(j, i) == empty.pieceAt(j, i));
                 }
             }
         }
