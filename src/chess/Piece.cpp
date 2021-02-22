@@ -9,6 +9,7 @@ namespace Chess {
             case Color::Black:
                 return Color::White;
         }
+        return {};
     }
 
 #define ENUM_TO_INT(val) static_cast<Piece::IntType>(val)
@@ -18,7 +19,7 @@ namespace Chess {
 
     constexpr Piece::IntType colorMask = whiteMask | blackMask;
 
-    Piece::Piece(Piece::Type tp, Color c) {
+    Piece::Piece(Piece::Type tp, Color c) noexcept {
         m_val = ENUM_TO_INT(tp)
                | ENUM_TO_INT(c);
     }
@@ -37,7 +38,7 @@ namespace Chess {
 
     constexpr const auto caseDiff = 'a' - 'A';
 
-    char Piece::toFEN() const {
+    char Piece::toFEN() const noexcept {
         char c;
         switch (type()) {
             case Type::Pawn:

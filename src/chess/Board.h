@@ -5,6 +5,7 @@
 #include <string_view>
 #include <variant>
 #include <vector>
+#include <array>
 
 namespace Chess {
 
@@ -19,6 +20,18 @@ namespace Chess {
     };
 
     struct ExpectedBoard;
+
+    enum class CastlingRight : uint8_t {
+        NO_CASTLING = 0u,
+        WHITE_KING_SIDE = 1u,
+        WHITE_QUEEN_SIDE = WHITE_KING_SIDE << 1,
+        BLACK_KING_SIDE = WHITE_KING_SIDE << 2,
+        BLACK_QUEEN_SIDE = WHITE_KING_SIDE << 3,
+
+        WHITE_CASTLING = WHITE_KING_SIDE | WHITE_QUEEN_SIDE,
+        BLACK_CASTLING = BLACK_KING_SIDE | BLACK_QUEEN_SIDE,
+        ANY_CASTLING = WHITE_CASTLING | BLACK_CASTLING
+    };
 
     class Board {
     public:
@@ -62,7 +75,7 @@ namespace Chess {
         uint8_t m_size;
         std::vector<Piece::IntType> m_pieces;
 
-        uint16_t m_numPieces[2] = {0, 0};
+        std::array<uint16_t, 2> m_numPieces = {0, 0};
 
         Color m_next_turn = Color::White;
 
@@ -73,8 +86,12 @@ namespace Chess {
         [[nodiscard]] std::optional<uint16_t> SANToIndex(std::string_view) const;
 
         bool setAvailableCastles(std::string_view vw);
+
+        CastlingRight m_castlingRights = CastlingRight::NO_CASTLING;
     };
 
+    CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);
+    CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs);
 
     struct ExpectedBoard {
     private:

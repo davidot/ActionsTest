@@ -306,6 +306,12 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("w qqqqq - 0 1");
             fails("w KqQQk - 0 1");
             fails("w KKQQ - 0 1");
+            fails("w kqK - 0 1");
+            fails("w kK - 0 1");
+            fails("w qK - 0 1");
+            fails("w KQkQ - 0 1");
+            fails("w QkKq - 0 1");
+            fails("w kqQ - 0 1");
             fails("w pPpP - 0 1");
             fails("w RBrb - 0 1");
 
@@ -453,6 +459,15 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
                 REQUIRE(board.pieceAt(j, i) == expectedPieces[j]);
             }
         }
+    }
+
+    SECTION("Castling state") {
+        std::string castling = GENERATE("-", "KQkq", "KQ", "kq", "Kk", "Qq", "Kq", "Qk", "K", "Q", "k", "q");
+        CAPTURE(castling);
+        std::string basePosition = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w " + castling + " - 0 1";
+        is_valid_board(basePosition);
+        // TODO: check we can actually make the appropriate castling moves
+        REQUIRE("TODO");
     }
 
     SECTION("Example positions") {

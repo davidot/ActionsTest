@@ -255,6 +255,13 @@ namespace Chess {
         return columnRowToIndex(col, row);
     }
 
+    static std::array<std::pair<char, CastlingRight>, 4> castleMapping = {
+            std::make_pair(Piece(Piece::Type::King, Color::White).toFEN(), CastlingRight::WHITE_QUEEN_SIDE),
+            std::make_pair(Piece(Piece::Type::Queen, Color::White).toFEN(), CastlingRight::WHITE_KING_SIDE),
+            std::make_pair(Piece(Piece::Type::King, Color::Black).toFEN(), CastlingRight::BLACK_QUEEN_SIDE),
+            std::make_pair(Piece(Piece::Type::Queen, Color::Black).toFEN(), CastlingRight::BLACK_KING_SIDE),
+    };
+
     bool Board::setAvailableCastles(std::string_view vw) {
         if (vw.empty() || vw.size() > 4) {
             return false;
@@ -263,27 +270,39 @@ namespace Chess {
             return true;
         }
 
-        static std::array<char, 4> possiblePieces = {
-                Piece(Piece::Type::King, Color::Black).toFEN(),
-                Piece(Piece::Type::King, Color::White).toFEN(),
-                Piece(Piece::Type::Queen, Color::Black).toFEN(),
-                Piece(Piece::Type::Queen, Color::White).toFEN(),
-        };
-
-        std::array<bool, possiblePieces.size()> found{ false, false, false, false};
+        auto front = castleMapping.begin();
 
         for (auto& c : vw) {
-            if (auto pos = std::find(possiblePieces.begin(), possiblePieces.end(), c); pos == possiblePieces.end()) {
+            if (auto pos = std::find_if(front, castleMapping.end(), [&](auto pair) {
+                    return pair.first == c;
+                }); pos == castleMapping.end()) {
                 return false;
             } else {
-                auto& f = found[std::distance(possiblePieces.begin(), pos)];
-                if (f) {
+                CastlingRight right = pos->second;
+                if ((m_castlingRights & right) != CastlingRight::NO_CASTLING) {
+                    // already have that right (Actually not possible anymore)
                     return false;
                 }
-                f = true;
+                m_castlingRights |= right;
+                front = std::next(pos);
             }
         }
         return true;
+    }
+
+    std::string castlingOutput(CastlingRight right) {
+        std::stringstream stream;
+        bool any = false;
+        for (auto& [fen, fenRight] : castleMapping) {
+            if ((right & fenRight) != CastlingRight::NO_CASTLING) {
+                stream << fen;
+                any = true;
+            }
+        }
+        if (!any) {
+            return "-";
+        }
+        return stream.str();
     }
 
     std::string Board::toFEN() const {
@@ -314,10 +333,25 @@ namespace Chess {
             }
         }
 
-        val << ' ' << turnColor(m_next_turn) << " - - 0 1";
+        val << ' ' << turnColor(m_next_turn) << ' ' << castlingOutput(m_castlingRights) << " - 0 1";
 
         return val.str();
-
     }
+
+#define INT(x) static_cast<uint8_t>(x)
+#define TOCASTLE(x) static_cast<CastlingRight>(x)
+
+    CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs) {
+        lhs = TOCASTLE(INT(lhs) | INT(rhs));
+        return lhs;
+    }
+
+    CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs) {
+        return TOCASTLE(INT(lhs) & INT(rhs));
+    }
+
+
+#undef INT
+#undef TOCASTLE
 
 }

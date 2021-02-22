@@ -32,11 +32,11 @@ namespace Chess {
         };
 
 
-        Piece(Type tp, Color c);
+        Piece(Type tp, Color c) noexcept;
 
         [[nodiscard]] IntType toInt() const;
 
-        [[nodiscard]] char toFEN() const;
+        [[nodiscard]] char toFEN() const noexcept;
 
         [[nodiscard]] bool isPawn() const;
         [[nodiscard]] bool canKnightJump() const;
