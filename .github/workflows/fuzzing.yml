@@ -1,10 +1,11 @@
 name: fuzz
 on:
-  push:
-    paths-ignore:
-      - '**/*.md'
-  schedule:
-    - cron: "25 */12 * * *"
+  workflow_dispatch:
+#  push:
+#    paths-ignore:
+#      - '**/*.md'
+#  schedule:
+#    - cron: "25 */12 * * *"
 
 jobs:
   build-compile-test:
