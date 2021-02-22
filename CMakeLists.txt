@@ -40,3 +40,5 @@ enable_testing()
 add_test(NAME UnitTests COMMAND ActionsTest)
 
 add_test(NAME StartUpTest COMMAND ActionsMain)
+
+add_subdirectory(fuzzer)
