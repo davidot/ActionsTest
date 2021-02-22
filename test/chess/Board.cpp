@@ -239,6 +239,9 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
         SECTION("Completely invalid formats") {
             failsBase("");
+            failsBase("\n");
+            failsBase("\r");
+            failsBase("\b");
             failsBase("bla bla");
             failsBase("8 no other things left here");
         }
@@ -324,19 +327,21 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
     }
 
-    auto is_valid_board = [](ExpectedBoard& board) {
+    auto is_valid_board = [](const std::string& str) {
+        ExpectedBoard board = Board::fromFEN(str);
         if (board) {
-            return;
+            REQUIRE(board.value().toFEN() == str);
+
+            return std::move(board.extract());
         }
         INFO("Did not create valid board: " << board.error());
         REQUIRE(board);
+
+        return Board::emptyBoard(1);
     };
 
     SECTION("Empty FEN") {
-        ExpectedBoard b = Board::fromFEN("8/8/8/8/8/8/8/8 w - - 0 1");
-        is_valid_board(b);
-
-        Board board = b.extract();
+        Board board = is_valid_board("8/8/8/8/8/8/8/8 w - - 0 1");
         REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == 0);
         CHECK(board.countPieces(Color::Black) == 0);
@@ -346,10 +351,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     SECTION("Reads color of next turn") {
         std::string color = GENERATE("w", "b");
         CAPTURE(color);
-        ExpectedBoard b = Board::fromFEN("8/8/8/8/8/8/8/8 " + color + " - - 0 1");
-        is_valid_board(b);
+        Board board = is_valid_board("8/8/8/8/8/8/8/8 " + color + " - - 0 1");
 
-        Board board = b.extract();
         REQUIRE(board.size() == 8);
         CHECK(board.colorToMove() == (color == "w" ? Color::White : Color::Black));
     }
@@ -358,10 +361,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         std::string pieceFEN = GENERATE("p", "P");
         CAPTURE(pieceFEN);
         bool isWhite = pieceFEN == "P";
-        ExpectedBoard b = Board::fromFEN(pieceFEN + "7/8/8/8/8/8/8/8 w - - 0 1");
-        is_valid_board(b);
+        Board board = is_valid_board(pieceFEN + "7/8/8/8/8/8/8/8 w - - 0 1");
 
-        Board board = b.extract();
         REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == (isWhite ? 1 : 0));
         CHECK(board.countPieces(Color::Black) == (isWhite ? 0 : 1));
@@ -376,10 +377,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     SECTION("Can read multiple pieces consecutively") {
         std::string pieceFEN = GENERATE("pN", "Pn");
         CAPTURE(pieceFEN);
-        ExpectedBoard b = Board::fromFEN(pieceFEN + "6/8/8/8/8/8/8/8 w - - 0 1");
-        is_valid_board(b);
+        Board board = is_valid_board(pieceFEN + "6/8/8/8/8/8/8/8 w - - 0 1");
 
-        Board board = b.extract();
         REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == 1);
         CHECK(board.countPieces(Color::Black) == 1);
@@ -409,12 +408,10 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         REQUIRE(ePiece);
         Piece expectedPiece = *ePiece;
 
-        ExpectedBoard b = Board::fromFEN(pieceFEN + "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN +
-                                   "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN +
-                                   " w - - 0 1");
-        is_valid_board(b);
+        Board board = is_valid_board(pieceFEN + "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN +
+                                     "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN +
+                                     " w - - 0 1");
 
-        Board board = b.extract();
         REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == (upper ? 64 : 0));
         CHECK(board.countPieces(Color::Black) == (upper ? 0 : 64));
@@ -436,11 +433,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
                 Piece(Piece::Type::Pawn, Color::White),
                 Piece(Piece::Type::King, Color::White),
         };
+        Board board = is_valid_board("pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK w - - 0 1");
 
-        ExpectedBoard b = Board::fromFEN("pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK w - - 0 1");
-        is_valid_board(b);
-
-        Board board = b.extract();
         REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == 2 * 8);
         CHECK(board.countPieces(Color::Black) == 6 * 8);
@@ -454,10 +448,11 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
     SECTION("Example positions") {
         SECTION("Start position") {
-            ExpectedBoard b = Board::fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-            is_valid_board(b);
+            std::string position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+            Board board = is_valid_board(position);
 
-            Board board = b.extract();
+            REQUIRE(board.toFEN() == position);
+
             Board standard = Board::standardBoard();
             REQUIRE(board.size() == standard.size());
             REQUIRE(board.countPieces(Color::White) == standard.countPieces(Color::White));

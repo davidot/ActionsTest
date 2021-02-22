@@ -4,6 +4,7 @@
 #include <charconv>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <utility>
 
 namespace Chess {
@@ -115,6 +116,16 @@ namespace Chess {
 
         // weirdly nullopt means no error here...
         return std::nullopt;
+    }
+
+    char turnColor(Color color) {
+        switch (color) {
+            case Color::White:
+                return 'w';
+            case Color::Black:
+                return 'b';
+        }
+        return '?';
     }
 
     std::optional<Color> parseTurnColor(const std::string_view& vw) {
@@ -273,6 +284,40 @@ namespace Chess {
             }
         }
         return true;
+    }
+
+    std::string Board::toFEN() const {
+        std::stringstream val;
+
+        uint8_t emptyAcc = 0;
+
+        auto writeEmpty = [&] {
+            if (emptyAcc > 0) {
+                val << std::to_string(emptyAcc);
+                emptyAcc = 0;
+            }
+        };
+
+        for (uint8_t row = m_size - 1; row < m_size; row--) {
+            for (uint8_t column = 0; column < m_size; column++) {
+                auto nextPiece = pieceAt(column, row);
+                if (nextPiece) {
+                    writeEmpty();
+                    val << nextPiece->toFEN();
+                } else {
+                    emptyAcc++;
+                }
+            }
+            writeEmpty();
+            if (row != 0) {
+                val << '/';
+            }
+        }
+
+        val << ' ' << turnColor(m_next_turn) << " - - 0 1";
+
+        return val.str();
+
     }
 
 }

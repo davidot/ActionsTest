@@ -54,6 +54,8 @@ namespace Chess {
 
         [[nodiscard]] uint8_t size() const;
 
+        [[nodiscard]] std::string toFEN() const;
+
     private:
         explicit Board(uint8_t size);
 
