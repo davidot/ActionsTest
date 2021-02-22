@@ -8,8 +8,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size) {
     ExpectedBoard parsed = Board::fromFEN(value);
     if (parsed) {
         // write FEN should be indentical
-        if (value != parsed.value().toFEN()) {
-            std::cout << "Not equal in and output FEN\n";
+
+        std::string output = parsed.value().toFEN();
+        if (value != output) {
+            std::cout << "Not equal in and output FEN\n"
+                      << " Input: " << value << '\n'
+                      << "Output: " << output << '\n';
             __builtin_trap();
         }
     } else {

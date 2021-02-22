@@ -72,6 +72,9 @@ namespace Chess {
                 if (*next != '/') {
                     return "Must have '/' as row separators";
                 }
+                if (index == totalSize) {
+                    return "Must not have trailing '/'";
+                }
                 ++next;
                 ++row;
                 lastWasNum = false;
@@ -94,8 +97,11 @@ namespace Chess {
                     return "Multiple consecutive numbers is not allowed";
                 }
                 auto val = *next - '0';
-                if (val > m_size) {
-                    return "Skipping more than a full row _" + std::to_string(val) + "_";
+                if (val == 0) {
+                    return "Skipping 0 is not allowed";
+                }
+                if (val > m_size || val > (m_size - index % m_size)) {
+                    return "Skipping more than a full row or the current row _" + std::to_string(val) + "_";
                 }
                 index += val;
 
@@ -144,6 +150,10 @@ namespace Chess {
 
     std::optional<uint32_t> strictParseUInt(const std::string_view& sv) {
         uint32_t result;
+        if (!sv.empty() && sv[0] == '0') {
+            // NO LEADING ZEROS!
+            return std::nullopt;
+        }
         if(auto [p, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), result);
                 ec == std::errc()) {
             if (p != sv.data() + sv.size()) {
@@ -161,7 +171,7 @@ namespace Chess {
         //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 
         auto parts = util::split(str, " ");
-        if (parts.size() < 6) {
+        if (parts.size() != 6) {
             return "Not enough pieces in FEN";
         }
 
