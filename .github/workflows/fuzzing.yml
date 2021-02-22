@@ -31,7 +31,7 @@ jobs:
           cd fuzzer
           mkdir FENFuzzer_corpus
           echo "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1" > FENFuzzer_corpus/standard
-          ./FENFuzzer -max_len 128 -max_total_time 90 ${fuzzer_source}_corpus
+          ./FENFuzzer -max_len=128 -max_total_time=90 ${fuzzer_source}_corpus
       - name: Output corpus
         run: |
           cd ${{ env.build_folder_location }}
