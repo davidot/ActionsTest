@@ -4,7 +4,7 @@ on:
     paths-ignore:
       - '**/*.md'
   schedule:
-    - 25 */12 * * *
+    - "25 */12 * * *"
 
 jobs:
   build-compile-test:
