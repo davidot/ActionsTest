@@ -150,7 +150,7 @@ namespace Chess {
 
     std::optional<uint32_t> strictParseUInt(const std::string_view& sv) {
         uint32_t result;
-        if (!sv.empty() && sv[0] == '0') {
+        if (sv.size() > 1 && sv[0] == '0') {
             // NO LEADING ZEROS!
             return std::nullopt;
         }
