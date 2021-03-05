@@ -25,7 +25,10 @@ if (NOT catch_POPULATED)
 endif ()
 
 
-add_library(Actions src/Action.cpp src/chess/Piece.cpp src/chess/Board.cpp src/util/StringUtil.cpp)
+add_library(Actions
+        src/util/StringUtil.cpp
+        src/chess/Piece.cpp src/chess/Board.cpp)
+
 target_include_directories(Actions INTERFACE src/)
 
 add_executable(ActionsMain src/main.cpp)

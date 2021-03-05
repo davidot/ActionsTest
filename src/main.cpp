@@ -1,8 +1,8 @@
+#include <chess/Board.h>
 #include <iostream>
-#include "Action.h"
 
 int main() {
-    Action a {3};
-    std::cout << "Hello, World!" << std::endl;
+    Chess::Board board = Chess::Board::standardBoard();
+    std::cout << "Standard fen: " << board.toFEN() << '\n';
     return 0;
 }

@@ -280,7 +280,7 @@ namespace Chess {
         return str;
     }
 
-    static std::array<std::pair<char, CastlingRight>, 4> castleMapping = {
+    std::array<std::pair<char, CastlingRight>, 4> castleMapping = {
             std::make_pair(Piece(Piece::Type::King, Color::White).toFEN(), CastlingRight::WHITE_QUEEN_SIDE),
             std::make_pair(Piece(Piece::Type::Queen, Color::White).toFEN(), CastlingRight::WHITE_KING_SIDE),
             std::make_pair(Piece(Piece::Type::King, Color::Black).toFEN(), CastlingRight::BLACK_QUEEN_SIDE),
