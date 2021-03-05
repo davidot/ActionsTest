@@ -27,7 +27,7 @@ endif ()
 
 add_library(Actions
         src/util/StringUtil.cpp
-        src/chess/Piece.cpp src/chess/Board.cpp)
+        src/chess/Piece.cpp src/chess/Board.cpp src/chess/MoveGen.cpp)
 
 target_include_directories(Actions INTERFACE src/)
 
@@ -35,7 +35,9 @@ add_executable(ActionsMain src/main.cpp)
 target_link_libraries(ActionsMain PRIVATE Actions)
 
 
-add_executable(ActionsTest test/main.cpp test/ActionTest.cpp test/chess/Piece.cpp test/chess/Board.cpp test/util/StringUtil.cpp)
+add_executable(ActionsTest test/main.cpp
+        test/util/StringUtil.cpp
+        test/chess/Piece.cpp test/chess/Board.cpp test/chess/MoveGen.cpp)
 target_link_libraries(ActionsTest PRIVATE Catch2::Catch2 Actions)
 
 enable_testing()
