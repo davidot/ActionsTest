@@ -187,9 +187,13 @@ namespace Chess {
         }
 
         if (parts[3] != "-") {
-            std::optional<uint16_t> enPassantPawn = b.SANToIndex(parts[3]);
+            std::optional<BoardIndex> enPassantPawn = b.SANToIndex(parts[3]);
             if (!enPassantPawn.has_value()) {
                 return std::string("Invalid en passant value: ") + std::string(parts[3]);
+            }
+            auto [col, row] = b.indexToColumnRow(*enPassantPawn);
+            if (row != 2 && row != m_size - 3) {
+                return std::string("Cannot have en passant on non 3th or 5th row: " + std::string(parts[3]));
             }
             // TODO: check whether this is actually a valid enPassant value (i.e. there is a pawn)
             b.m_enPassant = enPassantPawn;

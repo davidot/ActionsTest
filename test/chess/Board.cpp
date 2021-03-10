@@ -353,10 +353,16 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         }
 
         SECTION("Invalid en passant moves") {
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a1 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - h1 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - h8 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - h5 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a7 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - c2 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a4 0 1");
             // FIXME: these moves are really not valid and it should fail!
-//            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a1 0 1");
-//            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - h1 0 1");
-//            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a3 0 1");
+//            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a3 0 1"); Not valid due to no pawn
+//            failsBase("rnbqkbnr/pppppppp/8/8/PPPPPPPP/PPPPPPPP/PPPPPPPP/RNBQKBNR w - a3 0 1"); Not valid due to non empty square
         }
 
     }
@@ -483,16 +489,16 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     SECTION("Castling state") {
         std::string castling = GENERATE("-", "KQkq", "KQ", "kq", "Kk", "Qq", "Kq", "Qk", "K", "Q", "k", "q");
         CAPTURE(castling);
-        std::string basePosition = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w " + castling + " - 0 1";
+        std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w " + castling + " - 0 1";
         is_valid_board(basePosition);
         // TODO: check we can actually make the appropriate castling moves
         REQUIRE("TODO");
     }
 
     SECTION("En passant state") {
-        std::string enPassant = GENERATE("a1", "b1", "a2", "c2", "d4", "h8", "h1");
+        std::string enPassant = GENERATE(as<std::string>(), "a", "b", "h") + GENERATE("3", "6");
         CAPTURE(enPassant);
-        std::string basePosition = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - " + enPassant + " 0 1";
+        std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - " + enPassant + " 0 1";
         // FIXME: these moves are really not valid and it should fail!
         is_valid_board(basePosition);
         // TODO verify somehow?
@@ -502,7 +508,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     SECTION("Halfmoves since capture or pawn move") {
         uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u);
         CAPTURE(moves);
-        std::string basePosition = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - - " + std::to_string(moves) + " 1";
+        std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - " + std::to_string(moves) + " 1";
         is_valid_board(basePosition);
         // TODO verify somehow?
         REQUIRE("TODO");
@@ -511,7 +517,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     SECTION("Full move number") {
         uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u, 128u, 3000u, 8849u);
         CAPTURE(moves);
-        std::string basePosition = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - - 0 " + std::to_string(moves);
+        std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 " + std::to_string(moves);
         is_valid_board(basePosition);
         // TODO verify somehow?
         REQUIRE("TODO");
