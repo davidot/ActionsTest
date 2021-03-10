@@ -9,28 +9,26 @@ TEST_CASE("Board", "[chess][base]") {
 #define GENERATE_PIECES_WHITE_ONLY() Piece(GENERATE(Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King), Color::White)
 
     SECTION("Empty board has no pieces") {
-        uint8_t size = GENERATE(0, 1, 2, 8, 13, 255);
-        CAPTURE(size);
-        Board b = Board::emptyBoard(size);
+        Board b = Board::emptyBoard();
 
-        CHECK(b.size() == size);
+        CHECK(b.size() == 8);
 
         CHECK(b.countPieces(Color::White) == 0);
         CHECK(b.countPieces(Color::Black) == 0);
         CHECK_FALSE(b.hasValidPosition());
         CHECK(b.colorToMove() == Color::White);
 
-        for (uint16_t i = 0; i < size * size; i+= size / 17 + 1u) {
+        for (uint16_t i = 0; i < 64; i++) {
             CAPTURE(i);
             CHECK_FALSE(b.pieceAt(i));
         }
     }
 
     SECTION("Can add pieces every where") {
-        uint32_t size = GENERATE(1, 8, 255);
         Piece piece = GENERATE_PIECE();
-        Board b = Board::emptyBoard(size);
+        Board b = Board::emptyBoard();
 
+        uint32_t size = 8;
         uint32_t index = GENERATE_COPY(0u, size - 1, size * size - 1, size * size, take(3, random(1u, std::max(1u, size * size - 1))));
 
         CAPTURE(size, piece, index);
@@ -68,18 +66,14 @@ TEST_CASE("Board", "[chess][base]") {
     }
 
     SECTION("Can add pieces every where using column and row") {
-        int32_t size = GENERATE(1, 8, 13, 103, 180, 255);
         Piece piece = GENERATE_PIECE();
-        Board b = Board::emptyBoard(size);
+        Board b = Board::emptyBoard();
 
+        int32_t size = 8;
         uint32_t column = GENERATE_COPY(0u, size - 1, take(4u, random(0u, uint32_t(std::max(1, size - 2)))));
         uint32_t row = GENERATE_COPY(0u, size - 1, take(4u, random(0u, uint32_t(std::max(1, size - 2)))));
 
-        if (size == 1 && (row > 0 || column > 0)) {
-            return;
-        }
-
-        CAPTURE(size, piece, column, row);
+        CAPTURE(piece, column, row);
 
         b.setPiece(column, row, piece);
 
@@ -106,10 +100,10 @@ TEST_CASE("Board", "[chess][base]") {
     }
 
     SECTION("Double set piece") {
-        uint32_t size = GENERATE(1, 8, 13, 255);
         Piece piece = GENERATE_PIECE();
-        Board b = Board::emptyBoard(size);
+        Board b = Board::emptyBoard();
 
+        uint32_t size = 8;
         uint32_t index = GENERATE_COPY(0u, size - 1, size * size - 1, size * size, take(3, random(1u, std::max(1u, size * size - 1))));
 
         CAPTURE(size, piece, index);
@@ -131,9 +125,9 @@ TEST_CASE("Board", "[chess][base]") {
     }
 
     SECTION("Remove non-existant piece") {
-        uint32_t size = GENERATE(1, 8, 13, 255);
-        Board b = Board::emptyBoard(size);
+        Board b = Board::emptyBoard();
 
+        uint32_t size = 8;
         uint32_t index = GENERATE_COPY(0u, size - 1, size * size - 1, size * size, take(3, random(1u, std::max(1u, size * size - 1))));
 
         CAPTURE(size, index);
@@ -154,8 +148,8 @@ TEST_CASE("Board", "[chess][base]") {
 
     SECTION("Adding multiple pieces") {
         SECTION("Fill with same piece same color") {
-            uint32_t size = 4;
-            Board b = Board::emptyBoard(size);
+            uint32_t size = 8;
+            Board b = Board::emptyBoard();
 
             Piece piece = GENERATE_PIECE();
 
@@ -176,8 +170,8 @@ TEST_CASE("Board", "[chess][base]") {
         }
 
         SECTION("Fill board with alternating colors") {
-            uint32_t size = 4;
-            Board b = Board::emptyBoard(size);
+            uint32_t size = 8;
+            Board b = Board::emptyBoard();
 
             Piece piece = GENERATE_PIECES_WHITE_ONLY();
             Piece pieceOther(piece.type(), opposite(piece.color()));
@@ -377,7 +371,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         INFO("Did not create valid board: " << board.error());
         REQUIRE(board);
 
-        return Board::emptyBoard(1);
+        return Board::emptyBoard();
     };
 
     SECTION("Empty FEN") {
@@ -545,7 +539,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         }
 
         SECTION("Empty board") {
-            Board empty = Board::emptyBoard(8);
+            Board empty = Board::emptyBoard();
+            REQUIRE(empty.size() == 8);
 
             std::string position = "8/8/8/8/8/8/8/8 w - - 0 1";
             REQUIRE(empty.toFEN() == position);

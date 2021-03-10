@@ -35,13 +35,15 @@ namespace Chess {
 
     class Board {
     public:
+        using BoardIndex = uint8_t;
+
         [[nodiscard]] static ExpectedBoard fromFEN(std::string_view);
 
         [[nodiscard]] static ExpectedBoard fromExtendedFEN(std::string_view);
 
         [[nodiscard]] static Board standardBoard();
 
-        [[nodiscard]] static Board emptyBoard(uint8_t size = 8);
+        [[nodiscard]] static Board emptyBoard();
 
         bool makeMove(Move);
 
@@ -55,37 +57,35 @@ namespace Chess {
 
         std::optional<Piece> pieceAt(std::string_view) const;
 
-        std::optional<Piece> pieceAt(uint8_t column, uint8_t row) const;
+        std::optional<Piece> pieceAt(BoardIndex column, BoardIndex row) const;
 
-        std::optional<Piece> pieceAt(uint16_t index) const;
+        std::optional<Piece> pieceAt(BoardIndex index) const;
 
         void setPiece(std::string_view, std::optional<Piece> piece);
 
-        void setPiece(uint8_t column, uint8_t row, std::optional<Piece> piece);
+        void setPiece(BoardIndex column, BoardIndex row, std::optional<Piece> piece);
 
-        void setPiece(uint16_t index, std::optional<Piece> piece);
+        void setPiece(BoardIndex index, std::optional<Piece> piece);
 
         [[nodiscard]] uint8_t size() const;
 
         [[nodiscard]] std::string toFEN() const;
 
     private:
-        explicit Board(uint8_t size);
+        static constexpr const uint8_t m_size = 8;
+        std::array<Piece::IntType, m_size * m_size> m_pieces;
 
-        uint8_t m_size;
-        std::vector<Piece::IntType> m_pieces;
-
-        std::array<uint16_t, 2> m_numPieces = {0, 0};
+        std::array<uint8_t, 2> m_numPieces = {0, 0};
 
         Color m_next_turn = Color::White;
 
         std::optional<std::string> parseFENBoard(std::string_view);
 
-        [[nodiscard]] uint16_t columnRowToIndex(uint8_t column, uint8_t row) const;
+        [[nodiscard]] BoardIndex columnRowToIndex(uint8_t column, uint8_t row) const;
 
-        [[nodiscard]] std::pair<uint8_t, uint8_t> indexToColumnRow(uint16_t) const;
+        [[nodiscard]] std::pair<BoardIndex, BoardIndex> indexToColumnRow(BoardIndex) const;
 
-        [[nodiscard]] std::optional<uint16_t> SANToIndex(std::string_view) const;
+        [[nodiscard]] std::optional<BoardIndex> SANToIndex(std::string_view) const;
 
         [[nodiscard]] std::string indexToSAN(uint16_t) const;
 
@@ -93,7 +93,7 @@ namespace Chess {
 
         CastlingRight m_castlingRights = CastlingRight::NO_CASTLING;
 
-        std::optional<uint16_t> m_enPassant = std::nullopt;
+        std::optional<BoardIndex> m_enPassant = std::nullopt;
 
         uint32_t m_fullMoveNum = 1;
 

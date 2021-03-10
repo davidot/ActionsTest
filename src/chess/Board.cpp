@@ -9,11 +9,8 @@
 
 namespace Chess {
 
-    Board::Board(uint8_t size) : m_size(size), m_pieces(m_size * m_size, Piece::none()) {
-    }
-
-    Board Board::emptyBoard(uint8_t size) {
-        return Board(size);
+    Board Board::emptyBoard() {
+        return Board();
     }
 
     bool Board::hasValidPosition() const {
@@ -28,7 +25,7 @@ namespace Chess {
         return m_numPieces[colorIndex(c)];
     }
 
-    std::optional<Piece> Board::pieceAt(uint16_t index) const {
+    std::optional<Piece> Board::pieceAt(BoardIndex index) const {
         if (index >= m_size * m_size) {
             return std::nullopt;
         }
@@ -40,7 +37,7 @@ namespace Chess {
         }
     }
 
-    void Board::setPiece(uint16_t index, std::optional<Piece> piece) {
+    void Board::setPiece(BoardIndex index, std::optional<Piece> piece) {
         if (index >= m_size * m_size) {
             return;
         }
@@ -56,7 +53,7 @@ namespace Chess {
     }
 
     Board Board::standardBoard() {
-        return std::move(Board::fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").extract());
+        return Board::fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").extract();
     }
 
     std::optional<std::string> Board::parseFENBoard(std::string_view view) {
@@ -165,7 +162,7 @@ namespace Chess {
 
 
     ExpectedBoard Board::fromFEN(std::string_view str) {
-        Board b(8);
+        Board b{};
 
         //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 
@@ -221,19 +218,19 @@ namespace Chess {
         return m_size;
     }
 
-    uint16_t Board::columnRowToIndex(uint8_t column, uint8_t row) const {
+    Board::BoardIndex Board::columnRowToIndex(BoardIndex column, BoardIndex row) const {
         return column + uint16_t(m_size) * (uint16_t(m_size) - 1 - row);
     }
 
-    std::pair<uint8_t, uint8_t> Board::indexToColumnRow(uint16_t index) const {
+    std::pair<Board::BoardIndex, Board::BoardIndex> Board::indexToColumnRow(BoardIndex index) const {
         return std::make_pair(index % m_size, (m_size - 1) - index / m_size);
     }
 
-    std::optional<Piece> Board::pieceAt(uint8_t column, uint8_t row) const {
+    std::optional<Piece> Board::pieceAt(BoardIndex column, BoardIndex row) const {
         return pieceAt(columnRowToIndex(column, row));
     }
 
-    void Board::setPiece(uint8_t column, uint8_t row, std::optional<Piece> piece) {
+    void Board::setPiece(BoardIndex column, BoardIndex row, std::optional<Piece> piece) {
         setPiece(columnRowToIndex(column, row), piece);
     }
 
@@ -253,7 +250,7 @@ namespace Chess {
         }
     }
 
-    std::optional<uint16_t> Board::SANToIndex(std::string_view vw) const {
+    std::optional<Board::BoardIndex> Board::SANToIndex(std::string_view vw) const {
         if (vw.size() != 2) {
             return std::nullopt;
         }
@@ -331,7 +328,7 @@ namespace Chess {
     std::string Board::toFEN() const {
         std::stringstream val;
 
-        uint8_t emptyAcc = 0;
+        BoardIndex emptyAcc = 0;
 
         auto writeEmpty = [&] {
             if (emptyAcc > 0) {
@@ -340,8 +337,8 @@ namespace Chess {
             }
         };
 
-        for (uint8_t row = m_size - 1; row < m_size; row--) {
-            for (uint8_t column = 0; column < m_size; column++) {
+        for (BoardIndex row = m_size - 1; row < m_size; row--) {
+            for (BoardIndex column = 0; column < m_size; column++) {
                 auto nextPiece = pieceAt(column, row);
                 if (nextPiece) {
                     writeEmpty();
