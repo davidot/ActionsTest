@@ -9,17 +9,8 @@
 
 namespace Chess {
 
-    struct Move {
-        // TODO: actually add interface
-        uint16_t fromPosition;
-        uint16_t toPosition;
-        enum class Flags : uint8_t {
-            None = 0,
-        };
-        uint32_t val;
-    };
-
     struct ExpectedBoard;
+    struct Move;
 
     enum class CastlingRight : uint8_t {
         NO_CASTLING = 0u,
@@ -98,6 +89,15 @@ namespace Chess {
         uint32_t m_fullMoveNum = 1;
 
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;
+    };
+
+    struct Move {
+        // TODO: actually add interface
+        Board::BoardIndex fromPosition;
+        Board::BoardIndex toPosition;
+        enum class Flags : uint8_t {
+            None = 0,
+        };
     };
 
     CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);
