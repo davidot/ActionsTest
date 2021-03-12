@@ -62,6 +62,10 @@ namespace Chess {
 
         [[nodiscard]] std::string toFEN() const;
 
+        [[nodiscard]] static BoardIndex columnRowToIndex(uint8_t column, uint8_t row);
+
+        [[nodiscard]] static std::pair<BoardIndex, BoardIndex> indexToColumnRow(BoardIndex);
+
     private:
         static constexpr const uint8_t m_size = 8;
         std::array<Piece::IntType, m_size * m_size> m_pieces;
@@ -71,10 +75,6 @@ namespace Chess {
         Color m_next_turn = Color::White;
 
         std::optional<std::string> parseFENBoard(std::string_view);
-
-        [[nodiscard]] BoardIndex columnRowToIndex(uint8_t column, uint8_t row) const;
-
-        [[nodiscard]] std::pair<BoardIndex, BoardIndex> indexToColumnRow(BoardIndex) const;
 
         [[nodiscard]] std::optional<BoardIndex> SANToIndex(std::string_view) const;
 
@@ -92,12 +92,21 @@ namespace Chess {
     };
 
     struct Move {
+        using BoardOffset = std::make_signed_t<Board::BoardIndex>;
         // TODO: actually add interface
         Board::BoardIndex fromPosition;
         Board::BoardIndex toPosition;
         enum class Flags : uint8_t {
             None = 0,
         };
+
+        Flags flags;
+
+        Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flags flags = Flags::None);
+
+        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Flags flags = Flags::None);
+
+        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardIndex toCol, Board::BoardIndex toRow, Flags flags = Flags::None);
     };
 
     CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);

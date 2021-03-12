@@ -222,11 +222,11 @@ namespace Chess {
         return m_size;
     }
 
-    Board::BoardIndex Board::columnRowToIndex(BoardIndex column, BoardIndex row) const {
+    Board::BoardIndex Board::columnRowToIndex(BoardIndex column, BoardIndex row) {
         return column + uint16_t(m_size) * (uint16_t(m_size) - 1 - row);
     }
 
-    std::pair<Board::BoardIndex, Board::BoardIndex> Board::indexToColumnRow(BoardIndex index) const {
+    std::pair<Board::BoardIndex, Board::BoardIndex> Board::indexToColumnRow(BoardIndex index) {
         return std::make_pair(index % m_size, (m_size - 1) - index / m_size);
     }
 
@@ -382,4 +382,22 @@ namespace Chess {
 #undef INT
 #undef TOCASTLE
 
+    Move::Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flags flags)
+        : fromPosition(fromPosition),
+          toPosition(toPosition),
+          flags(flags) {
+    }
+
+    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Move::Flags flags) :
+        flags(flags) {
+        Board::BoardIndex index = Board::columnRowToIndex(fromCol, fromRow);
+        fromPosition = index;
+        toPosition = index + offset;
+    }
+
+    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardIndex toCol, Board::BoardIndex toRow, Move::Flags flags) :
+        fromPosition(Board::columnRowToIndex(fromCol, fromRow)),
+        toPosition(Board::columnRowToIndex(toCol, toRow)),
+        flags(flags) {
+    }
 }

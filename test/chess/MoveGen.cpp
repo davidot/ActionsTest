@@ -41,11 +41,41 @@ TEST_CASE("Move generation", "[chess][movegen]") {
         SECTION("Board with single rook always has 14 moves") {
             uint8_t index = GENERATE(range(0u, 64u));
             Board board = Board::emptyBoard();
-            for (uint8_t i = 0; i < index; i++) {
-                board.setPiece(index, Piece(Piece::Type::Rook, Color::White));
-            }
+            board.setPiece(index, Piece(Piece::Type::Rook, Color::White));
             MoveList list = Chess::generateAllMoves(board);
-            REQUIRE(list.size() == index);
+            REQUIRE(list.size() == 14);
+        }
+
+        SECTION("Bishop in the center has 13 moves") {
+            uint8_t col = GENERATE(3, 4);
+            uint8_t row = GENERATE(3, 4);
+            Board board = Board::emptyBoard();
+            board.setPiece(col, row, Piece(Piece::Type::Bishop, Color::White));
+            MoveList list = Chess::generateAllMoves(board);
+            REQUIRE(list.size() == 13);
+        }
+
+        SECTION("Bishop in the corner has 7 moves") {
+            uint8_t col = GENERATE(0, 7);
+            uint8_t row = GENERATE(0, 7);
+            Board board = Board::emptyBoard();
+            board.setPiece(col, row, Piece(Piece::Type::Bishop, Color::White));
+            MoveList list = Chess::generateAllMoves(board);
+            REQUIRE(list.size() == 7);
+        }
+
+        SECTION("King in the center has 8 moves") {
+            Board board = Board::emptyBoard();
+            board.setPiece(4, 4, Piece(Piece::Type::King, Color::White));
+            MoveList list = Chess::generateAllMoves(board);
+            REQUIRE(list.size() == 8);
+        }
+
+        SECTION("Knight in the center has 8 moves") {
+            Board board = Board::emptyBoard();
+            board.setPiece(4, 4, Piece(Piece::Type::Knight, Color::White));
+            MoveList list = Chess::generateAllMoves(board);
+            REQUIRE(list.size() == 8);
         }
     }
 }
