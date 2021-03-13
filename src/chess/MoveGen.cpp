@@ -28,6 +28,11 @@ namespace Chess {
             {-1,  1}, { 0,  1}, { 1,  1},
     };
 
+    constexpr static Offsets knightOffsets[] = {
+            {-2, -1}, {-1, -2}, { 1, -2}, { 2, -1},
+            {-2,  1}, {-1,  2}, { 1,  2}, { 2,  1}
+    };
+
     enum Direction {
         LeftUp = 0,
         Up = 1,
@@ -89,7 +94,12 @@ namespace Chess {
     }
 
     void addKnightMoves(MoveList &list, Index col, Index row) {
-        addMoves<ALL_DIRECTIONS>(list, col, row);
+        for (auto& off : knightOffsets) {
+            if (validOffset(col, row, off)) {
+                list.addMove(Move{col, row,
+                                  static_cast<Index>(col + off.first), static_cast<Index>(row + off.second)});
+            }
+        }
     }
 
     MoveList generateAllMoves(const Board &board) {

@@ -70,8 +70,8 @@ TEST_CASE("Board", "[chess][base]") {
         Board b = Board::emptyBoard();
 
         int32_t size = 8;
-        uint32_t column = GENERATE_COPY(0u, size - 1, take(4u, random(0u, uint32_t(std::max(1, size - 2)))));
-        uint32_t row = GENERATE_COPY(0u, size - 1, take(4u, random(0u, uint32_t(std::max(1, size - 2)))));
+        uint32_t column = GENERATE_COPY(0u, size - 1, take(1u, random(0u, uint32_t(std::max(1, size - 2)))));
+        uint32_t row = GENERATE_COPY(0u, size - 1, take(1u, random(0u, uint32_t(std::max(1, size - 2)))));
 
         CAPTURE(piece, column, row);
 
@@ -201,14 +201,19 @@ TEST_CASE("Board", "[chess][base]") {
         }
     }
 
+}
 
-//    SECTION("Valid boards") { TODO
-//        SECTION("Standard board is valid") {
-//            auto board = Board::standardBoard();
-//            REQUIRE(board.hasValidPosition());
-//        }
-//    }
+TEST_CASE("Validity of boards", "[.][chess][rules][board]") {
+    // TODO
+    SECTION("Empty board is invalid") {
+        auto board = Board::emptyBoard();
+        REQUIRE_FALSE(board.hasValidPosition());
+    }
 
+    SECTION("Standard board is valid") {
+        auto board = Board::standardBoard();
+        REQUIRE(board.hasValidPosition());
+    }
 }
 
 
