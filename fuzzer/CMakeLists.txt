@@ -14,7 +14,8 @@ function(add_simple_fuzzer fuzzer_source)
 
     target_compile_options(${fuzzer_source} PRIVATE -fsanitize=fuzzer,undefined,address)
 
-    add_test(NAME ${fuzzer_source}_dry_test COMMAND ${fuzzer_source} -runs=0 ${fuzzer_source}_corpus)
+# TODO: figure out how to do a dry run (probably in fuzzer workflow)
+#    add_test(NAME ${fuzzer_source}_dry_test COMMAND ${fuzzer_source} -runs=0 ${fuzzer_source}_corpus)
 
     message(STATUS "Added fuzzer ${fuzzer_source}")
 endfunction()
