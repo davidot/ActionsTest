@@ -4,26 +4,13 @@ project(ActionsTest LANGUAGES CXX
 
 set(CMAKE_CXX_STANDARD 20)
 
-include(FetchContent)
-
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     message(STATUS "CCache loaded and configured")
 endif(CCACHE_FOUND)
 
-fetchcontent_declare(
-        catch
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG v2.13.1
-)
-
-FetchContent_GetProperties(catch)
-if (NOT catch_POPULATED)
-    FetchContent_Populate(catch)
-    add_subdirectory(${catch_SOURCE_DIR} ${catch_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif ()
-
+add_subdirectory(cmake/dependencies EXCLUDE_FROM_ALL)
 
 add_library(Actions
         src/util/StringUtil.cpp
@@ -34,6 +21,7 @@ target_include_directories(Actions INTERFACE src/)
 add_executable(ActionsMain src/main.cpp)
 target_link_libraries(ActionsMain PRIVATE Actions)
 
+add_subdirectory(visual)
 
 add_executable(ActionsTest test/main.cpp
         test/util/StringUtil.cpp
