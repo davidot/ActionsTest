@@ -4,13 +4,19 @@ project(ActionsTest LANGUAGES CXX
 
 set(CMAKE_CXX_STANDARD 20)
 
+if (DEFINED ENV{CI})
+    message(STATUS "Probably running in CI, skipping graphical things...")
+    set(HEADLESS ON)
+else ()
+    set(HEADLESS OFF)
+endif()
+
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     message(STATUS "CCache loaded and configured")
 endif(CCACHE_FOUND)
-
-add_subdirectory(cmake/dependencies EXCLUDE_FROM_ALL)
+include(FetchContent)
 
 add_library(Actions
         src/util/StringUtil.cpp
@@ -21,8 +27,13 @@ target_include_directories(Actions INTERFACE src/)
 add_executable(ActionsMain src/main.cpp)
 target_link_libraries(ActionsMain PRIVATE Actions)
 
-add_subdirectory(visual)
+if (NOT HEADLESS)
+    include(cmake/dependencies/GUI.cmake)
+    add_subdirectory(visual)
+endif()
 
+
+include(cmake/dependencies/catch.cmake)
 add_executable(ActionsTest test/main.cpp
         test/util/StringUtil.cpp
         test/chess/Piece.cpp test/chess/Board.cpp test/chess/MoveGen.cpp)
