@@ -6,8 +6,8 @@ namespace Chess {
     using Offset = Move::BoardOffset;
 
 
-    void MoveList::addMove(Move) {
-        m_count++;
+    void MoveList::addMove(Move move) {
+        m_moves.push_back(move);
     }
 
     void MoveList::addMove(Board::BoardIndex col, Board::BoardIndex row, Move::BoardOffset offset, Move::Flags flags) {
@@ -15,7 +15,7 @@ namespace Chess {
     }
 
     size_t MoveList::size() const {
-        return m_count;
+        return m_moves.size();
     }
 
     constexpr static Index boardSize = 8;
@@ -23,9 +23,9 @@ namespace Chess {
     using Offsets = std::pair<Offset, Offset>;
 
     constexpr static Offsets offsets[] = {
-            {-1, -1}, { 0, -1}, { 1, -1},
-            {-1,  0}, { 0,  0}, { 1,  0},
             {-1,  1}, { 0,  1}, { 1,  1},
+            {-1,  0}, { 0,  0}, { 1,  0},
+            {-1, -1}, { 0, -1}, { 1, -1},
     };
 
     constexpr static Offsets knightOffsets[] = {
@@ -102,12 +102,18 @@ namespace Chess {
         }
     }
 
-    MoveList generateAllMoves(const Board &board) {
+    void addPawnMoves(MoveList list, Index col, Index row, Color color) {
+        if (color == Color::White) {
+            addMove<Up>(list, col, row);
+        } else {
+            addMove<Down>(list, col, row);
+        }
+    }
+
+    MoveList generateAllMoves(const Board &board, Color color) {
         using BI = Board::BoardIndex;
 
         MoveList list{};
-
-        Color color = board.colorToMove();
 
         for (BI col = 0; col < board.size(); col++) {
             for (BI row = 0; row < board.size(); row++) {
@@ -117,11 +123,7 @@ namespace Chess {
                 }
                 switch (opt_piece->type()) {
                     case Piece::Type::Pawn:
-                        if (color == Color::White) {
-                            addMove<Up>(list, col, row);
-                        } else {
-                            addMove<Down>(list, col, row);
-                        }
+                        addPawnMoves(list, col, row, opt_piece->color());
                         break;
                     case Piece::Type::King:
                         addMoves<ALL_DIRECTIONS>(list, col, row);

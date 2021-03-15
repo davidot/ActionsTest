@@ -91,23 +91,35 @@ namespace Chess {
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;
     };
 
+    // TODO to make this actually fit in 16 bits use: struct __attribute__((packed)) Move {
     struct Move {
         using BoardOffset = std::make_signed_t<Board::BoardIndex>;
-        // TODO: actually add interface
-        Board::BoardIndex fromPosition;
-        Board::BoardIndex toPosition;
         enum class Flags : uint8_t {
             None = 0,
+            CastlingShort = 1,
+            CastlingLong = 2,
+            DoublePushPawn = 3,
+            PromotionToKnight = 4,
+            PromotionToBishop = 5,
+            PromotionToRook = 6,
+            PromotionToQueen = 7
         };
 
-        Flags flags;
+        Board::BoardIndex toPosition: 6;
+        Board::BoardIndex fromPosition : 6;
+
+        Flags flags : 3;
+
+        Move();
 
         Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flags flags = Flags::None);
 
         Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Flags flags = Flags::None);
 
         Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardIndex toCol, Board::BoardIndex toRow, Flags flags = Flags::None);
+
     };
+
 
     CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);
     CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs);

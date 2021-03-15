@@ -17,76 +17,104 @@ TEST_CASE("Move generation", "[chess][movegen]") {
         board.setPiece(4, 4, p);
         MoveList list = Chess::generateAllMoves(board);
         REQUIRE(list.size() == 0);
+        list.forEachMove([](const auto&){
+            //Should not be called
+            REQUIRE(false);
+        });
     }
 
-    SECTION("Invalid boards still generate moves") {
+    SECTION("Invalid boards with single piece still generate moves") {
 
+        Board board = Board::emptyBoard();
         Color toMove = Color::White;
         [[maybe_unused]] Color other = opposite(Color::White); // TODO use or remove
+
+        auto validateCountAndFrom = [](const MoveList& list, Board::BoardIndex col, Board::BoardIndex row, int count) {
+          REQUIRE(list.size() == count);
+          int calls = 0;
+
+          auto index = Board::columnRowToIndex(col, row);
+          list.forEachMove([&](const Move& move) {
+            calls++;
+            CAPTURE(move);
+            REQUIRE(move.fromPosition == index);
+          });
+          REQUIRE(calls == count);
+
+          list.forEachMoveFrom(col, row, [&](const Move& move) {
+            calls--;
+            CAPTURE(move);
+            REQUIRE(move.fromPosition == index);
+          });
+
+          REQUIRE(calls == 0);
+        };
+
+
         SECTION("Board with single pawn has just one move") {
-            Board board = Board::emptyBoard();
             board.setPiece(4, 4, Piece(Piece::Type::Pawn, toMove));
             MoveList list = Chess::generateAllMoves(board);
-            REQUIRE(list.size() == 1);
-        }
-
-        SECTION("Board with multiple pawns has multiple moves") {
-            uint8_t count = GENERATE(range(2u, 8u));
-            Board board = Board::emptyBoard();
-            for (uint8_t i = 0; i < count; i++) {
-                board.setPiece(i, 4, Piece(Piece::Type::Pawn, toMove));
-            }
-            MoveList list = Chess::generateAllMoves(board);
-            REQUIRE(list.size() == count);
+            validateCountAndFrom(list, 4, 4, 1);
         }
 
         SECTION("Board with single rook always has 14 moves") {
-            uint8_t index = GENERATE(range(0u, 64u));
-            Board board = Board::emptyBoard();
-            board.setPiece(index, Piece(Piece::Type::Rook, toMove));
+            uint8_t col = GENERATE(range(0u, 8u));
+            uint8_t row = GENERATE(range(0u, 8u));
+            board.setPiece(col, row, Piece(Piece::Type::Rook, toMove));
             MoveList list = Chess::generateAllMoves(board);
-            REQUIRE(list.size() == 14);
+            validateCountAndFrom(list, col, row, 14);
         }
 
         SECTION("Bishop in the center has 13 moves") {
             uint8_t col = GENERATE(3, 4);
             uint8_t row = GENERATE(3, 4);
-            Board board = Board::emptyBoard();
             board.setPiece(col, row, Piece(Piece::Type::Bishop, toMove));
             MoveList list = Chess::generateAllMoves(board);
-            REQUIRE(list.size() == 13);
+            validateCountAndFrom(list, col, row, 13);
         }
 
         SECTION("Bishop in the corner has 7 moves") {
             uint8_t col = GENERATE(0, 7);
             uint8_t row = GENERATE(0, 7);
-            Board board = Board::emptyBoard();
             board.setPiece(col, row, Piece(Piece::Type::Bishop, toMove));
             MoveList list = Chess::generateAllMoves(board);
-            REQUIRE(list.size() == 7);
+            validateCountAndFrom(list, col, row, 7);
         }
 
         SECTION("King in the center has 8 moves") {
-            Board board = Board::emptyBoard();
             board.setPiece(4, 4, Piece(Piece::Type::King, toMove));
             MoveList list = Chess::generateAllMoves(board);
-            REQUIRE(list.size() == 8);
+            validateCountAndFrom(list, 4, 4, 8);
         }
 
         SECTION("Knight in the center has 8 moves") {
-            Board board = Board::emptyBoard();
             board.setPiece(4, 4, Piece(Piece::Type::Knight, toMove));
             MoveList list = Chess::generateAllMoves(board);
-            REQUIRE(list.size() == 8);
+            validateCountAndFrom(list, 4, 4, 8);
         }
 
         SECTION("Queen in the center has 14+13 moves") {
             uint8_t col = GENERATE(3, 4);
             uint8_t row = GENERATE(3, 4);
-            Board board = Board::emptyBoard();
             board.setPiece(col, row, Piece(Piece::Type::Queen, toMove));
             MoveList list = Chess::generateAllMoves(board);
-            REQUIRE(list.size() == 27);
+            validateCountAndFrom(list, col, row, 14 + 13);
+        }
+
+    }
+
+    SECTION("Multiple pieces (same color still)") {
+        Board board = Board::emptyBoard();
+        Color toMove = Color::White;
+        [[maybe_unused]] Color other = opposite(Color::White); // TODO use or remove
+
+        SECTION("Board with multiple pawns has multiple moves") {
+            uint8_t count = GENERATE(range(2u, 8u));
+            for (uint8_t i = 0; i < count; i++) {
+                board.setPiece(i, 4, Piece(Piece::Type::Pawn, toMove));
+            }
+            MoveList list = Chess::generateAllMoves(board);
+            REQUIRE(list.size() == count);
         }
     }
 }

@@ -10,10 +10,35 @@ namespace Chess {
         void addMove(Move);
 
         void addMove(Board::BoardIndex col, Board::BoardIndex row, Move::BoardOffset offset, Move::Flags flags = Move::Flags::None);
+
+        template<typename Func>
+        void forEachMove(Func f) const {
+            std::for_each(m_moves.begin(), m_moves.end(), f);
+        }
+
+        template<typename Filter, typename Func>
+        void forEachFilteredMove(Filter filter, Func func) const {
+            forEachMove([&](const auto& mv){
+              if (filter(mv)) {
+                  func(mv);
+              }
+            });
+        }
+
+        template<typename Func>
+        void forEachMoveFrom(Board::BoardIndex col, Board::BoardIndex row, Func func) const {
+            forEachFilteredMove([index = Board::columnRowToIndex(col, row)](const Move& move){
+                return move.fromPosition == index;
+            }, func);
+        }
     private:
-        uint32_t m_count;
+        std::vector<Move> m_moves;
     };
 
-    MoveList generateAllMoves(const Board& board);
+    MoveList generateAllMoves(const Board& board, Color color);
+
+    MoveList generateAllMoves(const Board& board) {
+        return generateAllMoves(board, board.colorToMove());
+    }
 
 }

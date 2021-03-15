@@ -1,8 +1,10 @@
 #include <SFML/Graphics.hpp>
 #include <imgui-SFML.h>
 #include <imgui.h>
-#include <chess/Board.h>
 #include <iostream>
+
+#include <chess/Board.h>
+#include <chess/MoveGen.h>
 
 int main() {
     std::string baseFolder = "visual/resources/";
@@ -56,6 +58,11 @@ int main() {
 
     sf::Vector2i selectedSquare = {-1, -1};
 
+    constexpr const int boardSquareSize = 8;
+    auto colRowToRect = [&](uint8_t col, uint8_t row) {
+      return boardOffset + sf::Vector2f {squareSize * (boardSquareSize - col), squareSize * (boardSquareSize - row)};
+    };
+
     sf::Clock deltaClock;
     while (window.isOpen()) {
         sf::Event event;
@@ -85,7 +92,6 @@ int main() {
         sf::RectangleShape square {{squareSize, squareSize}};
 
 
-        const int boardSquareSize = 8;
         for (int col = 0; col < boardSquareSize; col++) {
             for (int row = 0; row < boardSquareSize; row++) {
                 if ((col + row) % 2 == 0) {
@@ -94,7 +100,7 @@ int main() {
                     square.setFillColor(sf::Color::Black);
                 }
 
-                sf::Vector2f position = boardOffset + sf::Vector2f {squareSize * (boardSquareSize - col), squareSize * (boardSquareSize - row)};
+                sf::Vector2f position = colRowToRect(col, row);
                 square.setPosition(position);
 
                 window.draw(square);
@@ -120,7 +126,7 @@ int main() {
             highlightSquare.setOutlineColor(sf::Color(0, 0, 255, 200));
             window.draw(highlightSquare);
             if (clicked) {
-                sf::Vector2i newPosition ={boardSquareSize - mousePosition.x, boardSquareSize - mousePosition.y};
+                sf::Vector2i newPosition {boardSquareSize - mousePosition.x, boardSquareSize - mousePosition.y};
                 if (selectedSquare.x >= 0) {
                     auto pieceFrom = board.pieceAt(selectedSquare.x, selectedSquare.y);
                     board.setPiece(selectedSquare.x, selectedSquare.y, std::nullopt);
@@ -137,11 +143,20 @@ int main() {
 
 
         if (selectedSquare.x >= 0) {
-            sf::Vector2f position = boardOffset + sf::Vector2f {squareSize * (boardSquareSize - selectedSquare.x), squareSize * (boardSquareSize - selectedSquare.y)};
+            auto list = Chess::generateAllMoves(board);
+            sf::Vector2f position = colRowToRect(selectedSquare.x, selectedSquare.y);
             highlightSquare.setPosition(position);
 
             highlightSquare.setOutlineColor(sf::Color(255, 0, 0, 200));
             window.draw(highlightSquare);
+
+            highlightSquare.setOutlineColor(sf::Color(0, 255, 0, 200));
+            list.forEachMoveFrom(selectedSquare.x, selectedSquare.y, [&](const Chess::Move& move) {
+                auto [col, row] = Chess::Board::indexToColumnRow(move.toPosition);
+                sf::Vector2f position = colRowToRect(col, row);
+                highlightSquare.setPosition(position);
+                window.draw(highlightSquare);
+            });
         }
 
 

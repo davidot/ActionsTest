@@ -400,4 +400,8 @@ namespace Chess {
         toPosition(Board::columnRowToIndex(toCol, toRow)),
         flags(flags) {
     }
+    Move::Move() : toPosition(0), fromPosition(0), flags(Flags::None) {
+    }
+
+
 }
