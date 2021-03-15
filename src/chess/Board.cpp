@@ -383,21 +383,21 @@ namespace Chess {
 #undef TOCASTLE
 
     Move::Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flags flags)
-        : fromPosition(fromPosition),
-          toPosition(toPosition),
-          flags(flags) {
+        :  toPosition(toPosition),
+           fromPosition(fromPosition),
+           flags(flags) {
     }
 
     Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Move::Flags flags) :
         flags(flags) {
         Board::BoardIndex index = Board::columnRowToIndex(fromCol, fromRow);
-        fromPosition = index;
         toPosition = index + offset;
+        fromPosition = index;
     }
 
     Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardIndex toCol, Board::BoardIndex toRow, Move::Flags flags) :
-        fromPosition(Board::columnRowToIndex(fromCol, fromRow)),
         toPosition(Board::columnRowToIndex(toCol, toRow)),
+        fromPosition(Board::columnRowToIndex(fromCol, fromRow)),
         flags(flags) {
     }
     Move::Move() : toPosition(0), fromPosition(0), flags(Flags::None) {

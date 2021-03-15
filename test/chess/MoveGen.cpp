@@ -29,9 +29,9 @@ TEST_CASE("Move generation", "[chess][movegen]") {
         Color toMove = Color::White;
         [[maybe_unused]] Color other = opposite(Color::White); // TODO use or remove
 
-        auto validateCountAndFrom = [](const MoveList& list, Board::BoardIndex col, Board::BoardIndex row, int count) {
+        auto validateCountAndFrom = [](const MoveList& list, Board::BoardIndex col, Board::BoardIndex row, unsigned count) {
           REQUIRE(list.size() == count);
-          int calls = 0;
+          unsigned calls = 0;
 
           auto index = Board::columnRowToIndex(col, row);
           list.forEachMove([&](const Move& move) {

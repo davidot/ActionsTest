@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Board.h"
+#include <algorithm>
+
 namespace Chess {
 
     class MoveList {
