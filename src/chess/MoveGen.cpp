@@ -102,7 +102,7 @@ namespace Chess {
         }
     }
 
-    void addPawnMoves(MoveList list, Index col, Index row, Color color) {
+    void addPawnMoves(MoveList& list, Index col, Index row, Color color) {
         if (color == Color::White) {
             addMove<Up>(list, col, row);
         } else {

@@ -38,6 +38,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             calls++;
             CAPTURE(move);
             REQUIRE(move.fromPosition == index);
+            REQUIRE(move.toPosition != index);
           });
           REQUIRE(calls == count);
 
@@ -45,6 +46,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             calls--;
             CAPTURE(move);
             REQUIRE(move.fromPosition == index);
+            REQUIRE(move.toPosition != index);
           });
 
           REQUIRE(calls == 0);
