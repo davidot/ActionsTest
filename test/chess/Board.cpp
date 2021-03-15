@@ -16,12 +16,17 @@ TEST_CASE("Board", "[chess][base]") {
         CHECK(b.countPieces(Color::White) == 0);
         CHECK(b.countPieces(Color::Black) == 0);
         CHECK_FALSE(b.hasValidPosition());
-        CHECK(b.colorToMove() == Color::White);
 
         for (uint16_t i = 0; i < 64; i++) {
             CAPTURE(i);
             CHECK_FALSE(b.pieceAt(i));
         }
+
+        CHECK(b.colorToMove() == Color::White);
+        b.makeNullMove();
+        CHECK(b.colorToMove() == Color::Black);
+        b.undoNullMove();
+        CHECK(b.colorToMove() == Color::White);
     }
 
     SECTION("Can add pieces every where") {
