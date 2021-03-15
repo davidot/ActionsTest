@@ -6,7 +6,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
 
     SECTION("Empty board has no moves") {
         Board board = Board::emptyBoard();
-        MoveList list = Chess::generateAllMoves(board);
+        MoveList list = generateAllMoves(board);
         REQUIRE(list.size() == 0);
     }
 
@@ -15,7 +15,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
         Color c = opposite(board.colorToMove());
         Piece p{GENERATE(Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King), c};
         board.setPiece(4, 4, p);
-        MoveList list = Chess::generateAllMoves(board);
+        MoveList list = generateAllMoves(board);
         REQUIRE(list.size() == 0);
         list.forEachMove([](const auto&){
             //Should not be called
@@ -55,7 +55,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
 
         SECTION("Board with single pawn has just one move") {
             board.setPiece(4, 4, Piece(Piece::Type::Pawn, toMove));
-            MoveList list = Chess::generateAllMoves(board);
+            MoveList list = generateAllMoves(board);
             validateCountAndFrom(list, 4, 4, 1);
         }
 
@@ -63,7 +63,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             uint8_t col = GENERATE(range(0u, 8u));
             uint8_t row = GENERATE(range(0u, 8u));
             board.setPiece(col, row, Piece(Piece::Type::Rook, toMove));
-            MoveList list = Chess::generateAllMoves(board);
+            MoveList list = generateAllMoves(board);
             validateCountAndFrom(list, col, row, 14);
         }
 
@@ -71,7 +71,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             uint8_t col = GENERATE(3, 4);
             uint8_t row = GENERATE(3, 4);
             board.setPiece(col, row, Piece(Piece::Type::Bishop, toMove));
-            MoveList list = Chess::generateAllMoves(board);
+            MoveList list = generateAllMoves(board);
             validateCountAndFrom(list, col, row, 13);
         }
 
@@ -79,19 +79,19 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             uint8_t col = GENERATE(0, 7);
             uint8_t row = GENERATE(0, 7);
             board.setPiece(col, row, Piece(Piece::Type::Bishop, toMove));
-            MoveList list = Chess::generateAllMoves(board);
+            MoveList list = generateAllMoves(board);
             validateCountAndFrom(list, col, row, 7);
         }
 
         SECTION("King in the center has 8 moves") {
             board.setPiece(4, 4, Piece(Piece::Type::King, toMove));
-            MoveList list = Chess::generateAllMoves(board);
+            MoveList list = generateAllMoves(board);
             validateCountAndFrom(list, 4, 4, 8);
         }
 
         SECTION("Knight in the center has 8 moves") {
             board.setPiece(4, 4, Piece(Piece::Type::Knight, toMove));
-            MoveList list = Chess::generateAllMoves(board);
+            MoveList list = generateAllMoves(board);
             validateCountAndFrom(list, 4, 4, 8);
         }
 
@@ -99,7 +99,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             uint8_t col = GENERATE(3, 4);
             uint8_t row = GENERATE(3, 4);
             board.setPiece(col, row, Piece(Piece::Type::Queen, toMove));
-            MoveList list = Chess::generateAllMoves(board);
+            MoveList list = generateAllMoves(board);
             validateCountAndFrom(list, col, row, 14 + 13);
         }
 
@@ -115,7 +115,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             for (uint8_t i = 0; i < count; i++) {
                 board.setPiece(i, 4, Piece(Piece::Type::Pawn, toMove));
             }
-            MoveList list = Chess::generateAllMoves(board);
+            MoveList list = generateAllMoves(board);
             REQUIRE(list.size() == count);
         }
     }

@@ -39,7 +39,7 @@ namespace Chess {
 
     MoveList generateAllMoves(const Board& board, Color color);
 
-    MoveList generateAllMoves(const Board& board) {
+    inline MoveList generateAllMoves(const Board& board) {
         return generateAllMoves(board, board.colorToMove());
     }
 

@@ -67,7 +67,7 @@ namespace Chess {
         [[nodiscard]] static std::pair<BoardIndex, BoardIndex> indexToColumnRow(BoardIndex);
 
     private:
-        static constexpr const uint8_t m_size = 8;
+        static constexpr const BoardIndex m_size = 8;
         std::array<Piece::IntType, m_size * m_size> m_pieces;
 
         std::array<uint8_t, 2> m_numPieces = {0, 0};

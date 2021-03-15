@@ -17,7 +17,7 @@ jobs:
           - {
             compiler: g++-10,
             os: ubuntu-20.04,
-            os-base: ''
+            os-base: 'ubuntu' # TODO Maybe we always want at least one release build? then make this ''
           }
           - {
             compiler: clang++-10,
@@ -45,12 +45,12 @@ jobs:
           - ${{ contains(github.event.head_commit.message, 'mac') }}
         runwindows:
           - ${{ contains(github.event.head_commit.message, 'windows') }}
-        runubuntu:
-          - ${{ contains(github.event.head_commit.message, 'clang') }}
+        runrelease:
+          - ${{ contains(github.event.head_commit.message, 'release') }}
         exclude:
           - { config: { os-base: 'mac' }, runall: false, runmac: false }
           - { build_type: 'Release', config: { os-base: 'windows' }, runall: false, runwindows: false }
-          - { config: { os-base: 'ubuntu' }, runall: false, runubuntu: false }
+          - { build_type: 'Release', config: { os-base: 'ubuntu' }, runall: false, runrelease: false }
     env:
       build_folder_location: build
     runs-on: ${{ matrix.config.os }}
@@ -59,7 +59,9 @@ jobs:
 
       - name: Install Dependencies (Ubuntu)
         if: startsWith(matrix.config.os, 'ubuntu')
-        run: sudo apt-get install ninja-build
+        run: |
+          sudo apt-get install ninja-build
+          ${{ matrix.config.compiler }} --version && cmake --version && ninja --version
 
       - name: Install Dependencies (Windows)
         if: startsWith(matrix.config.os, 'windows')
