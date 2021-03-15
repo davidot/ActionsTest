@@ -1,8 +1,35 @@
 #include <SFML/Graphics.hpp>
 #include <imgui-SFML.h>
 #include <imgui.h>
+#include <chess/Board.h>
+#include <iostream>
 
 int main() {
+    std::string baseFolder = "visual/resources/";
+    sf::Texture texture;
+    if (!texture.loadFromFile(baseFolder + "pieces.png"))
+    {
+        return -1;
+    }
+
+    sf::Font font;
+    if (!font.loadFromFile(baseFolder + "font.otf")) {
+        return -1;
+    }
+
+    static std::map<Chess::Piece::Type, int> pieceValMapping = {
+            {Chess::Piece::Type::Pawn, 1},
+            {Chess::Piece::Type::Knight, 2},
+            {Chess::Piece::Type::Bishop, 3},
+            {Chess::Piece::Type::Rook, 4},
+            {Chess::Piece::Type::Queen, 5},
+            {Chess::Piece::Type::King, 6},
+    };
+
+    static int blackPieceOffset = pieceValMapping.size();
+
+    constexpr float squareSize = 64;
+
     sf::RenderWindow window(sf::VideoMode(1280, 960), "Visual");
     window.setFramerateLimit(60);
     ImGui::SFML::Init(window);
@@ -10,14 +37,40 @@ int main() {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
+    Chess::Board board = Chess::Board::standardBoard();
+    sf::Vector2f boardOffset = {100, 100};
+
+    sf::Text text;
+    text.setFont(font); // font is a sf::Font
+    text.setCharacterSize(24); // in pixels, not points!
+    text.setFillColor(sf::Color::Red);
+
+
+    sf::Sprite piece{texture};
+    piece.setScale(squareSize / 32.0f, squareSize / 32.0f);
+
+    sf::RectangleShape highlightSquare{{squareSize, squareSize}};
+    highlightSquare.setOutlineThickness(2.5);
+    highlightSquare.setFillColor(sf::Color::Transparent);
+
+
+    sf::Vector2i selectedSquare = {-1, -1};
+
     sf::Clock deltaClock;
     while (window.isOpen()) {
         sf::Event event;
+        bool clicked = false;
         while (window.pollEvent(event)) {
             ImGui::SFML::ProcessEvent(event);
 
-            if (event.type == sf::Event::Closed) {
+            if (event.type == sf::Event::Closed
+                || (event.type == sf::Event::KeyPressed
+                    && (event.key.code == sf::Keyboard::Escape
+                        || event.key.code == sf::Keyboard::Q))) {
                 window.close();
+            }
+            if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
+                clicked = true;
             }
         }
 
@@ -29,24 +82,72 @@ int main() {
 
         window.clear(sf::Color{0, 142, 29});
 
-        float squareSize = 64;
         sf::RectangleShape square {{squareSize, squareSize}};
 
-        square.setPosition(100, 100);
-        for (int i = 0; i < 64; i++) {
-            if (((i / 8) + i % 8) % 2 == 0) {
-                square.setFillColor(sf::Color::White);
-            } else {
-                square.setFillColor(sf::Color::Black);
-            }
-            window.draw(square);
 
-            if (i % 8 == 7) {
-                square.move({-7 * squareSize, squareSize});
-            } else {
-                square.move({squareSize, 0});
+        const int boardSquareSize = 8;
+        for (int col = 0; col < boardSquareSize; col++) {
+            for (int row = 0; row < boardSquareSize; row++) {
+                if ((col + row) % 2 == 0) {
+                    square.setFillColor(sf::Color::White);
+                } else {
+                    square.setFillColor(sf::Color::Black);
+                }
+
+                sf::Vector2f position = boardOffset + sf::Vector2f {squareSize * (boardSquareSize - col), squareSize * (boardSquareSize - row)};
+                square.setPosition(position);
+
+                window.draw(square);
+
+                auto pieceAt = board.pieceAt(col, row);
+                if (pieceAt.has_value()) {
+                    int pieceVal = pieceValMapping[pieceAt->type()] + (pieceAt->color() == Chess::Color::Black ? blackPieceOffset : 0);
+                    piece.setTextureRect({32 * pieceVal, 0, 32, 32});
+                    piece.setPosition(position);
+                    window.draw(piece);
+                }
             }
         }
+
+        sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+        mousePosition -= sf::Vector2i(boardOffset.x, boardOffset.y);
+        mousePosition /= (int)squareSize;
+        if (mousePosition.x > 0 && mousePosition.x <= boardSquareSize
+           && mousePosition.y > 0 && mousePosition.y <= boardSquareSize) {
+            sf::Vector2f position = boardOffset + sf::Vector2f {squareSize * mousePosition.x, squareSize * mousePosition.y};
+            highlightSquare.setPosition(position);
+
+            highlightSquare.setOutlineColor(sf::Color(0, 0, 255, 200));
+            window.draw(highlightSquare);
+            if (clicked) {
+                sf::Vector2i newPosition ={boardSquareSize - mousePosition.x, boardSquareSize - mousePosition.y};
+                if (selectedSquare.x >= 0) {
+                    auto pieceFrom = board.pieceAt(selectedSquare.x, selectedSquare.y);
+                    board.setPiece(selectedSquare.x, selectedSquare.y, std::nullopt);
+                    board.setPiece(newPosition.x, newPosition.y, pieceFrom);
+                    selectedSquare = {-1, -1};
+                } else {
+                    selectedSquare = newPosition;
+                }
+            }
+        } else if (clicked) {
+            selectedSquare = {-1, -1};
+        }
+
+
+
+        if (selectedSquare.x >= 0) {
+            sf::Vector2f position = boardOffset + sf::Vector2f {squareSize * (boardSquareSize - selectedSquare.x), squareSize * (boardSquareSize - selectedSquare.y)};
+            highlightSquare.setPosition(position);
+
+            highlightSquare.setOutlineColor(sf::Color(255, 0, 0, 200));
+            window.draw(highlightSquare);
+        }
+
+
+        text.setString(std::to_string(mousePosition.x) + "," + std::to_string(mousePosition.y));
+        window.draw(text);
+
 
         ImGui::SFML::Render(window);
         window.display();

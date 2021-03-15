@@ -12,7 +12,6 @@ namespace Chess {
         void addMove(Board::BoardIndex col, Board::BoardIndex row, Move::BoardOffset offset, Move::Flags flags = Move::Flags::None);
     private:
         uint32_t m_count;
-
     };
 
     MoveList generateAllMoves(const Board& board);
