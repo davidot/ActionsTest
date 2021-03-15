@@ -66,13 +66,17 @@ namespace Chess {
 
         [[nodiscard]] static std::pair<BoardIndex, BoardIndex> indexToColumnRow(BoardIndex);
 
+        void makeNullMove();
+
+        void undoNullMove();
+
     private:
         static constexpr const BoardIndex m_size = 8;
         std::array<Piece::IntType, m_size * m_size> m_pieces;
 
         std::array<uint8_t, 2> m_numPieces = {0, 0};
 
-        Color m_next_turn = Color::White;
+        Color m_nextTurnColor = Color::White;
 
         std::optional<std::string> parseFENBoard(std::string_view);
 
@@ -96,9 +100,9 @@ namespace Chess {
         using BoardOffset = std::make_signed_t<Board::BoardIndex>;
         enum class Flags : uint8_t {
             None = 0,
-            CastlingShort = 1,
-            CastlingLong = 2,
-            DoublePushPawn = 3,
+            Castling = 1,
+            DoublePushPawn = 2,
+            EnPassant = 3,
             PromotionToKnight = 4,
             PromotionToBishop = 5,
             PromotionToRook = 6,
