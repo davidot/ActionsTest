@@ -143,21 +143,11 @@ namespace Chess {
             return m_value.index() == 0;
         }
 
-        [[nodiscard]] const std::string& error() const{
-            //ASSERT
-            // in case it is a string we need to use the indices
-            return std::get<1>(m_value);
-        }
+        [[nodiscard]] const std::string& error() const;
 
-        [[nodiscard]] T&& extract() {
-            // in case it is a string we need to use the indices
-            return std::move(std::get<0>(m_value));
-        }
+        [[nodiscard]] T&& extract();
 
-        [[nodiscard]] const T& value() {
-            // in case it is a string we need to use the indices
-            return std::get<0>(m_value);
-        }
+        [[nodiscard]] const T& value();
     };
 
 }

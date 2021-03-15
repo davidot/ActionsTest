@@ -1,4 +1,5 @@
 #include "Board.h"
+#include "../util/Assertions.h"
 #include "../util/StringUtil.h"
 #include <array>
 #include <charconv>
@@ -180,7 +181,7 @@ namespace Chess {
         if (!nextTurn.has_value()) {
             return std::string("Invalid turn value: ") + std::string(parts[1]);
         }
-        b.m_next_turn = nextTurn.value();
+        b.m_nextTurnColor = nextTurn.value();
 
         if (!b.setAvailableCastles(parts[2])) {
             return std::string("Invalid possible castling moves value: ") + std::string(parts[2]);
@@ -215,7 +216,7 @@ namespace Chess {
     }
 
     Color Board::colorToMove() const {
-        return m_next_turn;
+        return m_nextTurnColor;
     }
 
     uint8_t Board::size() const {
@@ -357,13 +358,21 @@ namespace Chess {
             }
         }
 
-        val << ' ' << turnColor(m_next_turn)
+        val << ' ' << turnColor(m_nextTurnColor)
             << ' ' << castlingOutput(m_castlingRights)
             << ' ' << (m_enPassant.has_value() ? indexToSAN(m_enPassant.value()) : "-")
             << ' ' << m_halfMovesSinceCaptureOrPawn
             << ' ' << m_fullMoveNum;
 
         return val.str();
+    }
+
+    void Board::makeNullMove() {
+        m_nextTurnColor = opposite(m_nextTurnColor);
+    }
+
+    void Board::undoNullMove() {
+        m_nextTurnColor = opposite(m_nextTurnColor);
     }
 
 #define INT(x) static_cast<uint8_t>(x)
@@ -404,4 +413,21 @@ namespace Chess {
     }
 
 
+    const std::string &ExpectedBoard::error() const {
+        VERIFY(m_value.index() == 1);
+        // in case it is a string we need to use the indices
+        return std::get<1>(m_value);
+    }
+
+    ExpectedBoard::T &&ExpectedBoard::extract() {
+        VERIFY(m_value.index() == 0);
+        // in case it is a string we need to use the indices
+        return std::move(std::get<0>(m_value));
+    }
+
+    const ExpectedBoard::T &ExpectedBoard::value() {
+        VERIFY(m_value.index() == 0);
+        // in case it is a string we need to use the indices
+        return std::get<0>(m_value);
+    }
 }
