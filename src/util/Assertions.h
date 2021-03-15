@@ -1,5 +1,6 @@
 #pragma once
 
+#ifndef NDEBUG
 #include <iostream>
 #define BASE_VERIFY(expr) \
     do {                  \
@@ -14,3 +15,4 @@
 #define VERIFY(expr) BASE_VERIFY(expr)
 
 #define VERIFY_NOT_REACHED() VERIFY(false)
+#endif
