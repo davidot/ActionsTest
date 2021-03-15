@@ -13,6 +13,8 @@ namespace Chess {
         Black = 0b00100000
     };
 
+    std::ostream& operator<<(std::ostream& os, const Color& piece);
+
     Color opposite(Color c);
 
     class Piece {
@@ -54,7 +56,7 @@ namespace Chess {
 
         bool operator!=(const Piece &rhs) const;
 
-        friend std::ostream &operator<<(std::ostream &os, const Piece &piece);
+        friend std::ostream& operator<<(std::ostream& os, const Piece& piece);
 
         [[nodiscard]] Color color() const;
 
