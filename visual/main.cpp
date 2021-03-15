@@ -39,7 +39,15 @@ int main() {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    Chess::Board board = Chess::Board::standardBoard();
+    Chess::Board board = Chess::Board::fromFEN("rnbqk3/"
+                                               "ppppp3/"
+                                               "8/"
+                                               "8/"
+                                               "8/"
+                                               "8/"
+                                               "3PPPPP/"
+                                               "3QKBNR"
+                                               " w KQkq - 0 1").extract();
     sf::Vector2f boardOffset = {100, 100};
 
     sf::Text text;
@@ -60,7 +68,7 @@ int main() {
 
     constexpr const int boardSquareSize = 8;
     auto colRowToRect = [&](uint8_t col, uint8_t row) {
-      return boardOffset + sf::Vector2f {squareSize * (boardSquareSize - col), squareSize * (boardSquareSize - row)};
+      return boardOffset + sf::Vector2f {squareSize * col, squareSize * (boardSquareSize - row)};
     };
 
     sf::Clock deltaClock;
@@ -118,15 +126,17 @@ int main() {
         sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
         mousePosition -= sf::Vector2i(boardOffset.x, boardOffset.y);
         mousePosition /= (int)squareSize;
-        if (mousePosition.x > 0 && mousePosition.x <= boardSquareSize
-           && mousePosition.y > 0 && mousePosition.y <= boardSquareSize) {
-            sf::Vector2f position = boardOffset + sf::Vector2f {squareSize * mousePosition.x, squareSize * mousePosition.y};
+        mousePosition = sf::Vector2i(mousePosition.x, boardSquareSize - mousePosition.y);
+        if (mousePosition.x >= 0 && mousePosition.x < boardSquareSize
+           && mousePosition.y >= 0 && mousePosition.y < boardSquareSize) {
+
+            sf::Vector2f position = colRowToRect(mousePosition.x, mousePosition.y);
             highlightSquare.setPosition(position);
 
             highlightSquare.setOutlineColor(sf::Color(0, 0, 255, 200));
             window.draw(highlightSquare);
             if (clicked) {
-                sf::Vector2i newPosition {boardSquareSize - mousePosition.x, boardSquareSize - mousePosition.y};
+                sf::Vector2i newPosition {mousePosition.x, mousePosition.y};
                 if (selectedSquare.x >= 0) {
                     auto pieceFrom = board.pieceAt(selectedSquare.x, selectedSquare.y);
                     board.setPiece(selectedSquare.x, selectedSquare.y, std::nullopt);
@@ -139,8 +149,6 @@ int main() {
         } else if (clicked) {
             selectedSquare = {-1, -1};
         }
-
-
 
         if (selectedSquare.x >= 0) {
             auto list = Chess::generateAllMoves(board);
