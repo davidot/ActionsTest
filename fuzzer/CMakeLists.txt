@@ -1,4 +1,4 @@
-if (NOT CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR NOT APPLE)
+if (NOT CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR APPLE)
     # TODO do not just exlucde apple but add cmake level option to build fuzzers
     message(STATUS "Fuzzers are only supported on Clang")
     return()
