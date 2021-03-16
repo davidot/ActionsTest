@@ -162,10 +162,14 @@ int main() {
             highlightSquare.setOutlineColor(sf::Color(255, 0, 0, 200));
             window.draw(highlightSquare);
 
-            highlightSquare.setOutlineColor(sf::Color(0, 255, 0, 200));
             list.forEachMoveFrom(selectedSquare.x, selectedSquare.y, [&](const Chess::Move& move) {
                 auto [col, row] = Chess::Board::indexToColumnRow(move.toPosition);
                 sf::Vector2f position = colRowToRect(col, row);
+                if (move.flags == Chess::Move::Flags::None) {
+                    highlightSquare.setOutlineColor(sf::Color(0, 255, 0, 200));
+                } else {
+                    highlightSquare.setOutlineColor(sf::Color(0, 255, 255, 200));
+                }
                 highlightSquare.setPosition(position);
                 window.draw(highlightSquare);
             });
