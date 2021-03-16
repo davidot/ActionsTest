@@ -123,15 +123,59 @@ namespace Chess {
         }
     }
 
+    Index pawnStartRow(Color color) {
+        switch (color) {
+            case Color::White:
+                return 1;
+            case Color::Black:
+                return boardSize - 2;
+        }
+        VERIFY_NOT_REACHED();
+    }
+
+    Index pawnPromotionRow(Color color) {
+        switch (color) {
+            case Color::White:
+                return boardSize - 1;
+            case Color::Black:
+                return 0;
+        }
+        VERIFY_NOT_REACHED();
+    }
+
     void addPawnMoves(MoveList& list, const Board& board, const Index col, const Index row, Color color) {
         Offset forward = color == Color::White ? Up : Down;
+
+        auto addMove = [col, row, promoRow = pawnPromotionRow(color), &list]
+                (Index newCol, Index newRow, Move::Flags flags = Move::Flags::None) {
+            if (newRow == promoRow) {
+                // we do not want double push and promotion (on 4x4 board which we do not support)
+                VERIFY(flags == Move::Flags::None);
+
+                for (auto promotion : {Move::Flags::PromotionToKnight,
+                                       Move::Flags::PromotionToBishop,
+                                       Move::Flags::PromotionToRook,
+                                       Move::Flags::PromotionToQueen}) {
+                    list.addMove(Move{col, row, newCol, newRow, promotion});
+                }
+            } else {
+                list.addMove(Move{col, row, newCol, newRow, flags});
+            }
+        };
 
         {
             Index newCol = col;
             Index newRow = row;
-            if (validOffset(newCol, newRow, offsets[forward])) {
-                if (board.pieceAt(newCol, newRow) == std::nullopt) {
-                    list.addMove(Move{col, row, newCol, newRow});
+            if (validOffset(newCol, newRow, offsets[forward])
+                && board.pieceAt(newCol, newRow) == std::nullopt) {
+
+                addMove(newCol, newRow);
+
+                if (row == pawnStartRow(color)
+                    && validOffset(newCol, newRow, offsets[forward])
+                    && board.pieceAt(newCol, newRow) == std::nullopt){
+
+                    addMove(newCol, newRow, Move::Flags::DoublePushPawn);
                 }
             }
         }
@@ -145,7 +189,7 @@ namespace Chess {
             }
             auto pieceAt = board.pieceAt(newCol, newRow);
             if (pieceAt.has_value() && pieceAt->color() != color) {
-                list.addMove(Move{col, row, newCol, newRow});
+                addMove(newCol, newRow);
             }
         }
     }
