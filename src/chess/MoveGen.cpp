@@ -1,4 +1,5 @@
 #include "MoveGen.h"
+#include "../util/Assertions.h"
 
 
 namespace Chess {
@@ -7,11 +8,9 @@ namespace Chess {
 
 
     void MoveList::addMove(Move move) {
+        // not sure we actually want to reject none moves?
+        VERIFY(move.fromPosition != move.toPosition);
         m_moves.push_back(move);
-    }
-
-    void MoveList::addMove(Board::BoardIndex col, Board::BoardIndex row, Move::BoardOffset offset, Move::Flags flags) {
-        addMove({col, row, offset, flags});
     }
 
     size_t MoveList::size() const {
@@ -42,15 +41,13 @@ namespace Chess {
         Right = 5,
         LeftDown = 6,
         Down = 7,
-        RightDown = 8
+        RightDown = 8,
+
+        ToLeft = -1,
+        ToRight = +1,
     };
 
 #define ALL_DIRECTIONS LeftUp, Up, RightUp, Left, Right, LeftDown, Down, RightDown
-
-    void applyOffset(Index& col, Index& row, Offsets offset) {
-        col += offset.first;
-        row += offset.second;
-    }
 
     bool withinRange(Index v, Offset o) {
         if (o < 0) {
@@ -59,58 +56,102 @@ namespace Chess {
         return (boardSize - v) > o;
     }
 
-    bool validOffset(Index col, Index row, Offsets offset) {
-        return withinRange(col, offset.first) && withinRange(row, offset.second);
+    bool validOffset(Index& col, Index& row, Offsets offset) {
+        if (withinRange(col, offset.first) && withinRange(row, offset.second)) {
+            col += offset.first;
+            row += offset.second;
+            return true;
+        }
+        return false;
+    }
+
+    bool addMoveWithPieceCheck(MoveList& list, const Board& board, Move m) {
+        VERIFY(m.fromPosition != m.toPosition);
+        auto pieceAtToLocation = board.pieceAt(m.toPosition);
+        auto pieceAtFromLocation = board.pieceAt(m.fromPosition);
+        VERIFY(pieceAtFromLocation.has_value());
+        if (pieceAtToLocation.has_value()) {
+            if (pieceAtToLocation->color() != pieceAtFromLocation->color()) {
+                list.addMove(m);
+            }
+            return false;
+        } else {
+            list.addMove(m);
+            return true;
+        }
     }
 
     template<Direction direction>
-    void addMove(MoveList &list, Index col, Index row) {
+    void addMove(MoveList &list, const Board& board, Index col, Index row) {
         constexpr auto off = offsets[direction];
-        if (validOffset(col, row, off)) {
-            list.addMove(Move{col, row,
-                              static_cast<Index>(col + off.first), static_cast<Index>(row + off.second)});
+        Index newCol = col;
+        Index newRow = row;
+        if (validOffset(newCol, newRow, off)) {
+            addMoveWithPieceCheck(list, board, Move{col, row, newCol, newRow});
         }
     }
 
     template<Direction ...directions>
-    void addMoves(MoveList& list, Index col, Index row) {
-        (addMove<directions>(list, col, row), ...);
+    void addMoves(MoveList& list, const Board& board, Index col, Index row) {
+        (addMove<directions>(list, board, col, row), ...);
     }
 
     template<Direction d>
-    void addSlidingMoves(MoveList &list, Index col, Index row) {
+    void addSlidingMoves(MoveList &list, const Board& board, Index col, Index row) {
         Index toCol = col;
         Index toRow = row;
         auto& offset = offsets[d];
         while (validOffset(toCol, toRow, offset)) {
-            applyOffset(toCol, toRow, offset);
-            list.addMove(Move{col, row, toCol, toRow});
-        }
-    }
-
-    template<Direction... Directions>
-    void addAllSlidingMoves(MoveList &list, Index col, Index row) {
-        (addSlidingMoves<Directions>(list, col, row), ...);
-    }
-
-    void addKnightMoves(MoveList &list, Index col, Index row) {
-        for (auto& off : knightOffsets) {
-            if (validOffset(col, row, off)) {
-                list.addMove(Move{col, row,
-                                  static_cast<Index>(col + off.first), static_cast<Index>(row + off.second)});
+            if (!addMoveWithPieceCheck(list, board, Move{col, row, toCol, toRow})) {
+                break;
             }
         }
     }
 
-    void addPawnMoves(MoveList& list, Index col, Index row, Color color) {
-        if (color == Color::White) {
-            addMove<Up>(list, col, row);
-        } else {
-            addMove<Down>(list, col, row);
+    template<Direction... Directions>
+    void addAllSlidingMoves(MoveList &list, const Board& board, Index col, Index row) {
+        (addSlidingMoves<Directions>(list, board, col, row), ...);
+    }
+
+    void addKnightMoves(MoveList &list, const Board& board, Index col, Index row) {
+        for (auto& off : knightOffsets) {
+            Index newCol = col;
+            Index newRow = row;
+            if (validOffset(newCol, newRow, off)) {
+                addMoveWithPieceCheck(list, board, Move{col, row, newCol, newRow});
+            }
+        }
+    }
+
+    void addPawnMoves(MoveList& list, const Board& board, const Index col, const Index row, Color color) {
+        Offset forward = color == Color::White ? Up : Down;
+
+        {
+            Index newCol = col;
+            Index newRow = row;
+            if (validOffset(newCol, newRow, offsets[forward])) {
+                if (board.pieceAt(newCol, newRow) == std::nullopt) {
+                    list.addMove(Move{col, row, newCol, newRow});
+                }
+            }
+        }
+
+        for (auto change : {ToLeft, ToRight}) {
+            auto offset = offsets[forward + change];
+            Index newCol = col;
+            Index newRow = row;
+            if (!validOffset(newCol, newRow, offset)) {
+                continue;
+            }
+            auto pieceAt = board.pieceAt(newCol, newRow);
+            if (pieceAt.has_value() && pieceAt->color() != color) {
+                list.addMove(Move{col, row, newCol, newRow});
+            }
         }
     }
 
     MoveList generateAllMoves(const Board &board, Color color) {
+//        std::cout << board.toFEN() << '\n';
         using BI = Board::BoardIndex;
 
         MoveList list{};
@@ -123,22 +164,22 @@ namespace Chess {
                 }
                 switch (opt_piece->type()) {
                     case Piece::Type::Pawn:
-                        addPawnMoves(list, col, row, opt_piece->color());
+                        addPawnMoves(list, board, col, row, color);
                         break;
                     case Piece::Type::King:
-                        addMoves<ALL_DIRECTIONS>(list, col, row);
+                        addMoves<ALL_DIRECTIONS>(list, board, col, row);
                         break;
                     case Piece::Type::Knight:
-                        addKnightMoves(list, col, row);
+                        addKnightMoves(list, board, col, row);
                         break;
                     case Piece::Type::Bishop:
-                        addAllSlidingMoves<LeftUp, RightUp, LeftDown, RightDown>(list, col, row);
+                        addAllSlidingMoves<LeftUp, RightUp, LeftDown, RightDown>(list, board, col, row);
                         break;
                     case Piece::Type::Rook:
-                        addAllSlidingMoves<Up, Left, Right, Down>(list, col, row);
+                        addAllSlidingMoves<Up, Left, Right, Down>(list, board, col, row);
                         break;
                     case Piece::Type::Queen:
-                        addAllSlidingMoves<ALL_DIRECTIONS>(list, col, row);
+                        addAllSlidingMoves<ALL_DIRECTIONS>(list, board, col, row);
                         break;
                 }
             }
