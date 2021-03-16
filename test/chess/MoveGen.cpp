@@ -502,7 +502,9 @@ TEST_CASE("Move generation", "[chess][movegen]") {
               REQUIRE(col == col2);
               REQUIRE(row == endRow + offset);
               REQUIRE(Move::isPromotion(move.flag));
-              types.insert(Move::promotedType(move.flag));
+              auto type = Move::promotedType(move.flag);
+              REQUIRE(types.find(type) == types.end());
+              types.insert(type);
             });
             REQUIRE(types.size() == 4);
         }
@@ -532,7 +534,10 @@ TEST_CASE("Move generation", "[chess][movegen]") {
               REQUIRE(Move::isPromotion(move.flag));
               auto pieceAt = board.pieceAt(col2, row);
               if (pieceAt != std::nullopt) {
-                  types.insert(Move::promotedType(move.flag));
+                  auto type = Move::promotedType(move.flag);
+                  REQUIRE(types.find(type) == types.end());
+                  types.insert(type);
+
                   REQUIRE(col2 != col);
               }
               calls++;
