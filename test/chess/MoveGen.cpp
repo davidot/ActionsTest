@@ -436,7 +436,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
               REQUIRE(col == col2);
               destinationRows.insert(row);
               if (row == startRow + offset + offset) {
-                  REQUIRE(move.flags == Move::Flags::DoublePushPawn);
+                  REQUIRE(move.flag == Move::Flag::DoublePushPawn);
               }
             });
             REQUIRE(destinationRows.size() == 2);
@@ -485,7 +485,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             board.setPiece(col, row, Piece(Piece::Type::Pawn, toMove));
             MoveList list = generateAllMoves(board);
             list.forEachMove([](const Move& move) {
-                REQUIRE(move.flags != Move::Flags::DoublePushPawn);
+                REQUIRE(move.flag != Move::Flag::DoublePushPawn);
             });
         }
 
@@ -496,17 +496,49 @@ TEST_CASE("Move generation", "[chess][movegen]") {
 
             MoveList list = generateAllMoves(board);
             std::set<Piece::Type> types;
-            list.forEachMoveFrom(col, startRow, [&](const Move& move) {
+            list.forEachMoveFrom(col, endRow, [&](const Move& move) {
               REQUIRE(move.toPosition != move.fromPosition);
               auto [col2, row] = Board::indexToColumnRow(move.toPosition);
               REQUIRE(col == col2);
               REQUIRE(row == endRow + offset);
-              REQUIRE(isPromotion(move.flags));
+              REQUIRE(Move::isPromotion(move.flag));
+              types.insert(Move::promotedType(move.flag));
             });
+            REQUIRE(types.size() == 4);
         }
 
         SECTION("Capture promotion") {
-            // TODO
+            uint8_t col = GENERATE(0, 7);
+            uint8_t captureCol = GENERATE_REF(filter([&](uint8_t i){return i >= 0 && i < board.size();}, values({col - 1, col + 1})));
+            CAPTURE(col, endRow);
+
+            board.setPiece(col, endRow, Piece{Piece::Type::Pawn, toMove});
+
+            board.setPiece(captureCol, endRow + offset, Piece{GENERATE(CAPTURABLE_TYPES), other});
+
+            bool hasBlocker = GENERATE(true, false);
+            if (hasBlocker) {
+                Piece moveBlocker{GENERATE(Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King), GENERATE(Color::White, Color::Black)};
+                board.setPiece(col, endRow + offset, moveBlocker);
+            }
+
+            MoveList list = generateAllMoves(board);
+            std::set<Piece::Type> types;
+            unsigned calls = 0;
+            list.forEachMoveFrom(col, endRow, [&](const Move& move) {
+              REQUIRE(move.toPosition != move.fromPosition);
+              auto [col2, row] = Board::indexToColumnRow(move.toPosition);
+              REQUIRE(row == endRow + offset);
+              REQUIRE(Move::isPromotion(move.flag));
+              auto pieceAt = board.pieceAt(col2, row);
+              if (pieceAt != std::nullopt) {
+                  types.insert(Move::promotedType(move.flag));
+                  REQUIRE(col2 != col);
+              }
+              calls++;
+            });
+            REQUIRE(types.size() == 4);
+            REQUIRE(calls == (hasBlocker ? 4 : 8));
         }
 
         SECTION("En passant") {
