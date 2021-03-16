@@ -11,7 +11,7 @@ namespace Chess {
 
         void addMove(Move);
 
-        void addMove(Board::BoardIndex col, Board::BoardIndex row, Move::BoardOffset offset, Move::Flags flags = Move::Flags::None);
+        void addMove(Board::BoardIndex col, Board::BoardIndex row, Move::BoardOffset offset, Move::Flag flags = Move::Flag::None);
 
         template<typename Func>
         void forEachMove(Func f) const {

@@ -147,15 +147,15 @@ namespace Chess {
         Offset forward = color == Color::White ? Up : Down;
 
         auto addMove = [col, row, promoRow = pawnPromotionRow(color), &list]
-                (Index newCol, Index newRow, Move::Flags flags = Move::Flags::None) {
+                (Index newCol, Index newRow, Move::Flag flags = Move::Flag::None) {
             if (newRow == promoRow) {
                 // we do not want double push and promotion (on 4x4 board which we do not support)
-                VERIFY(flags == Move::Flags::None);
+                VERIFY(flags == Move::Flag::None);
 
-                for (auto promotion : {Move::Flags::PromotionToKnight,
-                                       Move::Flags::PromotionToBishop,
-                                       Move::Flags::PromotionToRook,
-                                       Move::Flags::PromotionToQueen}) {
+                for (auto promotion : {Move::Flag::PromotionToKnight,
+                                       Move::Flag::PromotionToBishop,
+                                       Move::Flag::PromotionToRook,
+                                       Move::Flag::PromotionToQueen}) {
                     list.addMove(Move{col, row, newCol, newRow, promotion});
                 }
             } else {
@@ -175,7 +175,7 @@ namespace Chess {
                     && validOffset(newCol, newRow, offsets[forward])
                     && board.pieceAt(newCol, newRow) == std::nullopt){
 
-                    addMove(newCol, newRow, Move::Flags::DoublePushPawn);
+                    addMove(newCol, newRow, Move::Flag::DoublePushPawn);
                 }
             }
         }

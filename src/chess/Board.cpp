@@ -391,29 +391,42 @@ namespace Chess {
 #undef INT
 #undef TOCASTLE
 
-    Move::Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flags flags)
+    Move::Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flag flags)
         :  toPosition(toPosition),
            fromPosition(fromPosition),
-           flags(flags) {
+          flag(flags) {
     }
 
-    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Move::Flags flags) :
-        flags(flags) {
+    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Move::Flag flags) : flag(flags) {
         Board::BoardIndex index = Board::columnRowToIndex(fromCol, fromRow);
         toPosition = index + offset;
         fromPosition = index;
     }
 
-    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardIndex toCol, Board::BoardIndex toRow, Move::Flags flags) :
+    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardIndex toCol, Board::BoardIndex toRow, Move::Flag flags) :
         toPosition(Board::columnRowToIndex(toCol, toRow)),
         fromPosition(Board::columnRowToIndex(fromCol, fromRow)),
-        flags(flags) {
+                                                                                                                                            flag(flags) {
     }
-    Move::Move() : toPosition(0), fromPosition(0), flags(Flags::None) {
+    Move::Move() : toPosition(0), fromPosition(0), flag(Flag::None) {
     }
 
-    bool isPromotion(Move::Flags flags) {
-        return (static_cast<uint8_t>(flags) & 0x4) != 0;
+    bool Move::isPromotion(Move::Flag flag) {
+        return (static_cast<uint8_t>(flag) & 0x4) != 0;
+    }
+
+    Piece::Type Move::promotedType(Move::Flag flag) {
+        switch (flag) {
+            case Flag::PromotionToKnight:
+                return Piece::Type::Knight;
+            case Flag::PromotionToBishop:
+                return Piece::Type::Bishop;
+            case Flag::PromotionToRook:
+                return Piece::Type::Rook;
+            case Flag::PromotionToQueen:
+                return Piece::Type::Queen;
+        }
+        VERIFY_NOT_REACHED();
     }
 
 

@@ -11,14 +11,19 @@
 
 TEST_CASE("Basic move checks", "[chess][move]") {
     using namespace Chess;
-    REQUIRE(isPromotion(Move::Flags::PromotionToKnight));
-    REQUIRE(isPromotion(Move::Flags::PromotionToBishop));
-    REQUIRE(isPromotion(Move::Flags::PromotionToRook));
-    REQUIRE(isPromotion(Move::Flags::PromotionToQueen));
-    REQUIRE_FALSE(isPromotion(Move::Flags::None));
-    REQUIRE_FALSE(isPromotion(Move::Flags::Castling));
-    REQUIRE_FALSE(isPromotion(Move::Flags::DoublePushPawn));
-    REQUIRE_FALSE(isPromotion(Move::Flags::EnPassant));
+    REQUIRE(Move::isPromotion(Move::Flag::PromotionToKnight));
+    REQUIRE(Move::isPromotion(Move::Flag::PromotionToBishop));
+    REQUIRE(Move::isPromotion(Move::Flag::PromotionToRook));
+    REQUIRE(Move::isPromotion(Move::Flag::PromotionToQueen));
+    REQUIRE_FALSE(Move::isPromotion(Move::Flag::None));
+    REQUIRE_FALSE(Move::isPromotion(Move::Flag::Castling));
+    REQUIRE_FALSE(Move::isPromotion(Move::Flag::DoublePushPawn));
+    REQUIRE_FALSE(Move::isPromotion(Move::Flag::EnPassant));
+
+    REQUIRE(Move::promotedType(Chess::Move::Flag::PromotionToKnight) == Piece::Type::Knight);
+    REQUIRE(Move::promotedType(Chess::Move::Flag::PromotionToBishop) == Piece::Type::Bishop);
+    REQUIRE(Move::promotedType(Chess::Move::Flag::PromotionToRook) == Piece::Type::Rook);
+    REQUIRE(Move::promotedType(Chess::Move::Flag::PromotionToQueen) == Piece::Type::Queen);
 }
 
 TEST_CASE("Move generation", "[chess][movegen]") {
@@ -57,7 +62,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             CAPTURE(move);
             REQUIRE(move.fromPosition == index);
             REQUIRE(move.toPosition != index);
-            REQUIRE(move.flags == Move::Flags::None);
+            REQUIRE(move.flag == Move::Flag::None);
             destinations.insert(move.toPosition);
           });
           REQUIRE(destinations.size() == count);
@@ -67,7 +72,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             CAPTURE(move);
             REQUIRE(move.fromPosition == index);
             REQUIRE(move.toPosition != index);
-            REQUIRE(move.flags == Move::Flags::None);
+            REQUIRE(move.flag == Move::Flag::None);
             REQUIRE(destinations.find(move.toPosition) != destinations.end());
             calls++;
           });
@@ -171,7 +176,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
 
                     REQUIRE((colTo == colFrom || rowTo == rowFrom));
                     REQUIRE(move.fromPosition != move.toPosition);
-                    REQUIRE(move.flags == Move::Flags::None);
+                    REQUIRE(move.flag == Move::Flag::None);
                 });
                 REQUIRE(count == 14);
             }
@@ -225,7 +230,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             list.forEachMoveFrom(0, 0, [&](const Move& move) {
                 count++;
                 REQUIRE(move.fromPosition != move.toPosition);
-                REQUIRE(move.flags == Move::Flags::None);
+                REQUIRE(move.flag == Move::Flag::None);
             });
             REQUIRE(count == 2);
         }

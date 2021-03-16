@@ -98,7 +98,7 @@ namespace Chess {
     // TODO to make this actually fit in 16 bits use: struct __attribute__((packed)) Move {
     struct Move {
         using BoardOffset = std::make_signed_t<Board::BoardIndex>;
-        enum class Flags : uint8_t {
+        enum class Flag : uint8_t {
             None = 0,
             Castling = 1,
             DoublePushPawn = 2,
@@ -112,19 +112,23 @@ namespace Chess {
         Board::BoardIndex toPosition: 6;
         Board::BoardIndex fromPosition : 6;
 
-        Flags flags : 3;
+        Flag flag : 3;
 
         Move();
 
-        Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flags flags = Flags::None);
+        Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flag flags = Flag::None);
 
-        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Flags flags = Flags::None);
+        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Flag flags = Flag::None);
 
         Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow,
-             Board::BoardIndex toCol, Board::BoardIndex toRow, Flags flags = Flags::None);
+             Board::BoardIndex toCol, Board::BoardIndex toRow, Flag flags = Flag::None);
+
+        static bool isPromotion(Flag);
+
+        static Piece::Type promotedType(Flag);
     };
 
-    bool isPromotion(Move::Flags flags);
+
 
     CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);
     CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs);
