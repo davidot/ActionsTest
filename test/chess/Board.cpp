@@ -496,6 +496,18 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         }
     }
 
+    SECTION("Side to move state") {
+        std::string col = GENERATE("w", "b");
+        CAPTURE(col);
+        std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR " + col + " KQkq - 0 1";
+        auto board = is_valid_board(basePosition);
+        if (col == "w") {
+            REQUIRE(board.colorToMove() == Color::White);
+        } else {
+            REQUIRE(board.colorToMove() == Color::Black);
+        }
+    }
+
     SECTION("Castling state") {
         std::string castling = GENERATE("-", "KQkq", "KQ", "kq", "Kk", "Qq", "Kq", "Qk", "K", "Q", "k", "q");
         CAPTURE(castling);
