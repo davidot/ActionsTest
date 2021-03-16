@@ -10,5 +10,8 @@
         }                                                                                     \
     } while (0)
 
-#define VERIFY_NOT_REACHED() VERIFY(false)
+#else
+#define VERIFY(expr)
 #endif
+
+#define VERIFY_NOT_REACHED() VERIFY(false)
