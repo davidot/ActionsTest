@@ -120,10 +120,11 @@ namespace Chess {
 
         Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Flags flags = Flags::None);
 
-        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardIndex toCol, Board::BoardIndex toRow, Flags flags = Flags::None);
-
+        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow,
+             Board::BoardIndex toCol, Board::BoardIndex toRow, Flags flags = Flags::None);
     };
 
+    bool isPromotion(Move::Flags flags);
 
     CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);
     CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs);

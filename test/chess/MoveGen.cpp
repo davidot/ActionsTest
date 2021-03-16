@@ -8,6 +8,18 @@
         REQUIRE(false); \
     })
 
+TEST_CASE("Basic move checks", "[chess][move]") {
+    using namespace Chess;
+    REQUIRE(isPromotion(Move::Flags::PromotionToKnight));
+    REQUIRE(isPromotion(Move::Flags::PromotionToBishop));
+    REQUIRE(isPromotion(Move::Flags::PromotionToRook));
+    REQUIRE(isPromotion(Move::Flags::PromotionToQueen));
+    REQUIRE_FALSE(isPromotion(Move::Flags::None));
+    REQUIRE_FALSE(isPromotion(Move::Flags::Castling));
+    REQUIRE_FALSE(isPromotion(Move::Flags::DoublePushPawn));
+    REQUIRE_FALSE(isPromotion(Move::Flags::EnPassant));
+}
+
 TEST_CASE("Move generation", "[chess][movegen]") {
     using namespace Chess;
 

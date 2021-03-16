@@ -412,6 +412,10 @@ namespace Chess {
     Move::Move() : toPosition(0), fromPosition(0), flags(Flags::None) {
     }
 
+    bool isPromotion(Move::Flags flags) {
+        return (static_cast<uint8_t>(flags) & 0x4) != 0;
+    }
+
 
     const std::string &ExpectedBoard::error() const {
         VERIFY(m_value.index() == 1);
