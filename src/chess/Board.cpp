@@ -255,7 +255,7 @@ namespace Chess {
         }
     }
 
-    std::optional<Board::BoardIndex> Board::SANToIndex(std::string_view vw) const {
+    std::optional<Board::BoardIndex> Board::SANToIndex(std::string_view vw) {
         if (vw.size() != 2) {
             return std::nullopt;
         }
@@ -274,12 +274,16 @@ namespace Chess {
         return columnRowToIndex(col, row);
     }
 
-    std::string Board::indexToSAN(uint16_t index) const {
-        auto [col, row] = indexToColumnRow(index);
+    std::string Board::columnRowToSAN(BoardIndex col, BoardIndex row) {
         std::string str;
         str.push_back('a' + col);
         str.push_back('1' + row);
         return str;
+    }
+
+    std::string Board::indexToSAN(Board::BoardIndex index) {
+        auto [col, row] = indexToColumnRow(index);
+        return columnRowToSAN(col, row);
     }
 
     std::array<std::pair<char, CastlingRight>, 4> castleMapping = {
@@ -328,6 +332,13 @@ namespace Chess {
             return "-";
         }
         return stream.str();
+    }
+
+    std::optional<std::pair<Board::BoardIndex, Board::BoardIndex>> Board::enPassantColRow() const {
+        if (!m_enPassant.has_value()) {
+            return std::nullopt;
+        }
+        return indexToColumnRow(*m_enPassant);
     }
 
     std::string Board::toFEN() const {
@@ -425,8 +436,9 @@ namespace Chess {
                 return Piece::Type::Rook;
             case Flag::PromotionToQueen:
                 return Piece::Type::Queen;
+            default:
+                VERIFY_NOT_REACHED();
         }
-        VERIFY_NOT_REACHED();
     }
 
 

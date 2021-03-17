@@ -590,6 +590,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
 }
 
+
 TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
 
     Piece filledPiece = Piece::fromFEN('p').value(); // black pawn
@@ -602,16 +603,16 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
 
     SECTION("Correct squares") {
         auto is_position = [&](uint8_t row, uint8_t column, const std::string& san) {
-            // since we do not actually specify the index order we have to test via a Board
-            CAPTURE(row, column, san);
-            filledBoard.setPiece(column, row, otherPiece);
-            REQUIRE(filledBoard.pieceAt(column, row) == otherPiece);
-            auto newPiece = filledBoard.pieceAt(san);
-            REQUIRE(newPiece);
-            REQUIRE(newPiece.value() == otherPiece);
-            filledBoard.setPiece(san, std::nullopt);
-            REQUIRE(filledBoard.pieceAt(column, row) == std::nullopt);
-            filledBoard.setPiece(column, row, filledPiece);
+          // since we do not actually specify the index order we have to test via a Board
+          CAPTURE(row, column, san);
+          filledBoard.setPiece(column, row, otherPiece);
+          REQUIRE(filledBoard.pieceAt(column, row) == otherPiece);
+          auto newPiece = filledBoard.pieceAt(san);
+          REQUIRE(newPiece);
+          REQUIRE(newPiece.value() == otherPiece);
+          filledBoard.setPiece(san, std::nullopt);
+          REQUIRE(filledBoard.pieceAt(column, row) == std::nullopt);
+          filledBoard.setPiece(column, row, filledPiece);
         };
 
         is_position(0, 0, "a1");
@@ -627,11 +628,11 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
         Board empty = Board::emptyBoard();
 
         auto is_not_a_position = [&](const std::string& san) {
-            CAPTURE(san);
-            REQUIRE_FALSE(filledBoard.pieceAt(san).has_value());
-            empty.setPiece(san, Piece(Piece::Type::Pawn, Color::Black));
-            REQUIRE(empty.countPieces(Color::Black) == 0);
-            REQUIRE(empty.countPieces(Color::White) == 0);
+          CAPTURE(san);
+          REQUIRE_FALSE(filledBoard.pieceAt(san).has_value());
+          empty.setPiece(san, Piece(Piece::Type::Pawn, Color::Black));
+          REQUIRE(empty.countPieces(Color::Black) == 0);
+          REQUIRE(empty.countPieces(Color::White) == 0);
         };
 
         is_not_a_position("");
@@ -653,4 +654,114 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
         is_not_a_position("1h");
     }
 
+}
+
+
+TEST_CASE("Basic FEN output", "[chess][parsing][fen]") {
+    // This assumes correct SAN parsing
+    SECTION("Empty board generates empty FEN") {
+        Board board = Board::emptyBoard();
+        REQUIRE(board.toFEN() == "8/8/8/8/8/8/8/8 w - - 0 1");
+    }
+
+    SECTION("If piece set it is shown in FEN") {
+        Board board = Board::emptyBoard();
+        Piece p = GENERATE_PIECE();
+        board.setPiece("a8", p);
+        auto fen = board.toFEN();
+        REQUIRE(fen[0] == p.toFEN());
+    }
+
+    SECTION("Filling the board gives filled FEN") {
+        Board board = Board::emptyBoard();
+        Piece p = GENERATE_PIECE();
+        for (uint8_t col = 0; col < 8; col++) {
+            for (uint8_t row = 0; row < 8; row++) {
+                board.setPiece(col, row, p);
+            }
+        }
+        const auto fen = board.toFEN();
+        auto it = fen.cbegin();
+        int i = 0;
+        char pFEN = p.toFEN();
+        CAPTURE(fen, pFEN);
+        while (it != fen.cend() && *it != ' ') {
+            CAPTURE(i);
+            if (i == 8) {
+                CHECK(*it == '/');
+                i = 0;
+            } else {
+                CHECK(*it == pFEN);
+                i++;
+            }
+            ++it;
+        }
+        REQUIRE(it != fen.cend());
+    }
+
+    SECTION("Single piece in some row first/last col") {
+        uint8_t row = GENERATE(range(0u, 8u));
+        Piece p = GENERATE_PIECE();
+        char pFEN = p.toFEN();
+
+        bool first = GENERATE(true, false);
+
+        Board board = Board::emptyBoard();
+        board.setPiece(first ? 0 : 7, row, p);
+
+        const auto fen = board.toFEN();
+        CAPTURE(fen, pFEN, row);
+
+        char firstChar = first ? pFEN : '7';
+        char secondChar = first ? '7' : pFEN;
+
+        auto it = fen.cbegin();
+        int currRow = 7;
+        while (it != fen.cend()) {
+            CAPTURE(currRow);
+            REQUIRE(currRow >= 0);
+            if (currRow == row) {
+                REQUIRE(*it == firstChar);
+                ++it;
+                REQUIRE_FALSE(it == fen.cend());
+                REQUIRE(*it == secondChar);
+                ++it;
+            } else {
+                REQUIRE(*it == '8');
+                ++it;
+            }
+            currRow--;
+            if (it == fen.cend() || *it == ' ') {
+                break;
+            }
+            REQUIRE(*it == '/');
+            ++it;
+        }
+        REQUIRE(it != fen.cend());
+    }
+
+    SECTION("From and to (valid) FEN is identical") {
+        auto checkIdentical = [](const std::string& str) {
+            CAPTURE(str);
+            auto expB = Board::fromFEN(str);
+            if (!expB) {
+                WARN("Got invalid board: " << expB.error());
+                REQUIRE(expB);
+                return;
+            }
+            auto board = expB.extract();
+            REQUIRE(board.toFEN() == str);
+        };
+
+        checkIdentical("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        checkIdentical("8/8/8/8/8/8/8/8 w - - 0 1");
+        SECTION("Single piece") {
+            std::string pawn = GENERATE("p", "P", "q", "Q", "k", "K", "r", "b", "n");
+            checkIdentical("3" + pawn + "4/8/8/8/8/8/8/8 w - - 0 1");
+            checkIdentical("4" + pawn + "3/8/8/8/8/8/8/8 w - - 0 1");
+            checkIdentical("8/4" + pawn + "3/8/8/8/8/8/8 w - - 0 1");
+            checkIdentical("8/3" + pawn + "4/8/8/8/8/8/8 w - - 0 1");
+        }
+
+    }
 }

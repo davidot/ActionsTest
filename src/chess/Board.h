@@ -30,8 +30,6 @@ namespace Chess {
 
         [[nodiscard]] static ExpectedBoard fromFEN(std::string_view);
 
-        [[nodiscard]] static ExpectedBoard fromExtendedFEN(std::string_view);
-
         [[nodiscard]] static Board standardBoard();
 
         [[nodiscard]] static Board emptyBoard();
@@ -46,52 +44,56 @@ namespace Chess {
 
         [[nodiscard]] uint32_t countPieces(Color) const;
 
-        std::optional<Piece> pieceAt(std::string_view) const;
+        [[nodiscard]] std::optional<Piece> pieceAt(std::string_view) const;
 
-        std::optional<Piece> pieceAt(BoardIndex column, BoardIndex row) const;
+        [[nodiscard]] std::optional<Piece> pieceAt(BoardIndex column, BoardIndex row) const;
 
-        std::optional<Piece> pieceAt(BoardIndex index) const;
+
+        // TODO make private
+        [[nodiscard]] std::optional<Piece> pieceAt(BoardIndex index) const;
 
         void setPiece(std::string_view, std::optional<Piece> piece);
 
         void setPiece(BoardIndex column, BoardIndex row, std::optional<Piece> piece);
 
+        // TODO make private
         void setPiece(BoardIndex index, std::optional<Piece> piece);
 
         [[nodiscard]] uint8_t size() const;
 
         [[nodiscard]] std::string toFEN() const;
 
-        [[nodiscard]] static BoardIndex columnRowToIndex(uint8_t column, uint8_t row);
+        // TODO make private
+        [[nodiscard]] static BoardIndex columnRowToIndex(BoardIndex column, BoardIndex row);
 
+        // TODO make private
         [[nodiscard]] static std::pair<BoardIndex, BoardIndex> indexToColumnRow(BoardIndex);
+
+        [[nodiscard]] static std::optional<BoardIndex> SANToIndex(std::string_view);
+
+        [[nodiscard]] static std::string columnRowToSAN(BoardIndex column, BoardIndex row);
 
         void makeNullMove();
 
         void undoNullMove();
 
+        std::optional<std::pair<Board::BoardIndex, Board::BoardIndex>> enPassantColRow() const;
+
     private:
-        static constexpr const BoardIndex m_size = 8;
-        std::array<Piece::IntType, m_size * m_size> m_pieces;
-
-        std::array<uint8_t, 2> m_numPieces = {0, 0};
-
-        Color m_nextTurnColor = Color::White;
-
         std::optional<std::string> parseFENBoard(std::string_view);
-
-        [[nodiscard]] std::optional<BoardIndex> SANToIndex(std::string_view) const;
-
-        [[nodiscard]] std::string indexToSAN(uint16_t) const;
 
         bool setAvailableCastles(std::string_view vw);
 
+        static std::string indexToSAN(BoardIndex) ;
+
+
+        static constexpr const BoardIndex m_size = 8;
+        std::array<Piece::IntType, m_size * m_size> m_pieces;
+        std::array<uint8_t, 2> m_numPieces = {0, 0};
+        Color m_nextTurnColor = Color::White;
         CastlingRight m_castlingRights = CastlingRight::NO_CASTLING;
-
         std::optional<BoardIndex> m_enPassant = std::nullopt;
-
         uint32_t m_fullMoveNum = 1;
-
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;
     };
 
