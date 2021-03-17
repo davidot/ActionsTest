@@ -180,6 +180,8 @@ namespace Chess {
             }
         }
 
+        auto [epCol, epRow] = board.enPassantColRow().value_or(std::make_pair(boardSize + 1, boardSize + 1));
+
         for (auto change : {ToLeft, ToRight}) {
             auto offset = offsets[forward + change];
             Index newCol = col;
@@ -190,6 +192,8 @@ namespace Chess {
             auto pieceAt = board.pieceAt(newCol, newRow);
             if (pieceAt.has_value() && pieceAt->color() != color) {
                 addMove(newCol, newRow);
+            } else if (newCol == epCol && newRow == epRow) {
+                addMove(newCol, newRow, Move::Flag::EnPassant);
             }
         }
     }

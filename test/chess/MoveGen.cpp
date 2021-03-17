@@ -172,7 +172,7 @@ TEST_CASE("Move generation", "[chess][movegen]") {
                 list.forEachMoveFrom(i, i, [&](const Move& move) {
                     count++;
                     auto [colFrom, rowFrom] = Board::indexToColumnRow(move.fromPosition);
-                    auto [colTo, rowTo] = Board::indexToColumnRow(move.fromPosition);
+                    auto [colTo, rowTo] = Board::indexToColumnRow(move.toPosition);
 
                     REQUIRE((colTo == colFrom || rowTo == rowFrom));
                     REQUIRE(move.fromPosition != move.toPosition);
@@ -364,7 +364,6 @@ TEST_CASE("Move generation", "[chess][movegen]") {
 
         CAPTURE(toMove);
 
-
         int8_t offset = toMove == Color::White ? 1 : -1;
         int8_t startRow = toMove == Color::White ? 1 : 6;
         int8_t endRow = toMove == Color::Black ? 1 : 6; // reverse of start
@@ -547,7 +546,68 @@ TEST_CASE("Move generation", "[chess][movegen]") {
         }
 
         SECTION("En passant") {
-            // TODO
+            uint8_t enPassantRowOther = endRow - offset;
+            uint8_t rowAfterDoublePushOther = enPassantRowOther - offset;
+            CAPTURE(enPassantRowOther, rowAfterDoublePushOther);
+
+            uint8_t col = GENERATE(range(0u, 8u));
+            CAPTURE(col);
+            {
+                // setup en passant square via FEN (we do not want a method to set this)
+                board.setPiece(col, rowAfterDoublePushOther, Piece{Piece::Type::Pawn, other});
+                std::string baseFEN = board.toFEN();
+                REQUIRE(baseFEN.ends_with(" - 0 1"));
+                auto loc = baseFEN.rfind("- ");
+                REQUIRE(loc != baseFEN.size());
+                baseFEN.replace(loc, 1, Board::columnRowToSAN(col, enPassantRowOther));
+                REQUIRE_FALSE(baseFEN.ends_with(" - 0 1"));
+                auto eBoard = Board::fromFEN(baseFEN);
+                REQUIRE(eBoard);
+                board = eBoard.extract();
+                REQUIRE(board.colorToMove() == toMove);
+                REQUIRE(board.enPassantColRow() == std::make_pair(col, enPassantRowOther));
+            }
+            CAPTURE(board.toFEN());
+
+            SECTION("Pawn can take other pawn with en passant") {
+                int8_t pawnOffset = GENERATE_COPY(filter([col](int8_t i){ return col + i >= 0 && col + i < 8; }, values({1, -1})));
+                board.setPiece(col + pawnOffset, rowAfterDoublePushOther, Piece{Piece::Type::Pawn, toMove});
+                CAPTURE(col + pawnOffset);
+
+                bool hasBlocker = GENERATE(true, false);
+                if (hasBlocker) {
+                    Piece moveBlocker{GENERATE(Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King), GENERATE(Color::White, Color::Black)};
+                    board.setPiece(col + pawnOffset, rowAfterDoublePushOther + offset, moveBlocker);
+                }
+                CAPTURE(hasBlocker);
+                CAPTURE(board.toFEN());
+
+                MoveList list = generateAllMoves(board);
+                unsigned calls = 0;
+                list.forEachMoveFrom(col + pawnOffset, rowAfterDoublePushOther, [&](const Move& move) {
+                  REQUIRE(move.toPosition != move.fromPosition);
+                  auto [col2, row] = Board::indexToColumnRow(move.toPosition);
+
+                  auto pieceAt = board.pieceAt(col2, row);
+                  REQUIRE_FALSE(pieceAt.has_value());
+                  if (move.flag != Move::Flag::None) {
+                      REQUIRE(col2 != col + pawnOffset);
+                      REQUIRE(col2 == col);
+                      REQUIRE(row == enPassantRowOther);
+                      REQUIRE(move.flag == Move::Flag::EnPassant);
+                  } else {
+                      REQUIRE_FALSE(hasBlocker);
+                      REQUIRE(move.flag == Move::Flag::None);
+                  }
+                  calls++;
+                });
+                REQUIRE(calls == (hasBlocker ? 1 : 2));
+            }
+
+
+            SECTION("Cannot take en passant with non-pawn") {
+
+            }
         }
     }
 
@@ -609,10 +669,6 @@ TEST_CASE("Move generation", "[chess][movegen]") {
             SECTION("Promotion capture to escape check") {
 
             }
-        }
-
-        SECTION("CANNOT castle to escape check") {
-
         }
 
         SECTION("Cannot move pinned piece (even when not in check)") {
