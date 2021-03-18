@@ -201,7 +201,7 @@ namespace Chess {
     }
 
     Color Piece::colorFromInt(Piece::IntType val) {
-        VERIFY(isPiece(val));
+        ASSERT(isPiece(val));
         switch (val & colorMask) {
             case whiteMask:
                 return Color::White;

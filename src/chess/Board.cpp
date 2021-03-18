@@ -461,19 +461,19 @@ namespace Chess {
 
 
     const std::string &ExpectedBoard::error() const {
-        VERIFY(m_value.index() == 1);
+        ASSERT(m_value.index() == 1);
         // in case it is a string we need to use the indices
         return std::get<1>(m_value);
     }
 
     ExpectedBoard::T &&ExpectedBoard::extract() {
-        VERIFY(m_value.index() == 0);
+        ASSERT(m_value.index() == 0);
         // in case it is a string we need to use the indices
         return std::move(std::get<0>(m_value));
     }
 
     const ExpectedBoard::T &ExpectedBoard::value() {
-        VERIFY(m_value.index() == 0);
+        ASSERT(m_value.index() == 0);
         // in case it is a string we need to use the indices
         return std::get<0>(m_value);
     }

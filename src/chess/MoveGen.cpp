@@ -9,7 +9,7 @@ namespace Chess {
 
     void MoveList::addMove(Move move) {
         // not sure we actually want to reject none moves?
-        VERIFY(move.fromPosition != move.toPosition);
+        ASSERT(move.fromPosition != move.toPosition);
         m_moves.push_back(move);
     }
 
@@ -66,10 +66,10 @@ namespace Chess {
     }
 
     bool addMoveWithPieceCheck(MoveList& list, const Board& board, Move m) {
-        VERIFY(m.fromPosition != m.toPosition);
+        ASSERT(m.fromPosition != m.toPosition);
         auto pieceAtToLocation = board.pieceAt(m.colRowToPosition());
         auto pieceAtFromLocation = board.pieceAt(m.colRowFromPosition());
-        VERIFY(pieceAtFromLocation.has_value());
+        ASSERT(pieceAtFromLocation.has_value());
         if (pieceAtToLocation.has_value()) {
             if (pieceAtToLocation->color() != pieceAtFromLocation->color()) {
                 list.addMove(m);
@@ -150,7 +150,7 @@ namespace Chess {
                 (Index newCol, Index newRow, Move::Flag flags = Move::Flag::None) {
             if (newRow == promoRow) {
                 // we do not want double push and promotion (on 4x4 board which we do not support)
-                VERIFY(flags == Move::Flag::None);
+                ASSERT(flags == Move::Flag::None);
 
                 for (auto promotion : {Move::Flag::PromotionToKnight,
                                        Move::Flag::PromotionToBishop,
@@ -174,6 +174,7 @@ namespace Chess {
                 if (row == pawnStartRow(color)
                     && validOffset(newCol, newRow, offsets[forward])
                     && board.pieceAt(newCol, newRow) == std::nullopt){
+                    // note it is always valid but this changes the position
 
                     addMove(newCol, newRow, Move::Flag::DoublePushPawn);
                 }

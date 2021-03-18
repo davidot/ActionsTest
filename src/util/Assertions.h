@@ -2,7 +2,7 @@
 
 #ifndef NDEBUG
 #include <iostream>
-#define VERIFY(expr)                                                                          \
+#define ASSERT(expr)                                                                          \
     do {                                                                                      \
         if (!static_cast<bool>(expr)) {                                                       \
             std::cout << "VERIFY: " << #expr << " failed in " << __FILE__ << ":" << __LINE__; \
@@ -14,4 +14,4 @@
 #define VERIFY(expr)
 #endif
 
-#define VERIFY_NOT_REACHED() VERIFY(false)
+#define VERIFY_NOT_REACHED() ASSERT(false)
