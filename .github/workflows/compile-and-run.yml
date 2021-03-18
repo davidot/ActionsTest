@@ -40,7 +40,7 @@ jobs:
             os-base: 'mac'
           }
         runall:
-          - ${{ contains('refs/heads/mains refs/heads/develops', github.ref) || contains(github.event.head_commit.message, 'ci') }}
+          - ${{ contains('refs/heads/mains refs/heads/develops', github.ref) || contains(github.event.head_commit.message, ' ci') || contains(github.event.head_commit.message, 'ci ')}}
         runmac:
           - ${{ contains(github.event.head_commit.message, 'mac') }}
         runwindows:
@@ -82,9 +82,9 @@ jobs:
 
       - name: Setup build
         run: >
-          cmake -S . -B ${{ env.build_folder_location }} -G Ninja \
-           -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}" \
-           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          cmake -S . -B ${{ env.build_folder_location }} -G Ninja
+           -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}"
+           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
            -DEXTENDED_TESTS=1
 
       - name: Build
