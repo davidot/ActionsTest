@@ -11,19 +11,30 @@
 
 TEST_CASE("Basic move checks", "[chess][move]") {
     using namespace Chess;
-    REQUIRE(Move::isPromotion(Move::Flag::PromotionToKnight));
-    REQUIRE(Move::isPromotion(Move::Flag::PromotionToBishop));
-    REQUIRE(Move::isPromotion(Move::Flag::PromotionToRook));
-    REQUIRE(Move::isPromotion(Move::Flag::PromotionToQueen));
-    REQUIRE_FALSE(Move::isPromotion(Move::Flag::None));
-    REQUIRE_FALSE(Move::isPromotion(Move::Flag::Castling));
-    REQUIRE_FALSE(Move::isPromotion(Move::Flag::DoublePushPawn));
-    REQUIRE_FALSE(Move::isPromotion(Move::Flag::EnPassant));
 
-    REQUIRE(Move::promotedType(Chess::Move::Flag::PromotionToKnight) == Piece::Type::Knight);
-    REQUIRE(Move::promotedType(Chess::Move::Flag::PromotionToBishop) == Piece::Type::Bishop);
-    REQUIRE(Move::promotedType(Chess::Move::Flag::PromotionToRook) == Piece::Type::Rook);
-    REQUIRE(Move::promotedType(Chess::Move::Flag::PromotionToQueen) == Piece::Type::Queen);
+    auto isPromo = [](Move::Flag flag) {
+        Move mv = Move{0, 0, flag};
+        return mv.isPromotion();
+    };
+
+    REQUIRE(isPromo(Move::Flag::PromotionToKnight));
+    REQUIRE(isPromo(Move::Flag::PromotionToBishop));
+    REQUIRE(isPromo(Move::Flag::PromotionToRook));
+    REQUIRE(isPromo(Move::Flag::PromotionToQueen));
+    REQUIRE_FALSE(isPromo(Move::Flag::None));
+    REQUIRE_FALSE(isPromo(Move::Flag::Castling));
+    REQUIRE_FALSE(isPromo(Move::Flag::DoublePushPawn));
+    REQUIRE_FALSE(isPromo(Move::Flag::EnPassant));
+
+    auto promoType = [](Move::Flag flag) {
+      Move mv = Move{0, 0, flag};
+      return mv.promotedType();
+    };
+
+    REQUIRE(promoType(Chess::Move::Flag::PromotionToKnight) == Piece::Type::Knight);
+    REQUIRE(promoType(Chess::Move::Flag::PromotionToBishop) == Piece::Type::Bishop);
+    REQUIRE(promoType(Chess::Move::Flag::PromotionToRook) == Piece::Type::Rook);
+    REQUIRE(promoType(Chess::Move::Flag::PromotionToQueen) == Piece::Type::Queen);
 }
 
 TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
@@ -57,11 +68,12 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             REQUIRE(list.size() == count);
             std::set<Board::BoardIndex> destinations;
 
-            auto index = Board::columnRowToIndex(col, row);
             list.forEachMove([&](const Move &move) {
                 CAPTURE(move);
-                REQUIRE(move.fromPosition == index);
-                REQUIRE(move.toPosition != index);
+                auto [colFrom, rowFrom] = move.colRowFromPosition();
+                REQUIRE(colFrom == col);
+                REQUIRE(rowFrom == row);
+                REQUIRE(move.toPosition != move.fromPosition);
                 REQUIRE(move.flag == Move::Flag::None);
                 destinations.insert(move.toPosition);
             });
@@ -70,8 +82,10 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             unsigned calls = 0;
             list.forEachMoveFrom(col, row, [&](const Move &move) {
                 CAPTURE(move);
-                REQUIRE(move.fromPosition == index);
-                REQUIRE(move.toPosition != index);
+                auto [colFrom, rowFrom] = move.colRowFromPosition();
+                REQUIRE(colFrom == col);
+                REQUIRE(rowFrom == row);
+                REQUIRE(move.toPosition != move.fromPosition);
                 REQUIRE(move.flag == Move::Flag::None);
                 REQUIRE(destinations.find(move.toPosition) != destinations.end());
                 calls++;
@@ -170,8 +184,8 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
                 unsigned count = 0;
                 list.forEachMoveFrom(i, i, [&](const Move &move) {
                     count++;
-                    auto [colFrom, rowFrom] = Board::indexToColumnRow(move.fromPosition);
-                    auto [colTo, rowTo] = Board::indexToColumnRow(move.toPosition);
+                    auto [colFrom, rowFrom] = move.colRowFromPosition();
+                    auto [colTo, rowTo] = move.colRowToPosition();
 
                     REQUIRE((colTo == colFrom || rowTo == rowFrom));
                     REQUIRE(move.fromPosition != move.toPosition);
@@ -263,7 +277,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             list.forEachMoveFrom(4, 4, [&](const Move &move) {
                 REQUIRE(move.toPosition != move.fromPosition);
                 captures.insert(move.toPosition);
-                auto [col, row] = Board::indexToColumnRow(move.toPosition);
+                auto [col, row] = move.colRowToPosition();
                 CAPTURE(col, row);
                 REQUIRE(board.pieceAt(col, row) == p);
             });
@@ -287,7 +301,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             std::set<uint8_t> captures;
             list.forEachMoveFrom(4, 4, [&](const Move &move) {
                 REQUIRE(move.toPosition != move.fromPosition);
-                auto [col, row] = Board::indexToColumnRow(move.toPosition);
+                auto [col, row] = move.colRowToPosition();
                 CAPTURE(col, row);
                 auto optPiece = board.pieceAt(col, row);
                 if (optPiece) {
@@ -317,7 +331,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             std::set<uint8_t> captures;
             list.forEachMoveFrom(4, 4, [&](const Move &move) {
                 REQUIRE(move.toPosition != move.fromPosition);
-                auto [col, row] = Board::indexToColumnRow(move.toPosition);
+                auto [col, row] = move.colRowToPosition();
                 CAPTURE(col, row);
                 REQUIRE(board.pieceAt(col, row) == capturable);
                 captures.insert(move.toPosition);
@@ -346,7 +360,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             MoveList list = generateAllMoves(board);
             list.forEachMoveFrom(4, 4, [&](const Move &move) {
                 REQUIRE(move.toPosition != move.fromPosition);
-                auto [col, row] = Board::indexToColumnRow(move.toPosition);
+                auto [col, row] = move.colRowToPosition();
                 CAPTURE(col, row);
                 REQUIRE(board.pieceAt(col, row) == std::nullopt);
             });
@@ -413,7 +427,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         std::set<uint8_t> captures;
         list.forEachMoveFrom(4, 4, [&](const Move& move) {
           REQUIRE(move.toPosition != move.fromPosition);
-          auto [col, row] = Board::indexToColumnRow(move.toPosition);
+          auto [col, row] = move.colRowToPosition();
           CAPTURE(col, row);
           auto optPiece = board.pieceAt(col, row);
           if (optPiece) {
@@ -433,7 +447,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         std::set<uint8_t> destinationRows;
         list.forEachMoveFrom(col, startRow, [&](const Move& move) {
           REQUIRE(move.toPosition != move.fromPosition);
-          auto [col2, row] = Board::indexToColumnRow(move.toPosition);
+          auto [col2, row] = move.colRowToPosition();
           REQUIRE(col == col2);
           destinationRows.insert(row);
           if (row == startRow + offset + offset) {
@@ -457,7 +471,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         std::set<uint8_t> destinationRows;
         list.forEachMoveFrom(col, startRow, [&](const Move& move) {
           REQUIRE(move.toPosition != move.fromPosition);
-          auto [col2, row] = Board::indexToColumnRow(move.toPosition);
+          auto [col2, row] = move.colRowToPosition();
           REQUIRE(col == col2);
           destinationRows.insert(row);
         });
@@ -499,11 +513,11 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         std::set<Piece::Type> types;
         list.forEachMoveFrom(col, endRow, [&](const Move& move) {
           REQUIRE(move.toPosition != move.fromPosition);
-          auto [col2, row] = Board::indexToColumnRow(move.toPosition);
+          auto [col2, row] = move.colRowToPosition();
           REQUIRE(col == col2);
           REQUIRE(row == endRow + offset);
-          REQUIRE(Move::isPromotion(move.flag));
-          auto type = Move::promotedType(move.flag);
+          REQUIRE(move.isPromotion());
+          auto type = move.promotedType();
           REQUIRE(types.find(type) == types.end());
           types.insert(type);
         });
@@ -530,12 +544,12 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         unsigned calls = 0;
         list.forEachMoveFrom(col, endRow, [&](const Move& move) {
           REQUIRE(move.toPosition != move.fromPosition);
-          auto [col2, row] = Board::indexToColumnRow(move.toPosition);
+          auto [col2, row] = move.colRowToPosition();;
           REQUIRE(row == endRow + offset);
-          REQUIRE(Move::isPromotion(move.flag));
+          REQUIRE(move.isPromotion());
           auto pieceAt = board.pieceAt(col2, row);
           if (pieceAt != std::nullopt) {
-              auto type = Move::promotedType(move.flag);
+              auto type = move.promotedType();
               REQUIRE(types.find(type) == types.end());
               types.insert(type);
 
@@ -589,7 +603,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
             unsigned calls = 0;
             list.forEachMoveFrom(col + pawnOffset, rowAfterDoublePushOther, [&](const Move& move) {
               REQUIRE(move.toPosition != move.fromPosition);
-              auto [col2, row] = Board::indexToColumnRow(move.toPosition);
+              auto [col2, row] = move.colRowToPosition();;
 
               auto pieceAt = board.pieceAt(col2, row);
               REQUIRE_FALSE(pieceAt.has_value());
@@ -638,7 +652,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
             list.forEachMoveFrom(col + pawnOffset, rowAfterDoublePushOther - offset, [&](const Move& move) {
               REQUIRE(move.fromPosition != move.toPosition);
               REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row] = Board::indexToColumnRow(move.toPosition);
+              auto [col2, row] = move.colRowToPosition();;
               auto pieceAt = board.pieceAt(col2, row);
               REQUIRE(pieceAt);
               REQUIRE(pieceAt->type() == Piece::Type::Pawn);

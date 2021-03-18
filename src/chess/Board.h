@@ -6,11 +6,9 @@
 #include <variant>
 #include <vector>
 #include <array>
+#include "Forward.h"
 
 namespace Chess {
-
-    struct ExpectedBoard;
-    struct Move;
 
     enum class CastlingRight : uint8_t {
         NO_CASTLING = 0u,
@@ -48,26 +46,15 @@ namespace Chess {
 
         [[nodiscard]] std::optional<Piece> pieceAt(BoardIndex column, BoardIndex row) const;
 
-
-        // TODO make private
-        [[nodiscard]] std::optional<Piece> pieceAt(BoardIndex index) const;
+        [[nodiscard]] std::optional<Piece> pieceAt(std::pair<BoardIndex, BoardIndex> coords) const;
 
         void setPiece(std::string_view, std::optional<Piece> piece);
 
         void setPiece(BoardIndex column, BoardIndex row, std::optional<Piece> piece);
 
-        // TODO make private
-        void setPiece(BoardIndex index, std::optional<Piece> piece);
-
         [[nodiscard]] uint8_t size() const;
 
         [[nodiscard]] std::string toFEN() const;
-
-        // TODO make private
-        [[nodiscard]] static BoardIndex columnRowToIndex(BoardIndex column, BoardIndex row);
-
-        // TODO make private
-        [[nodiscard]] static std::pair<BoardIndex, BoardIndex> indexToColumnRow(BoardIndex);
 
         [[nodiscard]] static std::optional<BoardIndex> SANToIndex(std::string_view);
 
@@ -84,8 +71,15 @@ namespace Chess {
 
         bool setAvailableCastles(std::string_view vw);
 
-        static std::string indexToSAN(BoardIndex) ;
+        [[nodiscard]] std::optional<Piece> pieceAt(BoardIndex index) const;
 
+        void setPiece(BoardIndex index, std::optional<Piece> piece);
+
+        [[nodiscard]] static BoardIndex columnRowToIndex(BoardIndex column, BoardIndex row);
+
+        [[nodiscard]] static std::pair<BoardIndex, BoardIndex> indexToColumnRow(BoardIndex);
+
+        [[nodiscard]] static std::string indexToSAN(BoardIndex);
 
         static constexpr const BoardIndex m_size = 8;
         std::array<Piece::IntType, m_size * m_size> m_pieces;
@@ -95,6 +89,9 @@ namespace Chess {
         std::optional<BoardIndex> m_enPassant = std::nullopt;
         uint32_t m_fullMoveNum = 1;
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;
+
+        friend struct Move;
+        friend class MoveList;
     };
 
     // TODO to make this actually fit in 16 bits use: struct __attribute__((packed)) Move {
@@ -125,9 +122,13 @@ namespace Chess {
         Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow,
              Board::BoardIndex toCol, Board::BoardIndex toRow, Flag flags = Flag::None);
 
-        static bool isPromotion(Flag);
 
-        static Piece::Type promotedType(Flag);
+        std::pair<Board::BoardIndex, Board::BoardIndex> colRowFromPosition() const;
+        std::pair<Board::BoardIndex, Board::BoardIndex> colRowToPosition() const;
+
+        bool isPromotion() const;
+
+        Piece::Type promotedType() const;
     };
 
 

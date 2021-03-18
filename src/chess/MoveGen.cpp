@@ -67,8 +67,8 @@ namespace Chess {
 
     bool addMoveWithPieceCheck(MoveList& list, const Board& board, Move m) {
         VERIFY(m.fromPosition != m.toPosition);
-        auto pieceAtToLocation = board.pieceAt(m.toPosition);
-        auto pieceAtFromLocation = board.pieceAt(m.fromPosition);
+        auto pieceAtToLocation = board.pieceAt(m.colRowToPosition());
+        auto pieceAtFromLocation = board.pieceAt(m.colRowFromPosition());
         VERIFY(pieceAtFromLocation.has_value());
         if (pieceAtToLocation.has_value()) {
             if (pieceAtToLocation->color() != pieceAtFromLocation->color()) {

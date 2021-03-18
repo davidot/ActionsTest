@@ -17,9 +17,10 @@ TEST_CASE("Board", "[chess][base]") {
         CHECK(b.countPieces(Color::Black) == 0);
         CHECK_FALSE(b.hasValidPosition());
 
-        for (uint16_t i = 0; i < 64; i++) {
-            CAPTURE(i);
-            CHECK_FALSE(b.pieceAt(i));
+        for (uint8_t i = 0; i < 8; i++) {
+            for (uint8_t j = 0; j < 8; j++) {
+                CHECK_FALSE(b.pieceAt(i, j));
+            }
         }
 
         CHECK(b.colorToMove() == Color::White);
@@ -33,14 +34,15 @@ TEST_CASE("Board", "[chess][base]") {
         Piece piece = GENERATE_PIECE();
         Board b = Board::emptyBoard();
 
-        uint32_t size = 8;
-        uint32_t index = GENERATE_COPY(0u, size - 1, size * size - 1, size * size, take(3, random(1u, std::max(1u, size * size - 1))));
+        uint8_t size = 8;
+        uint8_t col = GENERATE(range(0, 10));
+        uint8_t row = GENERATE(range(0, 10));
 
-        CAPTURE(size, piece, index);
+        CAPTURE(piece, col, row);
 
-        b.setPiece(index, piece);
+        b.setPiece(col, row, piece);
 
-        if (index >= size * size) {
+        if (col >= size || row >= size) {
             // out of bounds
             CHECK(b.countPieces(piece.color()) == 0);
             CHECK(b.countPieces(opposite(piece.color())) == 0);
@@ -52,22 +54,22 @@ TEST_CASE("Board", "[chess][base]") {
         // since we only add once piece it can never be a valid position!
         CHECK_FALSE(b.hasValidPosition());
 
-        for (uint32_t i = 0; i <= (size + 1) * size; i+= std::max(1u, size - 2)) {
-            auto pieceHere = b.pieceAt(i);
-            REQUIRE(pieceHere.has_value() == (i == index && index < size * size));
+        for (uint8_t i = 0; i < 8; i++) {
+            for (uint8_t j = 0; j < 8; j++) {
+                if (i == col && j == row) {
+                    REQUIRE(b.pieceAt(i, j) == piece);
+                } else {
+                    REQUIRE_FALSE(b.pieceAt(i, j));
+                }
+
+            }
         }
 
-        if (index < size * size) {
-            REQUIRE(b.pieceAt(index) == piece);
-        }
+        b.setPiece(col, row, std::nullopt);
 
-        SECTION("Remove piece") {
-            b.setPiece(index, std::nullopt);
-
-            CHECK(b.countPieces(piece.color()) == 0);
-            CHECK(b.countPieces(opposite(piece.color())) == 0);
-            CHECK_FALSE(b.pieceAt(index).has_value());
-        }
+        CHECK(b.countPieces(piece.color()) == 0);
+        CHECK(b.countPieces(opposite(piece.color())) == 0);
+        CHECK_FALSE(b.pieceAt(col, row).has_value());
     }
 
     SECTION("Can add pieces every where using column and row") {
@@ -109,15 +111,16 @@ TEST_CASE("Board", "[chess][base]") {
         Board b = Board::emptyBoard();
 
         uint32_t size = 8;
-        uint32_t index = GENERATE_COPY(0u, size - 1, size * size - 1, size * size, take(3, random(1u, std::max(1u, size * size - 1))));
+        uint8_t col = GENERATE(range(0, 10));
+        uint8_t row = GENERATE(range(0, 10));
 
-        CAPTURE(size, piece, index);
+        CAPTURE(size, piece, col, row);
 
-        b.setPiece(index, piece);
+        b.setPiece(col, row, piece);
 
-        b.setPiece(index, piece);
+        b.setPiece(col, row, piece);
 
-        if (index >= size * size) {
+        if (col >= size || row >= size) {
             // out of bounds
             REQUIRE(b.countPieces(piece.color()) == 0);
         } else {
@@ -129,19 +132,20 @@ TEST_CASE("Board", "[chess][base]") {
 
     }
 
-    SECTION("Remove non-existant piece") {
+    SECTION("Remove non-existent piece") {
         Board b = Board::emptyBoard();
 
         uint32_t size = 8;
-        uint32_t index = GENERATE_COPY(0u, size - 1, size * size - 1, size * size, take(3, random(1u, std::max(1u, size * size - 1))));
+        uint8_t col = GENERATE(range(0, 10));
+        uint8_t row = GENERATE(range(0, 10));
 
-        CAPTURE(size, index);
+        CAPTURE(size, col, row);
 
 
         // double set no piece (and should already be no piece of course
-        b.setPiece(index, std::nullopt);
+        b.setPiece(col, row, std::nullopt);
 
-        b.setPiece(index, std::nullopt);
+        b.setPiece(col, row, std::nullopt);
 
         REQUIRE(b.countPieces(Color::White) == 0);
         REQUIRE(b.countPieces(Color::Black) == 0);
@@ -157,19 +161,21 @@ TEST_CASE("Board", "[chess][base]") {
             Board b = Board::emptyBoard();
 
             Piece piece = GENERATE_PIECE();
-
             // overshoot for index check
-            for (uint32_t i = 0; i < size * size + 10; i++) {
-                b.setPiece(i, piece);
+            for (uint8_t i = 0; i < 10; i++) {
+                for (uint8_t j = 0; j < 10; j++) {
+                    b.setPiece(i, j, piece);
+                }
             }
 
             CHECK(b.countPieces(piece.color()) == size * size);
             CHECK(b.countPieces(opposite(piece.color())) == 0);
 
-            for (uint32_t i = 0; i < size * size + 10; i++) {
-                CAPTURE(i);
-                if (i < size * size) {
-                    CHECK(b.pieceAt(i) == piece);
+            for (uint8_t i = 0; i < 10; i++) {
+                for (uint8_t j = 0; j < 10; j++) {
+                    if (i < size && j < size) {
+                        CHECK(b.pieceAt(i, j) == piece);
+                    }
                 }
             }
         }
@@ -182,27 +188,33 @@ TEST_CASE("Board", "[chess][base]") {
             Piece pieceOther(piece.type(), opposite(piece.color()));
 
             // overshoot for index check
-            for (uint32_t i = 0; i < size * size + 10; i++) {
-                if (i % 2 == 0) {
-                    b.setPiece(i, piece);
-                } else {
-                    b.setPiece(i, pieceOther);
+            for (uint8_t col = 0; col < 10; col++) {
+                for (uint8_t row = 0; row < 10; row++) {
+                    if ((col + row) % 2 == 0) {
+                        b.setPiece(col, row, piece);
+                    } else {
+                        b.setPiece(col, row, pieceOther);
+                    }
                 }
             }
 
             CHECK(b.countPieces(piece.color()) == size * size / 2);
             CHECK(b.countPieces(opposite(piece.color())) == size * size / 2);
 
-            for (uint32_t i = 0; i < size * size + 10; i++) {
-                CAPTURE(i);
-                if (i < size * size) {
-                    if (i % 2 == 0) {
-                        CHECK(b.pieceAt(i) == piece);
+            for (uint8_t i = 0; i < 10; i++) {
+                for (uint8_t j = 0; j < 10; j++) {
+                    if (i < size && j < size) {
+                        if ((i + j) % 2 == 0) {
+                            CHECK(b.pieceAt(i, j) == piece);
+                        } else {
+                            CHECK(b.pieceAt(i, j) == pieceOther);
+                        }
                     } else {
-                        CHECK(b.pieceAt(i) == pieceOther);
+                        CHECK_FALSE(b.pieceAt(i, j));
                     }
                 }
             }
+
         }
     }
 
@@ -466,8 +478,10 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CHECK(board.countPieces(Color::White) == (upper ? 64 : 0));
         CHECK(board.countPieces(Color::Black) == (upper ? 0 : 64));
 
-        for (uint32_t i = 0; i < 64; i++) {
-            REQUIRE(board.pieceAt(i) == expectedPiece);
+        for (uint8_t i = 0; i < 8; i++) {
+            for (uint8_t j = 0; j < 8; j++) {
+                REQUIRE(board.pieceAt(i, j) == expectedPiece);
+            }
         }
     }
 

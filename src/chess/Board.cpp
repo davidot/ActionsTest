@@ -232,10 +232,20 @@ namespace Chess {
     }
 
     std::optional<Piece> Board::pieceAt(BoardIndex column, BoardIndex row) const {
+        if (column >= m_size || row >= m_size) {
+            return std::nullopt;
+        }
         return pieceAt(columnRowToIndex(column, row));
     }
 
+    std::optional<Piece> Board::pieceAt(std::pair<BoardIndex, BoardIndex> coords) const {
+        return pieceAt(coords.first, coords.second);
+    }
+
     void Board::setPiece(BoardIndex column, BoardIndex row, std::optional<Piece> piece) {
+        if (column >= m_size || row >= m_size) {
+            return;
+        }
         setPiece(columnRowToIndex(column, row), piece);
     }
 
@@ -422,11 +432,11 @@ namespace Chess {
     Move::Move() : toPosition(0), fromPosition(0), flag(Flag::None) {
     }
 
-    bool Move::isPromotion(Move::Flag flag) {
+    bool Move::isPromotion() const {
         return (static_cast<uint8_t>(flag) & 0x4) != 0;
     }
 
-    Piece::Type Move::promotedType(Move::Flag flag) {
+    Piece::Type Move::promotedType() const {
         switch (flag) {
             case Flag::PromotionToKnight:
                 return Piece::Type::Knight;
@@ -439,6 +449,14 @@ namespace Chess {
             default:
                 VERIFY_NOT_REACHED();
         }
+    }
+
+    std::pair<Board::BoardIndex, Board::BoardIndex> Move::colRowFromPosition() const {
+        return Board::indexToColumnRow(fromPosition);
+    }
+
+    std::pair<Board::BoardIndex, Board::BoardIndex> Move::colRowToPosition() const {
+        return Board::indexToColumnRow(toPosition);
     }
 
 
