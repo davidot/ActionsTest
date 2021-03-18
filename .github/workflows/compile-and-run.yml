@@ -17,7 +17,7 @@ jobs:
           - {
             compiler: g++-10,
             os: ubuntu-20.04,
-            os-base: 'ubuntu' # TODO Maybe we always want at least one release build? then make this ''
+            os-base: ''
           }
           - {
             compiler: clang++-10,
