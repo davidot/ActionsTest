@@ -19,7 +19,7 @@ endif(CCACHE_FOUND)
 include(FetchContent)
 
 add_library(Actions
-        src/util/StringUtil.cpp
+        src/util/StringUtil.cpp src/util/Assertions.cpp
         src/chess/Piece.cpp src/chess/Board.cpp src/chess/MoveGen.cpp)
 
 target_include_directories(Actions INTERFACE src/)
