@@ -82,7 +82,7 @@ jobs:
 
       - name: Setup build
         run: >
-          cmake -B ${{ env.build_folder_location }} .. -G Ninja \
+          cmake -S . -B ${{ env.build_folder_location }} -G Ninja \
            -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}" \
            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
            -DEXTENDED_TESTS=1
