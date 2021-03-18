@@ -42,6 +42,7 @@ add_executable(ActionsTest test/main.cpp
 target_link_libraries(ActionsTest PRIVATE Catch2::Catch2 Actions)
 if (EXTENDED_TESTS)
     target_compile_definitions(ActionsTest PRIVATE EXTENDED_TESTS=1)
+    message(STATUS "Running full tests")
 endif()
 
 enable_testing()
