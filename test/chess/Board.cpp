@@ -1,3 +1,4 @@
+#include "TestUtil.h"
 #include <catch2/catch.hpp>
 #include <chess/Board.h>
 
@@ -5,21 +6,21 @@ using namespace Chess;
 
 TEST_CASE("Board", "[chess][base]") {
 
-#define GENERATE_PIECE() Piece(GENERATE(Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King), GENERATE(Color::White, Color::Black))
-#define GENERATE_PIECES_WHITE_ONLY() Piece(GENERATE(Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King), Color::White)
+#define GENERATE_PIECE() Piece(GENERATE(TEST_SOME(values({Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King}))), GENERATE(Color::White, Color::Black))
+#define GENERATE_PIECES_WHITE_ONLY() Piece(GENERATE(TEST_SOME(values({Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King}))), Color::White)
 
     SECTION("Empty board has no pieces") {
         Board b = Board::emptyBoard();
 
-        CHECK(b.size() == 8);
+        REQUIRE(b.size() == 8);
 
-        CHECK(b.countPieces(Color::White) == 0);
-        CHECK(b.countPieces(Color::Black) == 0);
-        CHECK_FALSE(b.hasValidPosition());
+        REQUIRE(b.countPieces(Color::White) == 0);
+        REQUIRE(b.countPieces(Color::Black) == 0);
+        REQUIRE_FALSE(b.hasValidPosition());
 
         for (uint8_t i = 0; i < 8; i++) {
             for (uint8_t j = 0; j < 8; j++) {
-                CHECK_FALSE(b.pieceAt(i, j));
+                REQUIRE_FALSE(b.pieceAt(i, j));
             }
         }
 
@@ -35,8 +36,8 @@ TEST_CASE("Board", "[chess][base]") {
         Board b = Board::emptyBoard();
 
         uint8_t size = 8;
-        uint8_t col = GENERATE(range(0, 10));
-        uint8_t row = GENERATE(range(0, 10));
+        uint8_t col = GENERATE(TEST_SOME(range(0, 10)));
+        uint8_t row = GENERATE(TEST_SOME(range(0, 10)));
 
         CAPTURE(piece, col, row);
 
@@ -111,8 +112,8 @@ TEST_CASE("Board", "[chess][base]") {
         Board b = Board::emptyBoard();
 
         uint32_t size = 8;
-        uint8_t col = GENERATE(range(0, 10));
-        uint8_t row = GENERATE(range(0, 10));
+        uint8_t col = GENERATE(TEST_SOME(range(0, 10)));
+        uint8_t row = GENERATE(TEST_SOME(range(0, 10)));
 
         CAPTURE(size, piece, col, row);
 
@@ -136,8 +137,8 @@ TEST_CASE("Board", "[chess][base]") {
         Board b = Board::emptyBoard();
 
         uint32_t size = 8;
-        uint8_t col = GENERATE(range(0, 10));
-        uint8_t row = GENERATE(range(0, 10));
+        uint8_t col = GENERATE(TEST_SOME(range(0, 10)));
+        uint8_t row = GENERATE(TEST_SOME(range(0, 10)));
 
         CAPTURE(size, col, row);
 
@@ -168,13 +169,13 @@ TEST_CASE("Board", "[chess][base]") {
                 }
             }
 
-            CHECK(b.countPieces(piece.color()) == size * size);
-            CHECK(b.countPieces(opposite(piece.color())) == 0);
+            REQUIRE(b.countPieces(piece.color()) == size * size);
+            REQUIRE(b.countPieces(opposite(piece.color())) == 0);
 
             for (uint8_t i = 0; i < 10; i++) {
                 for (uint8_t j = 0; j < 10; j++) {
                     if (i < size && j < size) {
-                        CHECK(b.pieceAt(i, j) == piece);
+                        REQUIRE(b.pieceAt(i, j) == piece);
                     }
                 }
             }
@@ -198,19 +199,19 @@ TEST_CASE("Board", "[chess][base]") {
                 }
             }
 
-            CHECK(b.countPieces(piece.color()) == size * size / 2);
-            CHECK(b.countPieces(opposite(piece.color())) == size * size / 2);
+            REQUIRE(b.countPieces(piece.color()) == size * size / 2);
+            REQUIRE(b.countPieces(opposite(piece.color())) == size * size / 2);
 
             for (uint8_t i = 0; i < 10; i++) {
                 for (uint8_t j = 0; j < 10; j++) {
                     if (i < size && j < size) {
                         if ((i + j) % 2 == 0) {
-                            CHECK(b.pieceAt(i, j) == piece);
+                            REQUIRE(b.pieceAt(i, j) == piece);
                         } else {
-                            CHECK(b.pieceAt(i, j) == pieceOther);
+                            REQUIRE(b.pieceAt(i, j) == pieceOther);
                         }
                     } else {
-                        CHECK_FALSE(b.pieceAt(i, j));
+                        REQUIRE_FALSE(b.pieceAt(i, j));
                     }
                 }
             }
@@ -714,7 +715,7 @@ TEST_CASE("Basic FEN output", "[chess][parsing][fen]") {
     }
 
     SECTION("Single piece in some row first/last col") {
-        uint8_t row = GENERATE(range(0u, 8u));
+        uint8_t row = GENERATE(TEST_SOME(range(0u, 8u)));
         Piece p = GENERATE_PIECE();
         char pFEN = p.toFEN();
 
