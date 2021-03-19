@@ -11,15 +11,15 @@
 namespace Chess {
 
     enum class CastlingRight : uint8_t {
-        NO_CASTLING = 0u,
-        WHITE_KING_SIDE = 1u,
-        WHITE_QUEEN_SIDE = WHITE_KING_SIDE << 1,
-        BLACK_KING_SIDE = 1u << 2,
-        BLACK_QUEEN_SIDE = BLACK_KING_SIDE << 1,
+        NoCastling = 0u,
+        WhiteKingSide = 1u,
+        WhiteQueenSide = WhiteKingSide << 1,
+        BlackKingSide = 1u << 2,
+        BlackQueenSide = BlackKingSide << 1,
 
-        WHITE_CASTLING = WHITE_KING_SIDE | WHITE_QUEEN_SIDE,
-        BLACK_CASTLING = BLACK_KING_SIDE | BLACK_QUEEN_SIDE,
-        ANY_CASTLING = WHITE_CASTLING | BLACK_CASTLING
+        WhiteCastling = WhiteKingSide | WhiteQueenSide,
+        BlackCastling = BlackKingSide | BlackQueenSide,
+        AnyCastling = WhiteCastling | BlackCastling
     };
 
     class Board {
@@ -89,7 +89,7 @@ namespace Chess {
         std::array<Piece::IntType, m_size * m_size> m_pieces;
         std::array<uint8_t, 2> m_numPieces = {0, 0};
         Color m_nextTurnColor = Color::White;
-        CastlingRight m_castlingRights = CastlingRight::NO_CASTLING;
+        CastlingRight m_castlingRights = CastlingRight::NoCastling;
         std::optional<BoardIndex> m_enPassant = std::nullopt;
         uint32_t m_fullMoveNum = 1;
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;

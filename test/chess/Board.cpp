@@ -62,7 +62,6 @@ TEST_CASE("Board", "[chess][base]") {
                 } else {
                     REQUIRE_FALSE(b.pieceAt(i, j));
                 }
-
             }
         }
 
@@ -130,7 +129,6 @@ TEST_CASE("Board", "[chess][base]") {
 
         // since we only add once piece it can never be a valid position!
         REQUIRE_FALSE(b.hasValidPosition());
-
     }
 
     SECTION("Remove non-existent piece") {
@@ -215,10 +213,8 @@ TEST_CASE("Board", "[chess][base]") {
                     }
                 }
             }
-
         }
     }
-
 }
 
 TEST_CASE("Validity of boards", "[.][chess][rules][board]") {
@@ -237,22 +233,17 @@ TEST_CASE("Validity of boards", "[.][chess][rules][board]") {
 
 TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     SECTION("Wrong inputs") {
-        auto failsBase = [](const std::string& s) {
-            CAPTURE(s);
-            ExpectedBoard b = Board::fromFEN(s);
-            if (b) {
-                INFO("Size " << b.value().size());
-                INFO("White pieces: #" << b.value().countPieces(Color::White));
-                INFO("Black pieces: #" << b.value().countPieces(Color::Black));
 
-                CHECK_FALSE(b);
-            } else {
-                // should have some error
-                REQUIRE_FALSE(b.error().empty());
-//                WARN(s << " got error: " << b.error());
-            }
-
-        };
+#define failsBase(s)                                                        \
+    {                                                                       \
+        INFO("Input: " << s);                                               \
+        ExpectedBoard b = Board::fromFEN(s);                                \
+        if (b) {                                                            \
+            CHECK_FALSE(b);                                                 \
+        } else {                                                            \
+            REQUIRE_FALSE(b.error().empty());                               \
+        }                                                                   \
+    }
 
         SECTION("Completely invalid formats") {
             failsBase("");
@@ -265,9 +256,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
 
         SECTION("Board layout") {
-            auto fails = [&failsBase](const std::string& s) {
-                failsBase(s + " w - - 0 1");
-            };
+#define fails(v) failsBase(v " w - - 0 1")
 
             fails("8p");
             fails("p");
@@ -310,12 +299,11 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
             fails("pp7/8/8/8/8/8/8/8");
             fails("8/8/8/8/8/8/8/p8");
+#undef fails
         }
 
         SECTION("Metadata") {
-            auto fails = [&failsBase](const std::string& s) {
-              failsBase("8/8/8/8/8/8/8/8 " + s);
-            };
+#define fails(v) failsBase("8/8/8/8/8/8/8/8 " v)
 
             fails("x - - 0 1");
             fails("y - - 0 1");
@@ -368,6 +356,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("w - - 0 0.3");
             fails("w - - 0 0a");
             fails("w - - 0 1a");
+#undef fails
+
         }
 
         SECTION("Missing parts") {
@@ -388,20 +378,34 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - c2 0 1");
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a4 0 1");
             // FIXME: these moves are really not valid and it should fail!
-//            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a3 0 1"); Not valid due to no pawn
-//            failsBase("rnbqkbnr/pppppppp/8/8/PPPPPPPP/PPPPPPPP/PPPPPPPP/RNBQKBNR w - a3 0 1"); Not valid due to non empty square
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a3 0 1");              //Not valid due to no pawn
+            failsBase("rnbqkbnr/1ppppppp/8/p7/p7/8/PPPPPPPP/RNBQKBNR w - a3 0 1");            //Not valid due to no pawn
+            failsBase("rnbqkbnr/pppppppp/8/8/PPPPPPPP/PPPPPPPP/PPPPPPPP/RNBQKBNR w - a3 0 1");//Not valid due to non empty square
+            failsBase("rnbqkbnr/pppppppp/8/8/P7/8/8/1PPPPPPP/RNBQKBNR w - a3 0 1");           //Not valid due it being whites turn
+            failsBase("rnbqkbnr/pppppppp/8/8/8/p7/8/1PPPPPPP/RNBQKBNR w - a3 0 1");           //Not valid due it being the wrong color
         }
 
+        SECTION("Provably invalid castling state") {
+            // FIXME: these moves are really not valid and it should fail!
+            failsBase("rnbq1bnr/pppppppp/k7/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");// black king has moved
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR w KQkq - 0 1"); // white king has moved (swapped with queen)
+            failsBase("rnbqKbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQkBNR w KQkq - 0 1"); // both kings have moved (swapped)
+            failsBase("1nbqKbnr/pppppppp/r7/8/8/8/PPPPPPPP/RNBQkBNR w KQkq - 0 1");// black queen side rook has moved
+            failsBase("rnbqKbn1/pppppppp/r7/8/8/8/PPPPPPPP/RNBQkBNR w KQkq - 0 1");// black king side rook has moved
+            failsBase("nrbqKbrn/pppppppp/r7/8/8/8/PPPPPPPP/RNBQkBNR w KQkq - 0 1");// both black rooks have moved (swapped with knight (n))
+        }
+
+#undef failsBase
     }
 
-    auto is_valid_board = [](const std::string& str) {
+    auto is_valid_board = [](const std::string &str) {
         ExpectedBoard board = Board::fromFEN(str);
         if (board) {
             REQUIRE(board.value().toFEN() == str);
 
             return std::move(board.extract());
         }
-        INFO("Did not create valid board: " << board.error());
+        INFO("Did not create valid board from _" << str << "_ Error: " << board.error());
         REQUIRE(board);
 
         return Board::emptyBoard();
@@ -434,9 +438,9 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CHECK(board.countPieces(Color::White) == (isWhite ? 1 : 0));
         CHECK(board.countPieces(Color::Black) == (isWhite ? 0 : 1));
 
-        auto p =  board.pieceAt(0, 7);
+        auto p = board.pieceAt(0, 7);
         REQUIRE(p);
-        Piece& piece = *p;
+        Piece &piece = *p;
         REQUIRE(piece.type() == Piece::Type::Pawn);
         REQUIRE(piece.color() == (isWhite ? Color::White : Color::Black));
     }
@@ -450,13 +454,13 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CHECK(board.countPieces(Color::White) == 1);
         CHECK(board.countPieces(Color::Black) == 1);
 
-        auto p =  board.pieceAt(0, 7);
+        auto p = board.pieceAt(0, 7);
         REQUIRE(p);
-        Piece& piece1 = *p;
+        Piece &piece1 = *p;
 
-        auto p2 =  board.pieceAt(1, 7);
+        auto p2 = board.pieceAt(1, 7);
         REQUIRE(p2);
-        Piece& piece2 = *p2;
+        Piece &piece2 = *p2;
 
         CHECK(piece1.type() == Piece::Type::Pawn);
         CHECK(piece2.type() == Piece::Type::Knight);
@@ -467,7 +471,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         std::string pieceFEN = GENERATE("pppppppp", "nnnnnnnn", "kkkkkkkk", "qqqqqqqq", "rrrrrrrr", "bbbbbbbb");
         bool upper = GENERATE(true, false);
         if (upper) {
-            std::transform(pieceFEN.begin(), pieceFEN.end(), pieceFEN.begin(), [](unsigned char c){ return toupper(c); });
+            std::transform(pieceFEN.begin(), pieceFEN.end(), pieceFEN.begin(), [](unsigned char c) { return toupper(c); });
         }
         CAPTURE(pieceFEN);
 
@@ -534,20 +538,35 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         auto b = is_valid_board(basePosition);
         // TODO: check we can actually make the appropriate castling moves
         if (castling == "-") {
-            REQUIRE(b.castlingRights() == CastlingRight::NO_CASTLING);
+            REQUIRE(b.castlingRights() == CastlingRight::NoCastling);
         }
         // TODO: how to check this without actually replicating the logic??
         REQUIRE("TODO");
     }
 
     SECTION("En passant state") {
-        std::string enPassant = GENERATE(as<std::string>(), "a", "b", "h") + GENERATE("3", "6");
+        bool empty = GENERATE(true, false);
+        std::string enPassant;
+        std::string turn;
+        if (empty) {
+            enPassant = "-";
+            turn = GENERATE("w", "b");
+        } else {
+            uint8_t col = GENERATE(TEST_SOME(range(0, 7)));
+            uint8_t row = GENERATE(2, 5);
+            enPassant = Board::columnRowToSAN(col, row);
+            turn = row == 2 ? "b" : "w";
+        }
+
         CAPTURE(enPassant);
-        std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - " + enPassant + " 0 1";
-        // FIXME: these moves are really not valid and it should fail!
-        is_valid_board(basePosition);
-        // TODO verify somehow?
-        REQUIRE("TODO");
+        std::string basePosition = "rnbqkbnr/8/8/pppppppp/PPPPPPPP/8/8/RNBQKBNR " + turn + " - " + enPassant + " 0 1";
+        // FIXME: these boards are really not valid and it should fail!
+        auto b = is_valid_board(basePosition);
+        if (empty) {
+            REQUIRE_FALSE(b.enPassantColRow().has_value());
+        } else {
+            REQUIRE(b.enPassantColRow() == Board::SANToColRow(enPassant));
+        }
     }
 
     SECTION("Halfmoves since capture or pawn move") {
@@ -610,14 +629,13 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             }
         }
     }
-
 }
 
 
 TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
 
-    Piece filledPiece = Piece::fromFEN('p').value(); // black pawn
-    Piece otherPiece = Piece(Chess::Piece::Type::Queen, Color::White); // white queen
+    Piece filledPiece = Piece::fromFEN('p').value();                  // black pawn
+    Piece otherPiece = Piece(Chess::Piece::Type::Queen, Color::White);// white queen
     REQUIRE_FALSE(filledPiece == otherPiece);
 
     auto b = Board::fromFEN("pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp w - - 0 1");
@@ -625,19 +643,19 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
     Board filledBoard = b.extract();
 
     SECTION("Correct squares") {
-        auto is_position = [&](uint8_t column, uint8_t row, const std::string& san) {
-          // since we do not actually specify the index order we have to test via a Board
-          CAPTURE(row, column, san);
-          filledBoard.setPiece(column, row, otherPiece);
-          REQUIRE(filledBoard.pieceAt(column, row) == otherPiece);
-          auto newPiece = filledBoard.pieceAt(san);
-          REQUIRE(newPiece);
-          REQUIRE(newPiece.value() == otherPiece);
-          filledBoard.setPiece(san, std::nullopt);
-          REQUIRE(filledBoard.pieceAt(column, row) == std::nullopt);
-          filledBoard.setPiece(column, row, filledPiece);
+        auto is_position = [&](uint8_t column, uint8_t row, const std::string &san) {
+            // since we do not actually specify the index order we have to test via a Board
+            CAPTURE(row, column, san);
+            filledBoard.setPiece(column, row, otherPiece);
+            REQUIRE(filledBoard.pieceAt(column, row) == otherPiece);
+            auto newPiece = filledBoard.pieceAt(san);
+            REQUIRE(newPiece);
+            REQUIRE(newPiece.value() == otherPiece);
+            filledBoard.setPiece(san, std::nullopt);
+            REQUIRE(filledBoard.pieceAt(column, row) == std::nullopt);
+            filledBoard.setPiece(column, row, filledPiece);
 
-          REQUIRE(Board::SANToColRow(san) == std::make_pair(column, row));
+            REQUIRE(Board::SANToColRow(san) == std::make_pair(column, row));
         };
 
         is_position(0, 0, "a1");
@@ -652,13 +670,13 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
     SECTION("Failing squares") {
         Board empty = Board::emptyBoard();
 
-        auto is_not_a_position = [&](const std::string& san) {
-          CAPTURE(san);
-          REQUIRE_FALSE(filledBoard.pieceAt(san).has_value());
-          empty.setPiece(san, Piece(Piece::Type::Pawn, Color::Black));
-          REQUIRE(empty.countPieces(Color::Black) == 0);
-          REQUIRE(empty.countPieces(Color::White) == 0);
-          REQUIRE_FALSE(Board::SANToColRow(san).has_value());
+        auto is_not_a_position = [&](const std::string &san) {
+            CAPTURE(san);
+            REQUIRE_FALSE(filledBoard.pieceAt(san).has_value());
+            empty.setPiece(san, Piece(Piece::Type::Pawn, Color::Black));
+            REQUIRE(empty.countPieces(Color::Black) == 0);
+            REQUIRE(empty.countPieces(Color::White) == 0);
+            REQUIRE_FALSE(Board::SANToColRow(san).has_value());
         };
 
         is_not_a_position("");
@@ -679,7 +697,6 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
         is_not_a_position("1a");
         is_not_a_position("1h");
     }
-
 }
 
 
@@ -767,7 +784,7 @@ TEST_CASE("Basic FEN output", "[chess][parsing][fen]") {
     }
 
     SECTION("From and to (valid) FEN is identical") {
-        auto checkIdentical = [](const std::string& str) {
+        auto checkIdentical = [](const std::string &str) {
             CAPTURE(str);
             auto expB = Board::fromFEN(str);
             if (!expB) {
@@ -788,6 +805,5 @@ TEST_CASE("Basic FEN output", "[chess][parsing][fen]") {
             checkIdentical("8/4" + pawn + "3/8/8/8/8/8/8 w - - 0 1");
             checkIdentical("8/3" + pawn + "4/8/8/8/8/8/8 w - - 0 1");
         }
-
     }
 }

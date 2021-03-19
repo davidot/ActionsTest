@@ -15,7 +15,14 @@ namespace Chess {
     }
 
     bool Board::hasValidPosition() const {
-        return false;
+        auto fen = toFEN();
+        auto copied = Board::fromFEN(fen);
+        if (!copied) {
+            return false;
+        }
+        // TODO: check at least one king on both sides
+        // TODO: check king in non turn color is NOT in check (can take king)
+        return countPieces(Color::White) > 0 && countPieces(Color::Black);
     }
 
     int colorIndex(Color c) {
@@ -193,10 +200,17 @@ namespace Chess {
                 return std::string("Invalid en passant value: ") + std::string(parts[3]);
             }
             auto [col, row] = b.indexToColumnRow(*enPassantPawn);
-            if (row != 2 && row != m_size - 3) {
+            auto lastMoveColor = opposite(b.m_nextTurnColor);
+            if ((lastMoveColor == Color::White && row != 2) || (lastMoveColor == Color::Black && row != m_size - 1 - 2)) {
                 return std::string("Cannot have en passant on non 3th or 5th row: " + std::string(parts[3]));
             }
-            // TODO: check whether this is actually a valid enPassant value (i.e. there is a pawn)
+            if (b.pieceAt(col, row) != std::nullopt) {
+                return "En passant square cannot have a piece at square";
+            }
+            auto pawnRow = row + (lastMoveColor == Color::White ? 1 : -1);
+            if (b.pieceAt(col, pawnRow) != Piece{Piece::Type::Pawn, lastMoveColor}) {
+                return "En passant square must be just behind previously moved pawn";
+            }
             b.m_enPassant = enPassantPawn;
         }
 
@@ -304,11 +318,27 @@ namespace Chess {
         return columnRowToSAN(col, row);
     }
 
-    std::array<std::pair<char, CastlingRight>, 4> castleMapping = {
-            std::make_pair(Piece(Piece::Type::King, Color::White).toFEN(), CastlingRight::WHITE_QUEEN_SIDE),
-            std::make_pair(Piece(Piece::Type::Queen, Color::White).toFEN(), CastlingRight::WHITE_KING_SIDE),
-            std::make_pair(Piece(Piece::Type::King, Color::Black).toFEN(), CastlingRight::BLACK_QUEEN_SIDE),
-            std::make_pair(Piece(Piece::Type::Queen, Color::Black).toFEN(), CastlingRight::BLACK_KING_SIDE),
+    const std::array<std::pair<char, CastlingRight>, 4> castleMapping = {
+            std::make_pair(Piece(Piece::Type::King, Color::White).toFEN(), CastlingRight::WhiteKingSide),
+            std::make_pair(Piece(Piece::Type::Queen, Color::White).toFEN(), CastlingRight::WhiteQueenSide),
+            std::make_pair(Piece(Piece::Type::King, Color::Black).toFEN(), CastlingRight::BlackKingSide),
+            std::make_pair(Piece(Piece::Type::Queen, Color::Black).toFEN(), CastlingRight::BlackQueenSide),
+    };
+
+    struct CstlChk {
+        CastlingRight right;
+        Board::BoardIndex col;
+        Board::BoardIndex row;
+        Piece piece;
+    };
+
+    const std::array<CstlChk, 6> castleChecks = {
+            CstlChk{CastlingRight::WhiteCastling, 4, 0, Piece{Piece::Type::King, Color::White}},
+            CstlChk{CastlingRight::WhiteQueenSide, 0, 0, Piece{Piece::Type::Rook, Color::White}},
+            CstlChk{CastlingRight::WhiteKingSide, 7, 0, Piece{Piece::Type::Rook, Color::White}},
+            CstlChk{CastlingRight::BlackCastling, 4, 7, Piece{Piece::Type::King, Color::Black}},
+            CstlChk{CastlingRight::BlackQueenSide, 0, 7, Piece{Piece::Type::Rook, Color::Black}},
+            CstlChk{CastlingRight::BlackKingSide, 7, 7, Piece{Piece::Type::Rook, Color::Black}},
     };
 
     bool Board::setAvailableCastles(std::string_view vw) {
@@ -318,13 +348,12 @@ namespace Chess {
         if (vw == "-") {
             return true;
         }
-
         //reset before hand
-        m_castlingRights = CastlingRight::NO_CASTLING;
+        m_castlingRights = CastlingRight::NoCastling;
 
         auto front = castleMapping.begin();
 
-        for (auto& c : vw) {
+        for (const auto& c : vw) {
             if (auto pos = std::find_if(front, castleMapping.end(), [&](auto pair) {
                     return pair.first == c;
                 }); pos == castleMapping.end()) {
@@ -334,6 +363,14 @@ namespace Chess {
                 front = std::next(pos);
             }
         }
+
+        for (const auto& check : castleChecks) {
+            if ((m_castlingRights & check.right) != CastlingRight::NoCastling) {
+                if (pieceAt(check.col, check.row) != check.piece) {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
@@ -341,7 +378,7 @@ namespace Chess {
         std::stringstream stream;
         bool any = false;
         for (auto& [fen, fenRight] : castleMapping) {
-            if ((right & fenRight) != CastlingRight::NO_CASTLING) {
+            if ((right & fenRight) != CastlingRight::NoCastling) {
                 stream << fen;
                 any = true;
             }
