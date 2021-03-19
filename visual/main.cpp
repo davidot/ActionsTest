@@ -163,7 +163,7 @@ int main() {
             window.draw(highlightSquare);
 
             list.forEachMoveFrom(selectedSquare.x, selectedSquare.y, [&](const Chess::Move& move) {
-                auto [col, row] = Chess::Board::indexToColumnRow(move.toPosition);
+                auto [col, row] = move.colRowToPosition();
                 sf::Vector2f position = colRowToRect(col, row);
                 if (move.flag == Chess::Move::Flag::None) {
                     highlightSquare.setOutlineColor(sf::Color(0, 255, 0, 200));
