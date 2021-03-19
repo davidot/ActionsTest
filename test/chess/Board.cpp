@@ -334,6 +334,10 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("w KqQQk - 0 1");
             fails("w KKQQ - 0 1");
             fails("w kqK - 0 1");
+            fails("w kqKQ - 0 1");
+            fails("w kKQ - 0 1");
+            fails("w qKQ - 0 1");
+            fails("w qQ - 0 1");
             fails("w kK - 0 1");
             fails("w qK - 0 1");
             fails("w KQkQ - 0 1");
@@ -527,8 +531,12 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         std::string castling = GENERATE("-", "KQkq", "KQ", "kq", "Kk", "Qq", "Kq", "Qk", "K", "Q", "k", "q");
         CAPTURE(castling);
         std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w " + castling + " - 0 1";
-        is_valid_board(basePosition);
+        auto b = is_valid_board(basePosition);
         // TODO: check we can actually make the appropriate castling moves
+        if (castling == "-") {
+            REQUIRE(b.castlingRights() == CastlingRight::NO_CASTLING);
+        }
+        // TODO: how to check this without actually replicating the logic??
         REQUIRE("TODO");
     }
 
