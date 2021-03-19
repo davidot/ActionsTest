@@ -284,6 +284,14 @@ namespace Chess {
         return columnRowToIndex(col, row);
     }
 
+    std::optional<std::pair<Board::BoardIndex, Board::BoardIndex>> Board::SANToColRow(std::string_view vw) {
+        auto pos = SANToIndex(vw);
+        if (pos) {
+            return indexToColumnRow(pos.value());
+        }
+        return std::nullopt;
+    }
+
     std::string Board::columnRowToSAN(BoardIndex col, BoardIndex row) {
         std::string str;
         str.push_back('a' + col);
@@ -394,6 +402,9 @@ namespace Chess {
 
     void Board::undoNullMove() {
         m_nextTurnColor = opposite(m_nextTurnColor);
+    }
+    CastlingRight Board::castlingRights() {
+        return m_castlingRights;
     }
 
 #define INT(x) static_cast<uint8_t>(x)

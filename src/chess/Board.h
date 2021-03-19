@@ -14,8 +14,8 @@ namespace Chess {
         NO_CASTLING = 0u,
         WHITE_KING_SIDE = 1u,
         WHITE_QUEEN_SIDE = WHITE_KING_SIDE << 1,
-        BLACK_KING_SIDE = WHITE_KING_SIDE << 2,
-        BLACK_QUEEN_SIDE = WHITE_KING_SIDE << 3,
+        BLACK_KING_SIDE = 1u << 2,
+        BLACK_QUEEN_SIDE = BLACK_KING_SIDE << 1,
 
         WHITE_CASTLING = WHITE_KING_SIDE | WHITE_QUEEN_SIDE,
         BLACK_CASTLING = BLACK_KING_SIDE | BLACK_QUEEN_SIDE,
@@ -56,15 +56,17 @@ namespace Chess {
 
         [[nodiscard]] std::string toFEN() const;
 
-        [[nodiscard]] static std::optional<BoardIndex> SANToIndex(std::string_view);
-
         [[nodiscard]] static std::string columnRowToSAN(BoardIndex column, BoardIndex row);
+
+        [[nodiscard]] static std::optional<std::pair<BoardIndex, BoardIndex>> SANToColRow(std::string_view);
 
         void makeNullMove();
 
         void undoNullMove();
 
         std::optional<std::pair<Board::BoardIndex, Board::BoardIndex>> enPassantColRow() const;
+
+        CastlingRight castlingRights();
 
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
@@ -80,6 +82,8 @@ namespace Chess {
         [[nodiscard]] static std::pair<BoardIndex, BoardIndex> indexToColumnRow(BoardIndex);
 
         [[nodiscard]] static std::string indexToSAN(BoardIndex);
+
+        [[nodiscard]] static std::optional<BoardIndex> SANToIndex(std::string_view);
 
         static constexpr const BoardIndex m_size = 8;
         std::array<Piece::IntType, m_size * m_size> m_pieces;

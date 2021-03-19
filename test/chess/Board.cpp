@@ -617,7 +617,7 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
     Board filledBoard = b.extract();
 
     SECTION("Correct squares") {
-        auto is_position = [&](uint8_t row, uint8_t column, const std::string& san) {
+        auto is_position = [&](uint8_t column, uint8_t row, const std::string& san) {
           // since we do not actually specify the index order we have to test via a Board
           CAPTURE(row, column, san);
           filledBoard.setPiece(column, row, otherPiece);
@@ -628,15 +628,17 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
           filledBoard.setPiece(san, std::nullopt);
           REQUIRE(filledBoard.pieceAt(column, row) == std::nullopt);
           filledBoard.setPiece(column, row, filledPiece);
+
+          REQUIRE(Board::SANToColRow(san) == std::make_pair(column, row));
         };
 
         is_position(0, 0, "a1");
-        is_position(0, 1, "b1");
-        is_position(1, 0, "a2");
-        is_position(1, 2, "c2");
+        is_position(1, 0, "b1");
+        is_position(0, 1, "a2");
+        is_position(2, 1, "c2");
         is_position(3, 3, "d4");
         is_position(7, 7, "h8");
-        is_position(0, 7, "h1");
+        is_position(7, 0, "h1");
     }
 
     SECTION("Failing squares") {
@@ -648,6 +650,7 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
           empty.setPiece(san, Piece(Piece::Type::Pawn, Color::Black));
           REQUIRE(empty.countPieces(Color::Black) == 0);
           REQUIRE(empty.countPieces(Color::White) == 0);
+          REQUIRE_FALSE(Board::SANToColRow(san).has_value());
         };
 
         is_not_a_position("");
