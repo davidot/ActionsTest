@@ -47,7 +47,7 @@ int main() {
                                                "8/"
                                                "3PPPPP/"
                                                "3QKBNR"
-                                               " w KQkq - 0 1").extract();
+                                               " w Kq - 0 1").extract();
     sf::Vector2f boardOffset = {100, 100};
 
     sf::Text text;
@@ -164,12 +164,16 @@ int main() {
 
             list.forEachMoveFrom(selectedSquare.x, selectedSquare.y, [&](const Chess::Move& move) {
                 auto [col, row] = move.colRowToPosition();
-                sf::Vector2f position = colRowToRect(col, row);
                 if (move.flag == Chess::Move::Flag::None) {
                     highlightSquare.setOutlineColor(sf::Color(0, 255, 0, 200));
+                } else if (move.flag == Chess::Move::Flag::Castling) {
+                    // cheaty hack to move position one into the board
+                    col ^= 1u;
+                    highlightSquare.setOutlineColor(sf::Color(0, 255, 255, 200));
                 } else {
                     highlightSquare.setOutlineColor(sf::Color(0, 255, 255, 200));
                 }
+                sf::Vector2f position = colRowToRect(col, row);
                 highlightSquare.setPosition(position);
                 window.draw(highlightSquare);
             });
