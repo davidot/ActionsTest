@@ -19,6 +19,8 @@ namespace Chess {
 
         WhiteCastling = WhiteKingSide | WhiteQueenSide,
         BlackCastling = BlackKingSide | BlackQueenSide,
+        KingSideCastling = WhiteKingSide | BlackKingSide,
+        QueenSideCastling = WhiteQueenSide | BlackQueenSide,
         AnyCastling = WhiteCastling | BlackCastling
     };
 

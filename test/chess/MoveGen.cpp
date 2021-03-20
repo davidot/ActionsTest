@@ -671,10 +671,95 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 }
 
 TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
-    // TODO: oh oh gonna be hard!
-    SECTION("Can castle") {
+    using namespace Chess;
 
+    Board board = Board::emptyBoard();
+    if (GENERATE(true, false)) {
+        board.makeNullMove();
     }
+    Color toMove = board.colorToMove();
+    Color other = opposite(toMove);
+
+    uint8_t homeRow = toMove == Color::White ? 0 : 7;
+    const uint8_t queenSideRook = 0;
+    const uint8_t kingSideRook = 7;
+    const uint8_t kingCol = 4;
+
+    SECTION("Verify positions") {
+        Board startPosition = Board::standardBoard();
+        REQUIRE(startPosition.pieceAt(kingCol, homeRow) == Piece{Piece::Type::King, toMove});
+        REQUIRE(startPosition.pieceAt(kingSideRook, homeRow) == Piece{Piece::Type::Rook, toMove});
+        REQUIRE(startPosition.pieceAt(queenSideRook, homeRow) == Piece{Piece::Type::Rook, toMove});
+    }
+
+    bool kingSide = GENERATE(true, false);
+    bool queenSide = GENERATE_COPY(filter([=](bool b) {return b || kingSide;}, values({0, 1})));
+
+    bool withOppositeRook = GENERATE_COPY(filter([=](bool b) {return b || (!queenSide || !kingSide);}, values({0, 1})));
+
+    CAPTURE(toMove, kingSide, queenSide, withOppositeRook);
+
+    {
+        // setup en passant square via FEN (we do not want a method to set this)
+        board.setPiece(kingCol, homeRow, Piece{Piece::Type::King, toMove});
+
+        std::string castles;
+
+        if (kingSide || withOppositeRook) {
+            board.setPiece(kingSideRook, homeRow, Piece{Piece::Type::Rook, toMove});
+            if (kingSide) {
+                castles += Piece{Piece::Type::King, toMove}.toFEN();
+            }
+        }
+
+        if (queenSide || withOppositeRook) {
+            board.setPiece(queenSideRook, homeRow, Piece{Piece::Type::Rook, toMove});
+            if (queenSide) {
+                castles += Piece{Piece::Type::Queen, toMove}.toFEN();
+            }
+        }
+
+        std::string baseFEN = board.toFEN();
+        REQUIRE(baseFEN.ends_with(" - - 0 1"));
+        auto loc = baseFEN.rfind("- - ");
+        REQUIRE(loc != baseFEN.size());
+        baseFEN.replace(loc, 1, castles);
+        CAPTURE(baseFEN);
+        auto eBoard = Board::fromFEN(baseFEN);
+        if (!eBoard) {
+            INFO("Error - " << eBoard.error());
+            REQUIRE(eBoard);
+        }
+        board = eBoard.extract();
+        REQUIRE(board.colorToMove() == toMove);
+        REQUIRE((board.castlingRights() & CastlingRight::AnyCastling) != CastlingRight::NoCastling);
+        if (toMove == Color::White) {
+            REQUIRE((board.castlingRights() & CastlingRight::WhiteCastling) != CastlingRight::NoCastling);
+        } else {
+            REQUIRE((board.castlingRights() & CastlingRight::BlackCastling) != CastlingRight::NoCastling);
+        }
+    }
+
+    SECTION("Can castle") {
+        MoveList list = generateAllMoves(board);
+        unsigned calls = 0;
+        list.forEachMoveFrom(kingCol, homeRow, [&](const Move& move) {
+          REQUIRE(move.fromPosition != move.toPosition);
+
+
+          auto [col2, row] = move.colRowToPosition();;
+          auto pieceAt = board.pieceAt(col2, row);
+          if (!pieceAt.has_value()) {
+              return;
+          }
+          REQUIRE(move.flag == Move::Flag::Castling);
+          REQUIRE(pieceAt->type() == Piece::Type::Rook);
+          REQUIRE(row == homeRow);
+          calls++;
+        });
+        REQUIRE(calls == kingSide + queenSide);
+    }
+
 
     SECTION("Castling can be blocked") {
 
@@ -682,17 +767,17 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
 
         }
 
-        SECTION("King is in check") {
-
-        }
-
-        SECTION("King would move through check") {
-
-        }
-
-        SECTION("King would end in check") {
-
-        }
+//        SECTION("King is in check") {
+//
+//        }
+//
+//        SECTION("King would move through check") {
+//
+//        }
+//
+//        SECTION("King would end in check") {
+//
+//        }
     }
 }
 

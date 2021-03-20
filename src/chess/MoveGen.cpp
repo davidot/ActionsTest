@@ -199,6 +199,45 @@ namespace Chess {
         }
     }
 
+    const Index queenSideRook = 0;
+    const Index kingSideRook = 7;
+    const Index kingCol = 4;
+
+    Index homeRow(Color col) {
+        return col == Color::White ? 0 : 7;
+    }
+
+    bool empty(const Board& board, Index colFrom, Index colTo, Index row) {
+        Index start = std::min(colFrom, colTo) + 1u;
+        Index end = std::max(colFrom, colTo);
+        while (start < end) {
+            if (board.pieceAt(start, row) != std::nullopt) {
+                return false;
+            }
+            ++start;
+        }
+
+        return true;
+    }
+
+    void addCastles(MoveList& list, const Board& board, Index col, Index row, Color color) {
+        auto rights = board.castlingRights();
+        if (color == Color::White && (rights & CastlingRight::WhiteCastling) == CastlingRight::NoCastling
+            || color == Color::Black && (rights & CastlingRight::BlackCastling) == CastlingRight::NoCastling) {
+            return;
+        }
+        auto home = homeRow(color);
+        auto addCastleMove = [&](CastlingRight required, Index rookCol) {
+          if ((rights & required) != CastlingRight::NoCastling
+              && empty(board, kingCol, rookCol, home)
+              && board.pieceAt(rookCol, home) == Piece{Piece::Type::Rook, color}) {
+              list.addMove(Move{kingCol, home, rookCol, home, Move::Flag::Castling });
+          }
+        };
+        addCastleMove(CastlingRight::KingSideCastling, kingSideRook);
+        addCastleMove(CastlingRight::QueenSideCastling, queenSideRook);
+    }
+
     MoveList generateAllMoves(const Board &board, Color color) {
 //        std::cout << board.toFEN() << '\n';
         using BI = Board::BoardIndex;
@@ -217,6 +256,7 @@ namespace Chess {
                         break;
                     case Piece::Type::King:
                         addMoves<ALL_DIRECTIONS>(list, board, col, row);
+                        addCastles(list, board, col, row, color);
                         break;
                     case Piece::Type::Knight:
                         addKnightMoves(list, board, col, row);
