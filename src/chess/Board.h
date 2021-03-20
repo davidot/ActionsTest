@@ -64,9 +64,9 @@ namespace Chess {
 
         void undoNullMove();
 
-        std::optional<std::pair<Board::BoardIndex, Board::BoardIndex>> enPassantColRow() const;
+        [[nodiscard]] std::optional<std::pair<Board::BoardIndex, Board::BoardIndex>> enPassantColRow() const;
 
-        CastlingRight castlingRights();
+        [[nodiscard]] CastlingRight castlingRights() const;
 
     private:
         std::optional<std::string> parseFENBoard(std::string_view);

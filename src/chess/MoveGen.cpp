@@ -130,7 +130,7 @@ namespace Chess {
             case Color::Black:
                 return boardSize - 2;
         }
-        VERIFY_NOT_REACHED();
+        ASSERT_NOT_REACHED();
     }
 
     Index pawnPromotionRow(Color color) {
@@ -140,7 +140,7 @@ namespace Chess {
             case Color::Black:
                 return 0;
         }
-        VERIFY_NOT_REACHED();
+        ASSERT_NOT_REACHED();
     }
 
     void addPawnMoves(MoveList& list, const Board& board, const Index col, const Index row, Color color) {

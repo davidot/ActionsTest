@@ -440,7 +440,7 @@ namespace Chess {
     void Board::undoNullMove() {
         m_nextTurnColor = opposite(m_nextTurnColor);
     }
-    CastlingRight Board::castlingRights() {
+    CastlingRight Board::castlingRights() const {
         return m_castlingRights;
     }
 
@@ -495,7 +495,7 @@ namespace Chess {
             case Flag::PromotionToQueen:
                 return Piece::Type::Queen;
             default:
-                VERIFY_NOT_REACHED();
+                ASSERT_NOT_REACHED();
         }
     }
 

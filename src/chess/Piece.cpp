@@ -61,7 +61,7 @@ namespace Chess {
                 c = 'K';
                 break;
             default:
-                VERIFY_NOT_REACHED();
+                ASSERT_NOT_REACHED();
         }
         if (m_val & blackMask) {
             c += caseDiff;
@@ -85,7 +85,7 @@ namespace Chess {
             case 'K':
                 return T::King;
         }
-        VERIFY_NOT_REACHED();
+        ASSERT_NOT_REACHED();
     }
 
     // Just hardcode for now...
@@ -136,7 +136,7 @@ namespace Chess {
             case Color::Black:
                 return "Black";
         }
-        VERIFY_NOT_REACHED();
+        ASSERT_NOT_REACHED();
     }
 
     const char* pieceName(Piece::Type t) {
@@ -154,7 +154,7 @@ namespace Chess {
             case Piece::Type::King:
                 return "King";
         }
-        VERIFY_NOT_REACHED();
+        ASSERT_NOT_REACHED();
     }
 
     std::ostream& operator<<(std::ostream& os, const Piece& piece) {
@@ -208,7 +208,7 @@ namespace Chess {
             case blackMask:
                 return Color::Black;
         }
-        VERIFY_NOT_REACHED();
+        ASSERT_NOT_REACHED();
     }
 
 }

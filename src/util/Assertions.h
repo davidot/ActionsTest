@@ -13,7 +13,7 @@ namespace util::Assert {
     } while (0)
 
 #else
-#define VERIFY(expr)
+#define ASSERT(expr)
 #endif
 
-#define VERIFY_NOT_REACHED() ASSERT(false)
+#define ASSERT_NOT_REACHED() ASSERT(false)
