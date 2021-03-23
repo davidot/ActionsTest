@@ -766,13 +766,23 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
     }
 
     SECTION("Random pieces do not block castling") {
-        Piece p{GENERATE(ANY_TYPE), toMove};
 
-        uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
-        uint8_t row = GENERATE_COPY(filter([=](uint8_t i) {return i != homeRow; }, TEST_SOME(range(0, 8))));
-        REQUIRE(board.pieceAt(col, row) == std::nullopt);
-        board.setPiece(col, row, p);
+        SECTION("Other king of same color on board") {
+            board.setPiece(4, 4, Piece{Piece::Type::King, toMove});
+        }
+
+        SECTION("Any piece anywhere") {
+            // just "our" color so no checks can occur
+            Piece p{GENERATE(ANY_TYPE), toMove};
+
+            uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
+            uint8_t row = GENERATE_COPY(filter([=](uint8_t i) {return i != homeRow; }, TEST_SOME(range(0, 8))));
+            REQUIRE(board.pieceAt(col, row) == std::nullopt);
+            board.setPiece(col, row, p);
+        }
+
         unsigned calls = 0;
+        CAPTURE(board.toFEN());
         MoveList list = generateAllMoves(board);
         list.forEachMoveFrom(kingCol, homeRow, [&](const Move &move) {
           REQUIRE(move.fromPosition != move.toPosition);

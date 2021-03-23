@@ -227,6 +227,10 @@ namespace Chess {
             return;
         }
         auto home = homeRow(color);
+        if (home != row || col != kingCol) {
+            // this is technically not valid since we have castling rights but solves things for multiple kings...
+            return;
+        }
         auto addCastleMove = [&](CastlingRight required, Index rookCol) {
           if ((rights & required) != CastlingRight::NoCastling
               && empty(board, kingCol, rookCol, home)
