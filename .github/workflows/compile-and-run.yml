@@ -17,27 +17,26 @@ jobs:
           - {
             compiler: g++-10,
             os: ubuntu-20.04,
-            os-base: ''
+            os-base: '',
+            extra-flags: '-Wall -fsanitize=address,undefined'
           }
           - {
             compiler: clang++-10,
             os: ubuntu-20.04,
-            os-base: 'ubuntu'
+            os-base: 'ubuntu',
+            extra-flags: ''
           }
           - {
             compiler: cl.exe,
             os: windows-2019,
-            os-base: 'windows'
+            os-base: 'windows',
+            extra-flags: ''
           }
           - {
             compiler: clang++,
             os: macos-latest,
-            os-base: 'mac'
-          }
-          - {
-            compiler: g++-10,
-            os: macos-latest,
-            os-base: 'mac'
+            os-base: 'mac',
+            extra-flags: ''
           }
         runall:
           - ${{ contains('refs/heads/mains refs/heads/develops', github.ref) || contains(github.event.head_commit.message, ' ci') || contains(github.event.head_commit.message, 'ci ')}}
@@ -86,6 +85,7 @@ jobs:
           -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DEXTENDED_TESTS=1
+          -DCMAKE_CXX_FLAGS=${{ matrix.config.extra_flags }}
 
       - name: Build
         run: cmake --build ${{ env.build_folder_location }}
