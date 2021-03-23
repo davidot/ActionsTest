@@ -1,13 +1,13 @@
+#include "TestUtil.h"
 #include <catch2/catch.hpp>
 #include <chess/MoveGen.h>
 #include <set>
-#include "TestUtil.h"
 
-#define REQUIRE_EMPTY(list) \
-    REQUIRE(list.size() == 0); \
-    list.forEachMove([](const auto&){ \
-        /*Should not be called*/ \
-        REQUIRE(false); \
+#define REQUIRE_EMPTY(list)             \
+    REQUIRE(list.size() == 0);          \
+    list.forEachMove([](const auto &) { \
+        /*Should not be called*/        \
+        REQUIRE(false);                 \
     })
 
 TEST_CASE("Basic move checks", "[chess][move]") {
@@ -28,8 +28,8 @@ TEST_CASE("Basic move checks", "[chess][move]") {
     REQUIRE_FALSE(isPromo(Move::Flag::EnPassant));
 
     auto promoType = [](Move::Flag flag) {
-      Move mv = Move{0, 0, flag};
-      return mv.promotedType();
+        Move mv = Move{0, 0, flag};
+        return mv.promotedType();
     };
 
     REQUIRE(promoType(Chess::Move::Flag::PromotionToKnight) == Piece::Type::Knight);
@@ -385,7 +385,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
     int8_t offset = toMove == Color::White ? 1 : -1;
     int8_t startRow = toMove == Color::White ? 1 : 6;
-    int8_t endRow = toMove == Color::Black ? 1 : 6; // reverse of start
+    int8_t endRow = toMove == Color::Black ? 1 : 6;// reverse of start
 
     SECTION("Pawns cannot capture anywhere (except direct diagonals)") {
         Piece capturable{GENERATE(CAPTURABLE_TYPES), other};
@@ -428,15 +428,15 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
         MoveList list = generateAllMoves(board);
         std::set<uint8_t> captures;
-        list.forEachMoveFrom(4, 4, [&](const Move& move) {
-          REQUIRE(move.toPosition != move.fromPosition);
-          auto [col, row] = move.colRowToPosition();
-          CAPTURE(col, row);
-          auto optPiece = board.pieceAt(col, row);
-          if (optPiece) {
-              captures.insert(move.toPosition);
-              REQUIRE(optPiece == capturable);
-          }
+        list.forEachMoveFrom(4, 4, [&](const Move &move) {
+            REQUIRE(move.toPosition != move.fromPosition);
+            auto [col, row] = move.colRowToPosition();
+            CAPTURE(col, row);
+            auto optPiece = board.pieceAt(col, row);
+            if (optPiece) {
+                captures.insert(move.toPosition);
+                REQUIRE(optPiece == capturable);
+            }
         });
         REQUIRE(captures.size() == expectedCaptures);
     }
@@ -448,14 +448,14 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
         MoveList list = generateAllMoves(board);
         std::set<uint8_t> destinationRows;
-        list.forEachMoveFrom(col, startRow, [&](const Move& move) {
-          REQUIRE(move.toPosition != move.fromPosition);
-          auto [col2, row] = move.colRowToPosition();
-          REQUIRE(col == col2);
-          destinationRows.insert(row);
-          if (row == startRow + offset + offset) {
-              REQUIRE(move.flag == Move::Flag::DoublePushPawn);
-          }
+        list.forEachMoveFrom(col, startRow, [&](const Move &move) {
+            REQUIRE(move.toPosition != move.fromPosition);
+            auto [col2, row] = move.colRowToPosition();
+            REQUIRE(col == col2);
+            destinationRows.insert(row);
+            if (row == startRow + offset + offset) {
+                REQUIRE(move.flag == Move::Flag::DoublePushPawn);
+            }
         });
         REQUIRE(destinationRows.size() == 2);
         REQUIRE(destinationRows.find(startRow + offset) != destinationRows.end());
@@ -472,11 +472,11 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
         MoveList list = generateAllMoves(board);
         std::set<uint8_t> destinationRows;
-        list.forEachMoveFrom(col, startRow, [&](const Move& move) {
-          REQUIRE(move.toPosition != move.fromPosition);
-          auto [col2, row] = move.colRowToPosition();
-          REQUIRE(col == col2);
-          destinationRows.insert(row);
+        list.forEachMoveFrom(col, startRow, [&](const Move &move) {
+            REQUIRE(move.toPosition != move.fromPosition);
+            auto [col2, row] = move.colRowToPosition();
+            REQUIRE(col == col2);
+            destinationRows.insert(row);
         });
         REQUIRE(destinationRows.size() == 1);
         REQUIRE(destinationRows.find(startRow + offset) != destinationRows.end());
@@ -492,18 +492,18 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         board.setPiece(col, startRow + offset, moveBlocker);
 
         MoveList list = generateAllMoves(board);
-        list.forEachMoveFrom(col, startRow, [&](const Move& move) {
-          REQUIRE(false);
+        list.forEachMoveFrom(col, startRow, [&](const Move &move) {
+            REQUIRE(false);
         });
     }
 
     SECTION("Pawns not on the starting row never give a double push") {
         uint8_t col = GENERATE(range(0u, 8u));
-        uint8_t row = GENERATE_COPY(filter([startRow](uint8_t v){ return v != startRow; },range(0u, 8u)));
+        uint8_t row = GENERATE_COPY(filter([startRow](uint8_t v) { return v != startRow; }, range(0u, 8u)));
         board.setPiece(col, row, Piece(Piece::Type::Pawn, toMove));
         MoveList list = generateAllMoves(board);
-        list.forEachMove([](const Move& move) {
-          REQUIRE(move.flag != Move::Flag::DoublePushPawn);
+        list.forEachMove([](const Move &move) {
+            REQUIRE(move.flag != Move::Flag::DoublePushPawn);
         });
     }
 
@@ -514,22 +514,22 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
         MoveList list = generateAllMoves(board);
         std::set<Piece::Type> types;
-        list.forEachMoveFrom(col, endRow, [&](const Move& move) {
-          REQUIRE(move.toPosition != move.fromPosition);
-          auto [col2, row] = move.colRowToPosition();
-          REQUIRE(col == col2);
-          REQUIRE(row == endRow + offset);
-          REQUIRE(move.isPromotion());
-          auto type = move.promotedType();
-          REQUIRE(types.find(type) == types.end());
-          types.insert(type);
+        list.forEachMoveFrom(col, endRow, [&](const Move &move) {
+            REQUIRE(move.toPosition != move.fromPosition);
+            auto [col2, row] = move.colRowToPosition();
+            REQUIRE(col == col2);
+            REQUIRE(row == endRow + offset);
+            REQUIRE(move.isPromotion());
+            auto type = move.promotedType();
+            REQUIRE(types.find(type) == types.end());
+            types.insert(type);
         });
         REQUIRE(types.size() == 4);
     }
 
     SECTION("Capture promotion") {
         uint8_t col = GENERATE(0, 7);
-        uint8_t captureCol = GENERATE_REF(filter([&](uint8_t i){return i >= 0 && i < board.size();}, values({col - 1, col + 1})));
+        uint8_t captureCol = GENERATE_REF(filter([&](uint8_t i) { return i >= 0 && i < board.size(); }, values({col - 1, col + 1})));
         CAPTURE(col, endRow);
 
         board.setPiece(col, endRow, Piece{Piece::Type::Pawn, toMove});
@@ -545,20 +545,21 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         MoveList list = generateAllMoves(board);
         std::set<Piece::Type> types;
         unsigned calls = 0;
-        list.forEachMoveFrom(col, endRow, [&](const Move& move) {
-          REQUIRE(move.toPosition != move.fromPosition);
-          auto [col2, row] = move.colRowToPosition();;
-          REQUIRE(row == endRow + offset);
-          REQUIRE(move.isPromotion());
-          auto pieceAt = board.pieceAt(col2, row);
-          if (pieceAt != std::nullopt) {
-              auto type = move.promotedType();
-              REQUIRE(types.find(type) == types.end());
-              types.insert(type);
+        list.forEachMoveFrom(col, endRow, [&](const Move &move) {
+            REQUIRE(move.toPosition != move.fromPosition);
+            auto [col2, row] = move.colRowToPosition();
 
-              REQUIRE(col2 != col);
-          }
-          calls++;
+            REQUIRE(row == endRow + offset);
+            REQUIRE(move.isPromotion());
+            auto pieceAt = board.pieceAt(col2, row);
+            if (pieceAt != std::nullopt) {
+                auto type = move.promotedType();
+                REQUIRE(types.find(type) == types.end());
+                types.insert(type);
+
+                REQUIRE(col2 != col);
+            }
+            calls++;
         });
         REQUIRE(types.size() == 4);
         REQUIRE(calls == (hasBlocker ? 4 : 8));
@@ -586,7 +587,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
             REQUIRE(board.colorToMove() == toMove);
             REQUIRE(board.enPassantColRow() == std::make_pair(col, enPassantRowOther));
         }
-        int8_t pawnOffset = GENERATE_COPY(filter([col](int8_t i){ return col + i >= 0 && col + i < 8; }, values({1, -1})));
+        int8_t pawnOffset = GENERATE_COPY(filter([col](int8_t i) { return col + i >= 0 && col + i < 8; }, values({1, -1})));
         uint8_t myCol = col + pawnOffset;
         CAPTURE(board.toFEN(), myCol);
 
@@ -604,22 +605,22 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
-            list.forEachMoveFrom(myCol, rowAfterDoublePushOther, [&](const Move& move) {
-              REQUIRE(move.toPosition != move.fromPosition);
-              auto [col2, row] = move.colRowToPosition();;
+            list.forEachMoveFrom(myCol, rowAfterDoublePushOther, [&](const Move &move) {
+                REQUIRE(move.toPosition != move.fromPosition);
+                auto [col2, row] = move.colRowToPosition();
 
-              auto pieceAt = board.pieceAt(col2, row);
-              REQUIRE_FALSE(pieceAt.has_value());
-              if (move.flag != Move::Flag::None) {
-                  REQUIRE(col2 != myCol);
-                  REQUIRE(col2 == col);
-                  REQUIRE(row == enPassantRowOther);
-                  REQUIRE(move.flag == Move::Flag::EnPassant);
-              } else {
-                  REQUIRE_FALSE(hasBlocker);
-                  REQUIRE(move.flag == Move::Flag::None);
-              }
-              calls++;
+                auto pieceAt = board.pieceAt(col2, row);
+                REQUIRE_FALSE(pieceAt.has_value());
+                if (move.flag != Move::Flag::None) {
+                    REQUIRE(col2 != myCol);
+                    REQUIRE(col2 == col);
+                    REQUIRE(row == enPassantRowOther);
+                    REQUIRE(move.flag == Move::Flag::EnPassant);
+                } else {
+                    REQUIRE_FALSE(hasBlocker);
+                    REQUIRE(move.flag == Move::Flag::None);
+                }
+                calls++;
             });
             REQUIRE(calls == (hasBlocker ? 1 : 2));
         }
@@ -634,8 +635,8 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
-            list.forEachMoveFrom(myCol, enPassantRowOther, [&](const Move& move) {
-              REQUIRE(false);
+            list.forEachMoveFrom(myCol, enPassantRowOther, [&](const Move &move) {
+                REQUIRE(false);
             });
             REQUIRE(calls == 0);
         }
@@ -650,22 +651,21 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
-            list.forEachMoveFrom(myCol, rowAfterDoublePushOther - offset, [&](const Move& move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row] = move.colRowToPosition();;
-              auto pieceAt = board.pieceAt(col2, row);
-              REQUIRE(pieceAt);
-              REQUIRE(pieceAt->type() == Piece::Type::Pawn);
-              REQUIRE(col2 == col);
-              REQUIRE(row == rowAfterDoublePushOther);
-              calls++;
+            list.forEachMoveFrom(myCol, rowAfterDoublePushOther - offset, [&](const Move &move) {
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row] = move.colRowToPosition();
+                auto pieceAt = board.pieceAt(col2, row);
+                REQUIRE(pieceAt);
+                REQUIRE(pieceAt->type() == Piece::Type::Pawn);
+                REQUIRE(col2 == col);
+                REQUIRE(row == rowAfterDoublePushOther);
+                calls++;
             });
             REQUIRE(calls == 1);
         }
 
         SECTION("Cannot take en passant with non-pawn") {
-
         }
     }
 }
@@ -693,9 +693,9 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
     }
 
     bool kingSide = GENERATE(true, false);
-    bool queenSide = GENERATE_COPY(filter([=](bool b) {return b || kingSide;}, values({0, 1})));
+    bool queenSide = GENERATE_COPY(filter([=](bool b) { return b || kingSide; }, values({0, 1})));
 
-    bool withOppositeRook = GENERATE_COPY(filter([=](bool b) {return b || (!queenSide || !kingSide);}, values({0, 1})));
+    bool withOppositeRook = GENERATE_COPY(filter([=](bool b) { return b || (!queenSide || !kingSide); }, values({0, 1})));
 
     CAPTURE(toMove, kingSide, queenSide, withOppositeRook);
 
@@ -743,42 +743,108 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
     SECTION("Can castle") {
         MoveList list = generateAllMoves(board);
         unsigned calls = 0;
-        list.forEachMoveFrom(kingCol, homeRow, [&](const Move& move) {
-          REQUIRE(move.fromPosition != move.toPosition);
-
-
-          auto [col2, row] = move.colRowToPosition();;
-          auto pieceAt = board.pieceAt(col2, row);
-          if (!pieceAt.has_value()) {
-              return;
-          }
-          REQUIRE(move.flag == Move::Flag::Castling);
-          REQUIRE(pieceAt->type() == Piece::Type::Rook);
-          REQUIRE(row == homeRow);
-          calls++;
+        list.forEachMoveFrom(kingCol, homeRow, [&](const Move &move) {
+            REQUIRE(move.fromPosition != move.toPosition);
+            auto [col2, row] = move.colRowToPosition();
+            auto pieceAt = board.pieceAt(col2, row);
+            if (!pieceAt.has_value()) {
+                return;
+            }
+            REQUIRE(move.flag == Move::Flag::Castling);
+            REQUIRE(pieceAt->type() == Piece::Type::Rook);
+            REQUIRE((col2 == kingSideRook || col2 == queenSideRook));
+            if (!kingSide) {
+                REQUIRE(col2 == queenSideRook);
+            }
+            if (!queenSide) {
+                REQUIRE(col2 == kingSideRook);
+            }
+            REQUIRE(row == homeRow);
+            calls++;
         });
         REQUIRE(calls == kingSide + queenSide);
     }
 
+    SECTION("Random pieces do not block castling") {
+        Piece p{GENERATE(ANY_TYPE), toMove};
 
-    SECTION("Castling can be blocked") {
+        uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
+        uint8_t row = GENERATE_COPY(filter([=](uint8_t i) {return i != homeRow; }, TEST_SOME(range(0, 8))));
+        REQUIRE(board.pieceAt(col, row) == std::nullopt);
+        board.setPiece(col, row, p);
+        unsigned calls = 0;
+        MoveList list = generateAllMoves(board);
+        list.forEachMoveFrom(kingCol, homeRow, [&](const Move &move) {
+          REQUIRE(move.fromPosition != move.toPosition);
+          if (move.flag == Move::Flag::Castling) {
+              auto [col2, row] = move.colRowToPosition();
+              auto pieceAt = board.pieceAt(col2, row);
+              REQUIRE(pieceAt.has_value());
+              REQUIRE(pieceAt->type() == Piece::Type::Rook);
+              REQUIRE((col2 == kingSideRook || col2 == queenSideRook));
+              if (!kingSide) {
+                  REQUIRE(col2 == queenSideRook);
+              }
+              if (!queenSide) {
+                  REQUIRE(col2 == kingSideRook);
+              }
+              REQUIRE(row == homeRow);
+              calls++;
+          }
+        });
+        REQUIRE(calls == kingSide + queenSide);
+    }
 
-        SECTION("Piece between rook and king") {
+#define NO_CASTLING_MOVES()                                        \
+    CAPTURE(board.toFEN());                                        \
+    MoveList list = generateAllMoves(board);                       \
+    list.forEachMoveFrom(kingCol, homeRow, [&](const Move &move) { \
+        REQUIRE(move.fromPosition != move.toPosition);             \
+        REQUIRE(move.flag != Move::Flag::Castling);                \
+        auto [col2, row] = move.colRowToPosition();                \
+        REQUIRE(col2 != kingSideRook);                             \
+        REQUIRE(col2 != queenSideRook);                            \
+    })
 
+    SECTION("Castling is blocked by piece between rook and king") {
+
+        Piece p{GENERATE(CAPTURABLE_TYPES), GENERATE(Color::White, Color::Black)};
+
+        SECTION("Full homerow blocked") {
+            for (uint8_t col = 0; col < 8; col++) {
+                if (board.pieceAt(col, homeRow) == std::nullopt) {
+                    board.setPiece(col, homeRow, p);
+                }
+            }
+            NO_CASTLING_MOVES();
         }
 
-//        SECTION("King is in check") {
-//
-//        }
-//
-//        SECTION("King would move through check") {
-//
-//        }
-//
-//        SECTION("King would end in check") {
-//
-//        }
+        SECTION("Single piece") {
+            if (kingSide) {
+                uint8_t col = GENERATE_COPY(TEST_SOME(range(uint8_t(kingCol + 1), kingSideRook)));
+                board.setPiece(col, homeRow, p);
+            }
+            if (queenSide) {
+                uint8_t col = GENERATE_COPY(TEST_SOME(range(uint8_t(queenSideRook + 1), kingCol)));
+                board.setPiece(col, homeRow, p);
+            }
+            NO_CASTLING_MOVES();
+        }
     }
+
+    //        SECTION("King is in check") {
+    //
+    //        }
+    //
+    //        SECTION("King would move through check") {
+    //
+    //        }
+    //
+    //        SECTION("King would end in check") {
+    //
+    //        }
+
+#undef NO_CASTLING_MOVES
 }
 
 TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
@@ -787,40 +853,31 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
     SECTION("In check") {
         // TODO: oh oh gonna be hard!
         SECTION("Move the king away from being attacked") {
-
         }
 
         SECTION("Move piece in front of attack") {
             SECTION("Cannot move pinned piece in front") {
-
             }
         }
 
         SECTION("Capture direct attacker") {
 
             SECTION("Cannot capture with pinned piece") {
-
             }
         }
 
         SECTION("Single move escapes") {
             SECTION("Double push to escape check") {
-
             }
             SECTION("En passant to escape check") {
-
             }
             SECTION("Promotion to escape check") {
-
             }
             SECTION("Promotion capture to escape check") {
-
             }
         }
 
         SECTION("Cannot move pinned piece (even when not in check)") {
-
         }
     }
 }
-
