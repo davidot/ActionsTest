@@ -18,7 +18,7 @@ jobs:
             compiler: g++-10,
             os: ubuntu-20.04,
             os-base: '',
-            extra-flags: '-Wall -fsanitize=address,undefined'
+            extra-flags: '-fno-omit-frame-pointer -Wall -fsanitize=address,undefined'
           }
           - {
             compiler: clang++-10,
@@ -85,7 +85,7 @@ jobs:
           -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DEXTENDED_TESTS=1
-          -DCMAKE_CXX_FLAGS=${{ matrix.config.extra_flags }}
+          -DCMAKE_CXX_FLAGS=${{ matrix.config.extra-flags }}
 
       - name: Build
         run: cmake --build ${{ env.build_folder_location }}
