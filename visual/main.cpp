@@ -71,6 +71,8 @@ int main() {
       return boardOffset + sf::Vector2f {squareSize * col, squareSize * (boardSquareSize - row)};
     };
 
+    std::string fenStatus = "";
+
     sf::Clock deltaClock;
     while (window.isOpen()) {
         sf::Event event;
@@ -95,8 +97,35 @@ int main() {
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
-        ImGui::Begin("Hello, world!");
-        ImGui::Button("Look at this pretty button");
+        if (ImGui::Begin("Hello, world!")) {
+            std::string FEN = board.toFEN();
+
+            ImGui::Separator();
+            ImGui::Indent();
+            ImGui::Dummy(ImVec2(0, 3));
+            ImGui::TextWrapped("%s", FEN.c_str());
+            ImGui::Dummy(ImVec2(0, 3));
+            ImGui::Unindent();
+            ImGui::Separator();
+
+            if (ImGui::Button("Copy string value")) {
+                sf::Clipboard::setString(FEN);
+                fenStatus = "Copied!";
+            }
+            ImGui::SameLine(0.0f, 5.0f);
+            if (ImGui::Button("Paste string value")) {
+                auto s = sf::Clipboard::getString().toAnsiString();
+                auto eBoard = Chess::Board::fromFEN(s);
+                if (!eBoard) {
+                    fenStatus = "Failed: " + eBoard.error();
+                } else {
+                    board = eBoard.extract();
+                    fenStatus = "Loaded";
+                }
+            }
+
+            ImGui::Text("%s", fenStatus.c_str());
+        }
         ImGui::End();
 
         window.clear(sf::Color{0, 142, 29});
