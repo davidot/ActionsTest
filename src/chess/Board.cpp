@@ -440,8 +440,22 @@ namespace Chess {
     void Board::undoNullMove() {
         m_nextTurnColor = opposite(m_nextTurnColor);
     }
+
     CastlingRight Board::castlingRights() const {
         return m_castlingRights;
+    }
+
+    std::pair<Board::BoardIndex, Board::BoardIndex> Board::kingSquare(Color color) const {
+        Piece king {Piece::Type::King, color};
+          for (uint8_t col = 0; col < m_size; col++) {
+              for (uint8_t row = 0; row < m_size; row++) {
+                  if (pieceAt(col, row) == king) {
+                      // if there are multiple kings we dont care
+                      return std::make_pair(col, row);
+                  }
+              }
+          }
+          return std::make_pair(m_size + 1, m_size + 1);
     }
 
 #define INT(x) static_cast<uint8_t>(x)

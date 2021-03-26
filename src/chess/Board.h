@@ -70,6 +70,8 @@ namespace Chess {
 
         [[nodiscard]] CastlingRight castlingRights() const;
 
+        std::pair<Board::BoardIndex, Board::BoardIndex> kingSquare(Color color) const;
+
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 
