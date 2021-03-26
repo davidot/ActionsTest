@@ -117,7 +117,7 @@ int main() {
                 auto s = sf::Clipboard::getString().toAnsiString();
                 auto eBoard = Chess::Board::fromFEN(s);
                 if (!eBoard) {
-                    fenStatus = "Failed: " + eBoard.error();
+                    fenStatus = "Invalid FEN: _" + s + "_\n Got: " + eBoard.error();
                 } else {
                     board = eBoard.extract();
                     fenStatus = "Loaded";
