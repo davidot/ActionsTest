@@ -1112,21 +1112,52 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             REQUIRE(list.size() == 3);
         }
 
-        SECTION("Capture direct attacker") {
+        SECTION("Cannot move next to other king") {
+            board.setPiece(0, 0, king);
+            board.setPiece(2, 0, Piece{Piece::Type::King, other});
 
-            SECTION("Cannot capture with pinned piece") {
-            }
+            CAPTURE(board.toFEN());
+
+            int calls = 0;
+            MoveList list = generateAllMoves(board);
+            list.forEachMoveFrom(0, 0, [&](const Move &move) {
+              REQUIRE(move.fromPosition != move.toPosition);
+              REQUIRE(move.flag == Move::Flag::None);
+              auto [col2, row2] = move.colRowToPosition();
+              REQUIRE(col2 == 0); // can only move up
+              calls++;
+            });
+            REQUIRE(calls == 1);
         }
 
-        SECTION("Single move escapes") {
-            SECTION("Double push to escape check") {
-            }
-            SECTION("En passant to escape check") {
-            }
-            SECTION("Promotion to escape check") {
-            }
-            SECTION("Promotion capture to escape check") {
-            }
+        SECTION("Cannot take with pinned piece") {
+            board.setPiece(0, 0, king);
+            board.setPiece(1, 2, Piece{Piece::Type::Knight, other});
+
+            board.setPiece(0, 1, Piece{Piece::Type::Bishop, toMove});
+            board.setPiece(0, 7, Piece{Piece::Type::Rook, other});
+
+            board.setPiece(7, 4, Piece{Piece::Type::Pawn, toMove});
+
+            CAPTURE(board.toFEN());
+
+            int calls = 0;
+            MoveList list = generateAllMoves(board);
+            list.forEachMoveFrom(0, 0, [&](const Move &move) {
+              REQUIRE(move.fromPosition != move.toPosition);
+              REQUIRE(move.flag == Move::Flag::None);
+              auto [col2, row2] = move.colRowToPosition();
+              REQUIRE(col2 == 1); // can only move up
+              calls++;
+            });
+            REQUIRE(calls == 2);
+            list.forEachMoveFrom(0, 1, [&](const Move& move) {
+               REQUIRE(false);
+            });
+            list.forEachMoveFrom(7, 4, [&](const Move& move) {
+              REQUIRE(false);
+            });
+            REQUIRE(list.size() == 2);
         }
 
         SECTION("Cannot move pinned piece (even when not in check)") {
