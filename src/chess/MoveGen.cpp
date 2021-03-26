@@ -189,7 +189,6 @@ namespace Chess {
             // we assume empty here for now
             if (colFrom > colTo) {
                 // queen side
-                Index finalRookSpot = colFrom - 1;
                 Index finalKingSpot = colFrom - 2;
                 for (Index i = colFrom; i >= finalKingSpot; i--) {
                     if (attacked(i, rowFrom, board, {})) {
@@ -198,7 +197,6 @@ namespace Chess {
                 }
             } else {
                 // king side
-                Index finalRookSpot = colFrom + 1;
                 Index finalKingSpot = colFrom + 2;
                 for (Index i = colFrom; i <= finalKingSpot; i++) {
                     if (attacked(i, rowFrom, board, {})) {
@@ -208,7 +206,6 @@ namespace Chess {
             }
 
             list.addMove(m);
-            // return does not really matter here
             return true;
         }
 
@@ -278,23 +275,21 @@ namespace Chess {
     }
 
     Index pawnStartRow(Color color) {
-        switch (color) {
-            case Color::White:
-                return 1;
-            case Color::Black:
-                return boardSize - 2;
+        if (color == Color::White) {
+            return 1;
+        } else {
+            ASSERT(color == Color::Black);
+            return boardSize - 2;
         }
-        ASSERT_NOT_REACHED();
     }
 
     Index pawnPromotionRow(Color color) {
-        switch (color) {
-            case Color::White:
-                return boardSize - 1;
-            case Color::Black:
-                return 0;
+        if (color == Color::White) {
+            return boardSize - 1;
+        } else {
+            ASSERT(color == Color::Black);
+            return 0;
         }
-        ASSERT_NOT_REACHED();
     }
 
     void addPawnMoves(MoveList &list, const Board &board, const Index col, const Index row, Color color) {
@@ -372,7 +367,8 @@ namespace Chess {
 
     void addCastles(MoveList &list, const Board &board, Index col, Index row, Color color) {
         auto rights = board.castlingRights();
-        if (color == Color::White && (rights & CastlingRight::WhiteCastling) == CastlingRight::NoCastling || color == Color::Black && (rights & CastlingRight::BlackCastling) == CastlingRight::NoCastling) {
+        if ((color == Color::White && (rights & CastlingRight::WhiteCastling) == CastlingRight::NoCastling)
+            || (color == Color::Black && (rights & CastlingRight::BlackCastling) == CastlingRight::NoCastling)) {
             return;
         }
         auto home = homeRow(color);

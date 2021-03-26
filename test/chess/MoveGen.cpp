@@ -696,7 +696,6 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
-            unsigned calls = 0;
             list.forEachMoveFrom(myCol, rowAfterDoublePushOther, [&](const Move &move) {
               REQUIRE(move.toPosition != move.fromPosition);
               REQUIRE(move.flag == Move::Flag::None);
@@ -780,7 +779,7 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
 
     SECTION("Can castle") {
         MoveList list = generateAllMoves(board);
-        unsigned calls = 0;
+        int calls = 0;
         list.forEachMoveFrom(kingCol, homeRow, [&](const Move &move) {
             REQUIRE(move.fromPosition != move.toPosition);
             auto [col2, row] = move.colRowToPosition();
@@ -826,7 +825,7 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
             }
         }
 
-        unsigned calls = 0;
+        int calls = 0;
         CAPTURE(board.toFEN());
         MoveList list = generateAllMoves(board);
         list.forEachMoveFrom(kingCol, homeRow, [&](const Move &move) {
@@ -1033,7 +1032,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
-            unsigned calls = 0;
+            int calls = 0;
             list.forEachMoveFrom(coord, 1, [&](const Move &move) {
               REQUIRE(move.fromPosition != move.toPosition);
               REQUIRE(move.flag == Move::Flag::None);
@@ -1137,8 +1136,6 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
-            unsigned calls = 0;
-            auto [kingCol, kingRow] = board.kingSquare(toMove);
             list.forEachMoveFrom(0, 1, [&](const Move &move) {
                 REQUIRE(false);
             });
