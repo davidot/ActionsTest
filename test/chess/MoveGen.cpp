@@ -41,6 +41,16 @@ TEST_CASE("Basic move checks", "[chess][move]") {
         REQUIRE(false);                 \
     })
 
+#ifdef EXTENDED_TESTS
+#define TRUE_FALSE() GENERATE(true, false)
+#else
+// compile time random to still check both colors (hopefully)
+#define TRUE_FALSE() bool(((__TIME__[7] - '0') + __LINE__ + __COUNTER__) % 2)
+#endif
+
+#define CHECK_BOTH_COLORS() \
+    if (TRUE_FALSE()) board.makeNullMove(); \
+
 TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
     using namespace Chess;
 
@@ -61,9 +71,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
 
     SECTION("Invalid boards with single piece still generate moves") {
         Board board = Board::emptyBoard();
-        if (GENERATE(true, false)) {
-            board.makeNullMove();
-        }
+        CHECK_BOTH_COLORS()
         Color toMove = board.colorToMove();
         [[maybe_unused]] Color other = opposite(Color::White);// TODO use or remove
 
@@ -151,9 +159,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
 
     SECTION("In invalid board multiple pieces (same color still)") {
         Board board = Board::emptyBoard();
-        if (GENERATE(true, false)) {
-            board.makeNullMove();
-        }
+        CHECK_BOTH_COLORS()
         Color toMove = board.colorToMove();
         [[maybe_unused]] Color other = opposite(Color::White);// TODO use or remove
 
@@ -202,9 +208,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
 
     SECTION("Pieces are blocked by pieces of the same color") {
         Board board = Board::emptyBoard();
-        if (GENERATE(true, false)) {
-            board.makeNullMove();
-        }
+        CHECK_BOTH_COLORS()
         Color toMove = board.colorToMove();
         [[maybe_unused]] Color other = opposite(Color::White);// TODO use or remove
 
@@ -255,9 +259,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
 
     SECTION("Does generate capturing moves") {
         Board board = Board::emptyBoard();
-        if (GENERATE(true, false)) {
-            board.makeNullMove();
-        }
+        CHECK_BOTH_COLORS()
         Color toMove = board.colorToMove();
         Color other = opposite(toMove);
 
@@ -400,9 +402,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
     using namespace Chess;
 
     Board board = Board::emptyBoard();
-    if (GENERATE(true, false)) {
-        board.makeNullMove();
-    }
+    CHECK_BOTH_COLORS()
     Color toMove = board.colorToMove();
     Color other = opposite(toMove);
 
@@ -429,6 +429,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         REQUIRE_EMPTY(list);
     }
 
+#define IS_BLOCKED() TRUE_FALSE()
     SECTION("Pawns can capture forward and to the side (non en passant)") {
         Piece capturable{GENERATE(CAPTURABLE_TYPES), other};
         unsigned expectedCaptures = 1;
@@ -441,8 +442,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
             board.setPiece(col, 4 + offset, capturable);
         }
 
-        bool blocked = GENERATE(true, false);
-        CAPTURE(blocked);
+        bool blocked = IS_BLOCKED();
         if (blocked) {
             Color c = GENERATE(Color::White, Color::Black);
             Piece moveBlocker{GENERATE(CAPTURABLE_TYPES), c};
@@ -509,7 +509,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
     }
 
     SECTION("Piece directly in front of pawn stops both single and double pushes") {
-        uint8_t col = GENERATE(0, 7);
+        uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
         CAPTURE(col, startRow);
         board.setPiece(col, startRow, Piece{Piece::Type::Pawn, toMove});
 
@@ -523,8 +523,8 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
     }
 
     SECTION("Pawns not on the starting row never give a double push") {
-        uint8_t col = GENERATE(range(0u, 8u));
-        uint8_t row = GENERATE_COPY(filter([startRow](uint8_t v) { return v != startRow; }, range(0u, 8u)));
+        uint8_t col = GENERATE(TEST_SOME(range(0u, 8u)));
+        uint8_t row = GENERATE_COPY(filter([startRow](uint8_t v) { return v != startRow; }, TEST_SOME(range(0u, 8u))));
         board.setPiece(col, row, Piece(Piece::Type::Pawn, toMove));
         MoveList list = generateAllMoves(board);
         list.forEachMove([](const Move &move) {
@@ -533,7 +533,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
     }
 
     SECTION("Promotion") {
-        uint8_t col = GENERATE(0, 7);
+        uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
         CAPTURE(col, endRow);
         board.setPiece(col, endRow, Piece{Piece::Type::Pawn, toMove});
 
@@ -553,7 +553,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
     }
 
     SECTION("Capture promotion") {
-        uint8_t col = GENERATE(0, 7);
+        uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
         uint8_t captureCol = GENERATE_REF(filter([&](uint8_t i) { return i >= 0 && i < board.size(); }, values({col - 1, col + 1})));
         CAPTURE(col, endRow);
 
@@ -561,7 +561,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
         board.setPiece(captureCol, endRow + offset, Piece{GENERATE(CAPTURABLE_TYPES), other});
 
-        bool hasBlocker = GENERATE(true, false);
+        bool hasBlocker = IS_BLOCKED();
         if (hasBlocker) {
             Piece moveBlocker{GENERATE(ANY_TYPE), GENERATE(Color::White, Color::Black)};
             board.setPiece(col, endRow + offset, moveBlocker);
@@ -620,7 +620,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         SECTION("Pawn can take other pawn with en passant") {
             board.setPiece(myCol, rowAfterDoublePushOther, Piece{Piece::Type::Pawn, toMove});
 
-            bool hasBlocker = GENERATE(true, false);
+            bool hasBlocker = IS_BLOCKED();
             if (hasBlocker) {
                 Piece moveBlocker{GENERATE(CAPTURABLE_TYPES), GENERATE(Color::White, Color::Black)};
                 board.setPiece(myCol, rowAfterDoublePushOther + offset, moveBlocker);
@@ -691,6 +691,20 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         }
 
         SECTION("Cannot take en passant with non-pawn") {
+            board.setPiece(myCol, rowAfterDoublePushOther, Piece{Piece::Type::Bishop, toMove});
+
+            CAPTURE(board.toFEN());
+
+            MoveList list = generateAllMoves(board);
+            unsigned calls = 0;
+            list.forEachMoveFrom(myCol, rowAfterDoublePushOther, [&](const Move &move) {
+              REQUIRE(move.toPosition != move.fromPosition);
+              REQUIRE(move.flag == Move::Flag::None);
+              auto [col2, row] = move.colRowToPosition();
+
+              auto pieceAt = board.pieceAt(col2, row);
+              REQUIRE_FALSE(pieceAt.has_value());
+            });
         }
     }
 }
@@ -699,9 +713,7 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
     using namespace Chess;
 
     Board board = Board::emptyBoard();
-    if (GENERATE(true, false)) {
-        board.makeNullMove();
-    }
+    CHECK_BOTH_COLORS()
     Color toMove = board.colorToMove();
     Color other = opposite(toMove);
 
@@ -720,7 +732,12 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
     bool kingSide = GENERATE(true, false);
     bool queenSide = GENERATE_COPY(filter([=](bool b) { return b || kingSide; }, values({0, 1})));
 
-    bool withOppositeRook = GENERATE_COPY(filter([=](bool b) { return b || (!queenSide || !kingSide); }, values({0, 1})));
+    bool withOppositeRook =
+#ifdef EXTENDED_TESTS
+            GENERATE_COPY(filter([=](bool b) { return b || (!queenSide || !kingSide); }, values({0, 1})));
+#else
+      false;
+#endif
 
     CAPTURE(toMove, kingSide, queenSide, withOppositeRook);
 
@@ -745,18 +762,14 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
         }
 
         std::string baseFEN = board.toFEN();
-        REQUIRE(baseFEN.ends_with(" - - 0 1"));
         auto loc = baseFEN.rfind("- - ");
-        REQUIRE(loc != baseFEN.size());
         baseFEN.replace(loc, 1, castles);
-        CAPTURE(baseFEN);
         auto eBoard = Board::fromFEN(baseFEN);
         if (!eBoard) {
             INFO("Error - " << eBoard.error());
             REQUIRE(eBoard);
         }
         board = eBoard.extract();
-        REQUIRE(board.colorToMove() == toMove);
         REQUIRE((board.castlingRights() & CastlingRight::AnyCastling) != CastlingRight::NoCastling);
         if (toMove == Color::White) {
             REQUIRE((board.castlingRights() & CastlingRight::WhiteCastling) != CastlingRight::NoCastling);
@@ -790,9 +803,10 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
         REQUIRE(calls == kingSide + queenSide);
     }
 
-    SECTION("Random pieces do not block castling") {
+    SECTION("Pieces do not block castling") {
 
         SECTION("Other king of same color on board") {
+            // this is technically invalid though...
             board.setPiece(4, 4, Piece{Piece::Type::King, toMove});
         }
 
@@ -809,7 +823,6 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
         if (queenSide) {
             SECTION("Queen side is not blocked by attack on b rank") {
                 board.setPiece(1, 4, Piece{Piece::Type::Rook, other});
-
             }
         }
 
@@ -899,9 +912,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
     using namespace Chess;
 
     Board board = Board::emptyBoard();
-    if (GENERATE(true, false)) {
-        board.makeNullMove();
-    }
+    CHECK_BOTH_COLORS()
     Color toMove = board.colorToMove();
     Color other = opposite(toMove);
     CAPTURE(toMove);
@@ -916,7 +927,8 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
             uint8_t row = GENERATE(TEST_SOME(range(0, 6)));
             board.setPiece(col, row, king);
-            board.setPiece(col, 8, Piece{Piece::Type::Rook, other});
+            board.setPiece(col, 7, Piece{Piece::Type::Rook, other});
+            CAPTURE(board.toFEN());
             MoveList list = generateAllMoves(board);
             list.forEachMoveFrom(3, 4, [&](const Move &move) {
               REQUIRE(move.fromPosition != move.toPosition);
