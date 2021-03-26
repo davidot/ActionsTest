@@ -37,10 +37,6 @@ namespace Chess {
         std::vector<Move> m_moves;
     };
 
-    MoveList generateAllMoves(const Board& board, Color color);
-
-    inline MoveList generateAllMoves(const Board& board) {
-        return generateAllMoves(board, board.colorToMove());
-    }
+    MoveList generateAllMoves(const Board& board);
 
 }
