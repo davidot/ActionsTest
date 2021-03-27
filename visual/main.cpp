@@ -56,8 +56,10 @@ int main() {
     text.setFillColor(sf::Color::Red);
 
 
+    constexpr float pieceSize = 32.f;
+
     sf::Sprite piece{texture};
-    piece.setScale(squareSize / 32.0f, squareSize / 32.0f);
+    piece.setScale(squareSize / pieceSize, squareSize / pieceSize);
 
     sf::RectangleShape highlightSquare{{squareSize, squareSize}};
     highlightSquare.setOutlineThickness(2.5);
@@ -149,7 +151,7 @@ int main() {
                 auto pieceAt = board.pieceAt(col, row);
                 if (pieceAt.has_value()) {
                     int pieceVal = pieceValMapping[pieceAt->type()] + (pieceAt->color() == Chess::Color::Black ? blackPieceOffset : 0);
-                    piece.setTextureRect({32 * pieceVal, 0, 32, 32});
+                    piece.setTextureRect(sf::IntRect(pieceSize * pieceVal, 0, pieceSize, pieceSize));
                     piece.setPosition(position);
                     window.draw(piece);
                 }

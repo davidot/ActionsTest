@@ -2,13 +2,15 @@
 #include <iostream>
 
 namespace util::Assert {
-    void assertFailed(const char *assertion, const char *file, int line) {
-        std::cerr << "Assertion: " << assertion << " failed! in " << file << ':' << line << "\n";
+    void assert(bool passed, const char *assertion, const char *file, int line) {
+        if (!passed) {
+            std::cerr << "Assertion: " << assertion << " failed! in " << file << ':' << line << "\n";
 #if defined __has_builtin
-#  if __has_builtin (__builtin_trap)
-        __builtin_trap();
-#  endif
+#if __has_builtin(__builtin_trap)
+            __builtin_trap();
 #endif
-        std::exit(-3);
+#endif
+            std::exit(-3);
+        }
     }
 }
