@@ -136,10 +136,12 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             validateCountAndFrom(list, col, row, 7);
         }
 
-        SECTION("King in the center has 8 moves") {
-            board.setPiece(4, 4, Piece(Piece::Type::King, toMove));
+        SECTION("King not on the edge has 8 moves") {
+            uint8_t col = GENERATE(TEST_SOME(range(1, 7)));
+            uint8_t row = GENERATE(TEST_SOME(range(1, 7)));
+            board.setPiece(col, row, Piece(Piece::Type::King, toMove));
             MoveList list = generateAllMoves(board);
-            validateCountAndFrom(list, 4, 4, 8);
+            validateCountAndFrom(list, col, row, 8);
         }
 
         SECTION("Knight in the center has 8 moves") {
