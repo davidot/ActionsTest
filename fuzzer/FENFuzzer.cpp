@@ -1,4 +1,5 @@
 #include <chess/Board.h>
+#include <chess/MoveGen.h>
 #include <iostream>
 
 
@@ -16,6 +17,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size) {
                       << "Output: " << output << '\n';
             __builtin_trap();
         }
+        [[maybe_unused]] auto list = Chess::generateAllMoves(parsed.value());
     } else {
         if (parsed.error().empty()) {
             std::cout << "No error specified!\n";
