@@ -1192,7 +1192,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
     }
 }
 
-TEST_CASE("Specific examples", "[chess]") {
+TEST_CASE("Specific examples", "[chess][movegen]") {
     using namespace Chess;
     SECTION("Move count") {
 
