@@ -1,7 +1,7 @@
 #pragma once
 
 namespace util::Assert {
-    void assert(bool passed, const char *assertion, const char *file, int line);
+    void assertExpression(bool passed, const char *assertion, const char *file, int line);
 }
 
 #ifndef NDEBUG
