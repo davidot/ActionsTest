@@ -7,7 +7,7 @@ namespace util::Assert {
 #ifndef NDEBUG
 #define ASSERT(expr)                                         \
     do {                                                     \
-        util::Assert::assert(static_cast<bool>(expr), #expr, __FILE__, __LINE__);                                                     \
+        util::Assert::assertExpression(static_cast<bool>(expr), #expr, __FILE__, __LINE__);                                                     \
     } while (0)
 
 #else
