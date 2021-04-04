@@ -1253,6 +1253,10 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
             HAS_N_MOVES("rnb2k1r/pp1Pbppp/2p5/q7/2B5/8/PPPQNnPP/RNB1K2R w KQ - 3 9", 39);
             HAS_N_MOVES("2r5/3pk3/8/2P5/8/2K5/8/8 w - - 5 4", 9);
         }
+
+        SECTION("Single move no check") {
+            HAS_N_MOVES("k5r1/3p4/8/2pP4/2P1p3/4P3/r7/7K w - - 0 1", 1);
+        }
     }
 
     SECTION("Checks") {
