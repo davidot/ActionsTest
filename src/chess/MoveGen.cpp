@@ -19,6 +19,19 @@ namespace Chess {
         return m_moves.size();
     }
 
+    bool MoveList::isStaleMate() const {
+        return size() == 0 && !m_inCheck;
+    }
+
+    bool MoveList::isCheckMate() const {
+        return size() == 0 && m_inCheck;
+    }
+
+    void MoveList::kingAttacked() {
+        m_inCheck = true;
+    }
+
+
     constexpr static Index boardSize = 8;
 
     using Offsets = std::pair<Offset, Offset>;
@@ -421,6 +434,15 @@ namespace Chess {
                 }
             }
         }
+
+        if (list.size() == 0) {
+            // add king check to differentiate check and stale mate
+            auto [kingCol, kingRow] = board.kingSquare(board.colorToMove());
+            if (attacked(kingCol, kingRow, board, {})) {
+                list.kingAttacked();
+            }
+        }
+
         return list;
     }
 }// namespace Chess

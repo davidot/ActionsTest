@@ -48,6 +48,10 @@ TEST_CASE("Basic move checks", "[chess][move]") {
 #define TRUE_FALSE() bool(((__TIME__[7] - '0') + __LINE__ + __COUNTER__) % 2)
 #endif
 
+#define MOVES_NOT_CHECK_OR_STALEMATE() \
+    REQUIRE_FALSE(list.isStaleMate()); \
+    REQUIRE_FALSE(list.isCheckMate())
+
 #define CHECK_BOTH_COLORS() \
     if (TRUE_FALSE()) board.makeNullMove(); \
 
@@ -73,11 +77,12 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
         Board board = Board::emptyBoard();
         CHECK_BOTH_COLORS()
         Color toMove = board.colorToMove();
-        [[maybe_unused]] Color other = opposite(Color::White);// TODO use or remove
-
 
         auto validateCountAndFrom = [](const MoveList &list, Board::BoardIndex col, Board::BoardIndex row, unsigned count) {
             REQUIRE(list.size() == count);
+            if (count > 0) {
+                MOVES_NOT_CHECK_OR_STALEMATE();
+            }
             std::set<Board::BoardIndex> destinations;
 
             list.forEachMove([&](const Move &move) {
@@ -163,7 +168,6 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
         Board board = Board::emptyBoard();
         CHECK_BOTH_COLORS()
         Color toMove = board.colorToMove();
-        [[maybe_unused]] Color other = opposite(Color::White);// TODO use or remove
 
         SECTION("Board with multiple pawns has multiple moves") {
             uint8_t count = GENERATE(range(2u, 8u));
@@ -212,7 +216,6 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
         Board board = Board::emptyBoard();
         CHECK_BOTH_COLORS()
         Color toMove = board.colorToMove();
-        [[maybe_unused]] Color other = opposite(Color::White);// TODO use or remove
 
         SECTION("Full board with any piece generates no moves") {
             Piece p{GENERATE(Piece::Type::Pawn, Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop, Piece::Type::Queen, Piece::Type::King), toMove};
@@ -708,6 +711,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
             });
         }
     }
+#undef IS_BLOCKED
 }
 
 TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
@@ -912,6 +916,7 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
 TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
     using namespace Chess;
 
+
     Board board = Board::emptyBoard();
     CHECK_BOTH_COLORS()
     Color toMove = board.colorToMove();
@@ -937,6 +942,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
               auto [col2, row2] = move.colRowToPosition();
               REQUIRE(col2 != col);
             });
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Move piece inbetween attack on king") {
@@ -957,6 +963,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             });
             CHECK(calls == 1);
             REQUIRE(list.size() == 2);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Capture attacker with not king") {
@@ -979,6 +986,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             });
             CHECK(calls == 1);
             REQUIRE(list.size() == 3);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Attacked by knight") {
@@ -1002,6 +1010,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             });
             CHECK(calls == 3);
             REQUIRE(list.size() == 3);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Attacked by bishop") {
@@ -1021,6 +1030,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             });
             CHECK(calls == 2);
             REQUIRE(list.size() == 2);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Block bishop or take it") {
@@ -1050,6 +1060,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             });
             CHECK(calls == 2 + (coord % 2)); // on the diagonal we can actually block twice
             REQUIRE(list.size() == calls + 2);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Pawn is also an attacker") {
@@ -1080,6 +1091,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             });
             CHECK(calls == 1);
             REQUIRE(list.size() == 1);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Pawn is not bishop") {
@@ -1112,6 +1124,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             CHECK(calls == 2);
             CHECK(otherCalls == 1);
             REQUIRE(list.size() == 3);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Cannot move next to other king") {
@@ -1130,6 +1143,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
               calls++;
             });
             REQUIRE(calls == 1);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Cannot take with pinned piece") {
@@ -1160,6 +1174,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
               REQUIRE(false);
             });
             REQUIRE(list.size() == 2);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Cannot move pinned piece (even when not in check)") {
@@ -1173,6 +1188,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
                 REQUIRE(false);
             });
             REQUIRE(list.size() > 0);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
         SECTION("Cannot defend by jumping over pieces") {
@@ -1188,6 +1204,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
               REQUIRE(false);
             });
             REQUIRE(list.size() > 0);
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
     }
@@ -1204,8 +1221,76 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
                 auto [col2, row] = move.colRowToPosition();
                 REQUIRE(col2 == 0);
             });
+            MOVES_NOT_CHECK_OR_STALEMATE();
         }
     }
+}
+
+TEST_CASE("Stale/check mate", "[chess][rules][movegen]") {
+    using namespace Chess;
+
+
+    Board board = Board::emptyBoard();
+    CHECK_BOTH_COLORS()
+    Color toMove = board.colorToMove();
+    Color other = opposite(toMove);
+    CAPTURE(toMove);
+
+    Piece king{Piece::Type::King, toMove};
+    Piece otherKing{Piece::Type::King, other};
+
+    SECTION("If king in check and cannot move it is checkmate") {
+        board.setPiece(0, 0, king);
+        board.setPiece(0, 7, Piece{Piece::Type::Rook, other});
+        board.setPiece(1, 7, Piece{Piece::Type::Rook, other});
+        board.setPiece(7, 7, otherKing);
+
+        MoveList list = generateAllMoves(board);
+        REQUIRE(list.size() == 0);
+        REQUIRE(list.isCheckMate());
+        REQUIRE_FALSE(list.isStaleMate());
+    }
+
+    SECTION("If king not in check but cannot move it is stalemate") {
+        board.setPiece(0, 0, king);
+        board.setPiece(1, 7, Piece{Piece::Type::Rook, other});
+        board.setPiece(7, 1, Piece{Piece::Type::Rook, other});
+        board.setPiece(7, 7, otherKing);
+
+        MoveList list = generateAllMoves(board);
+        REQUIRE(list.size() == 0);
+        REQUIRE_FALSE(list.isCheckMate());
+        REQUIRE(list.isStaleMate());
+    }
+
+    SECTION("If king not in check but cannot move but has other moves it is not stalemate") {
+        board.setPiece(0, 0, king);
+        board.setPiece(1, 7, Piece{Piece::Type::Rook, other});
+        board.setPiece(7, 1, Piece{Piece::Type::Rook, other});
+        board.setPiece(7, 7, otherKing);
+
+        board.setPiece(4, 4, Piece{Piece::Type::Pawn, toMove});
+
+        MoveList list = generateAllMoves(board);
+        REQUIRE(list.size() != 0);
+        REQUIRE_FALSE(list.isCheckMate());
+        REQUIRE_FALSE(list.isStaleMate());
+    }
+
+    SECTION("In checkmate having other moves does not matter") {
+        board.setPiece(0, 0, king);
+        board.setPiece(0, 7, Piece{Piece::Type::Rook, other});
+        board.setPiece(1, 7, Piece{Piece::Type::Rook, other});
+        board.setPiece(7, 7, otherKing);
+
+        board.setPiece(4, 4, Piece{Piece::Type::Pawn, toMove});
+
+        MoveList list = generateAllMoves(board);
+        REQUIRE(list.size() == 0);
+        REQUIRE(list.isCheckMate());
+        REQUIRE_FALSE(list.isStaleMate());
+    }
+
 }
 
 TEST_CASE("Specific examples", "[chess][movegen]") {

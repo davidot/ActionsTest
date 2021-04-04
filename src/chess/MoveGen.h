@@ -9,10 +9,6 @@ namespace Chess {
     public:
         size_t size() const;
 
-        void addMove(Move);
-
-        void addMove(Board::BoardIndex col, Board::BoardIndex row, Move::BoardOffset offset, Move::Flag flags = Move::Flag::None);
-
         template<typename Func>
         void forEachMove(Func f) const {
             std::for_each(m_moves.begin(), m_moves.end(), f);
@@ -33,8 +29,19 @@ namespace Chess {
                 return move.fromPosition == index;
             }, func);
         }
+
+        [[nodiscard]] bool isStaleMate() const;
+
+        [[nodiscard]] bool isCheckMate() const;
+
+        void addMove(Move);
     private:
+        void kingAttacked();
+
+        friend MoveList generateAllMoves(const Board& board);
+
         std::vector<Move> m_moves;
+        bool m_inCheck;
     };
 
     MoveList generateAllMoves(const Board& board);
