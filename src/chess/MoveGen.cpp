@@ -224,7 +224,7 @@ namespace Chess {
         } else {
             // find the king
             if (auto [kingCol, kingRow] = board.kingSquare(board.colorToMove()); isAttacked(kingCol, kingRow)) {
-                return true;
+                return !pieceAtToLocation.has_value();
             }
         }
 

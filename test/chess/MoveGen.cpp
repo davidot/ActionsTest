@@ -1174,6 +1174,22 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             });
             REQUIRE(list.size() > 0);
         }
+
+        SECTION("Cannot defend by jumping over pieces") {
+            board.setPiece(0, 0, king);
+            Piece blockingPiece = GENERATE_COPY(Piece{Piece::Type::Rook, other}, Piece{Piece::Type::Bishop, toMove});
+            board.setPiece(2, 0, Piece{Piece::Type::Rook, other});
+            board.setPiece(3, 0, Piece{Piece::Type::Rook, other});
+            board.setPiece(4, 0, Piece{Piece::Type::Rook, toMove});
+            CAPTURE(board.toFEN());
+
+            MoveList list = generateAllMoves(board);
+            list.forEachMoveFrom(4, 0, [&](const Move &move) {
+              REQUIRE(false);
+            });
+            REQUIRE(list.size() > 0);
+        }
+
     }
 
     SECTION("Cannot move into check") {
@@ -1262,5 +1278,31 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
             });
             REQUIRE(calls == 1);
         }
+    }
+
+    SECTION("Single move possible") {
+
+        SECTION("Sequence of 13 (!) consecutive forced moves") {
+            Board board = Board::fromFEN("BQ4R1/2Q5/3Q4/4Q1pp/5B1P/6QK/Rrrrrrrq/R4nk1 w - - 0 1").extract();
+            for (int i = 0; i < 13; i++) {
+                MoveList list = generateAllMoves(board);
+                REQUIRE(list.size() == 1);
+                // fake make the move
+                bool madeMove = false;
+                list.forEachMove([&](const Move &move) {
+                    REQUIRE_FALSE(madeMove);
+                    auto [colFrom, rowFrom] = move.colRowFromPosition();
+                    auto [colTo, rowTo] = move.colRowToPosition();
+                    auto optPiece = board.pieceAt(colFrom, rowFrom);
+                    REQUIRE(optPiece.has_value());
+                    board.setPiece(colTo, rowTo, optPiece.value());
+                    board.setPiece(colFrom, rowFrom, std::nullopt);
+                    madeMove = true;
+                });
+                REQUIRE(madeMove);
+                board.makeNullMove();
+            }
+        }
+
     }
 }
