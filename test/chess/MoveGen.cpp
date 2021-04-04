@@ -1059,7 +1059,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
               calls++;
             });
             CHECK(calls == 2 + (coord % 2)); // on the diagonal we can actually block twice
-            REQUIRE(list.size() == calls + 2);
+            REQUIRE(list.size() == calls + 2u);
             MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
@@ -1195,7 +1195,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             board.setPiece(0, 0, king);
             Piece blockingPiece = GENERATE_COPY(Piece{Piece::Type::Rook, other}, Piece{Piece::Type::Bishop, toMove});
             board.setPiece(2, 0, Piece{Piece::Type::Rook, other});
-            board.setPiece(3, 0, Piece{Piece::Type::Rook, other});
+            board.setPiece(3, 0, blockingPiece);
             board.setPiece(4, 0, Piece{Piece::Type::Rook, toMove});
             CAPTURE(board.toFEN());
 
