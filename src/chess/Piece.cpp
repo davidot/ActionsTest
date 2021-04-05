@@ -4,13 +4,10 @@
 namespace Chess {
 
     Color opposite(Color c) {
-        switch (c) {
-            case Color::White:
-                return Color::Black;
-            case Color::Black:
-                return Color::White;
+        if (c == Color::White) {
+            return Color::Black;
         }
-        return {};
+        return Color::White;
     }
 
 #define ENUM_TO_INT(val) static_cast<Piece::IntType>(val)

@@ -34,7 +34,7 @@ namespace Chess {
     }
 
     std::optional<Piece> Board::pieceAt(BoardIndex index) const {
-        if (index >= m_size * m_size) {
+        if (index >= size * size) {
             return std::nullopt;
         }
 
@@ -46,7 +46,7 @@ namespace Chess {
     }
 
     void Board::setPiece(BoardIndex index, std::optional<Piece> piece) {
-        if (index >= m_size * m_size) {
+        if (index >= size * size) {
             return;
         }
         if (Piece::isPiece(m_pieces[index])) {
@@ -70,10 +70,10 @@ namespace Chess {
         uint32_t index = 0;
         uint32_t row = 1;
         bool lastWasNum = false;
-        uint16_t totalSize = m_size * m_size;
+        uint16_t totalSize = size * size;
 
         while (next != view.end() && index <= totalSize) {
-            if (index == m_size * row) {
+            if (index == size * row) {
                 if (index == totalSize) {
                     if (*next == '/') {
                         return "Must not have trailing '/'";
@@ -109,7 +109,7 @@ namespace Chess {
                 if (val == 0) {
                     return "Skipping 0 is not allowed";
                 }
-                if (val > m_size || val > (m_size - index % m_size)) {
+                if (val > size || val > (size - index % size)) {
                     return "Skipping more than a full row or the current row _" + std::to_string(val) + "_";
                 }
                 index += val;
@@ -201,7 +201,7 @@ namespace Chess {
             }
             auto [col, row] = b.indexToColumnRow(*enPassantPawn);
             auto lastMoveColor = opposite(b.m_nextTurnColor);
-            if ((lastMoveColor == Color::White && row != 2) || (lastMoveColor == Color::Black && row != m_size - 1 - 2)) {
+            if ((lastMoveColor == Color::White && row != 2) || (lastMoveColor == Color::Black && row != size - 1 - 2)) {
                 return std::string("Cannot have en passant on non 3th or 5th row: " + std::string(parts[3]));
             }
             if (b.pieceAt(col, row) != std::nullopt) {
@@ -233,20 +233,16 @@ namespace Chess {
         return m_nextTurnColor;
     }
 
-    uint8_t Board::size() const {
-        return m_size;
-    }
-
     Board::BoardIndex Board::columnRowToIndex(BoardIndex column, BoardIndex row) {
-        return column + uint16_t(m_size) * (uint16_t(m_size) - 1 - row);
+        return column + uint16_t(size) * (uint16_t(size) - 1 - row);
     }
 
     std::pair<Board::BoardIndex, Board::BoardIndex> Board::indexToColumnRow(BoardIndex index) {
-        return std::make_pair(index % m_size, (m_size - 1) - index / m_size);
+        return std::make_pair(index % size, (size - 1) - index / size);
     }
 
     std::optional<Piece> Board::pieceAt(BoardIndex column, BoardIndex row) const {
-        if (column >= m_size || row >= m_size) {
+        if (column >= size || row >= size) {
             return std::nullopt;
         }
         return pieceAt(columnRowToIndex(column, row));
@@ -257,7 +253,7 @@ namespace Chess {
     }
 
     void Board::setPiece(BoardIndex column, BoardIndex row, std::optional<Piece> piece) {
-        if (column >= m_size || row >= m_size) {
+        if (column >= size || row >= size) {
             return;
         }
         setPiece(columnRowToIndex(column, row), piece);
@@ -328,17 +324,16 @@ namespace Chess {
     struct CstlChk {
         CastlingRight right;
         Board::BoardIndex col;
-        Board::BoardIndex row;
         Piece piece;
     };
 
     const std::array<CstlChk, 6> castleChecks = {
-            CstlChk{CastlingRight::WhiteCastling, 4, 0, Piece{Piece::Type::King, Color::White}},
-            CstlChk{CastlingRight::WhiteQueenSide, 0, 0, Piece{Piece::Type::Rook, Color::White}},
-            CstlChk{CastlingRight::WhiteKingSide, 7, 0, Piece{Piece::Type::Rook, Color::White}},
-            CstlChk{CastlingRight::BlackCastling, 4, 7, Piece{Piece::Type::King, Color::Black}},
-            CstlChk{CastlingRight::BlackQueenSide, 0, 7, Piece{Piece::Type::Rook, Color::Black}},
-            CstlChk{CastlingRight::BlackKingSide, 7, 7, Piece{Piece::Type::Rook, Color::Black}},
+            CstlChk{CastlingRight::WhiteCastling, Board::kingCol, Piece{Piece::Type::King, Color::White}},
+            CstlChk{CastlingRight::WhiteQueenSide, Board::queenSideRookCol, Piece{Piece::Type::Rook, Color::White}},
+            CstlChk{CastlingRight::WhiteKingSide, Board::kingSideRookCol, Piece{Piece::Type::Rook, Color::White}},
+            CstlChk{CastlingRight::BlackCastling, Board::kingCol, Piece{Piece::Type::King, Color::Black}},
+            CstlChk{CastlingRight::BlackQueenSide, Board::queenSideRookCol, Piece{Piece::Type::Rook, Color::Black}},
+            CstlChk{CastlingRight::BlackKingSide, Board::kingSideRookCol, Piece{Piece::Type::Rook, Color::Black}},
     };
 
     bool Board::setAvailableCastles(std::string_view vw) {
@@ -366,7 +361,7 @@ namespace Chess {
 
         for (const auto& check : castleChecks) {
             if ((m_castlingRights & check.right) != CastlingRight::NoCastling) {
-                if (pieceAt(check.col, check.row) != check.piece) {
+                if (pieceAt(check.col, homeRow(check.piece.color())) != check.piece) {
                     return false;
                 }
             }
@@ -408,8 +403,8 @@ namespace Chess {
             }
         };
 
-        for (BoardIndex row = m_size - 1; row < m_size; row--) {
-            for (BoardIndex column = 0; column < m_size; column++) {
+        for (BoardIndex row = size - 1; row < size; row--) {
+            for (BoardIndex column = 0; column < size; column++) {
                 auto nextPiece = pieceAt(column, row);
                 if (nextPiece) {
                     writeEmpty();
@@ -447,15 +442,15 @@ namespace Chess {
 
     std::pair<Board::BoardIndex, Board::BoardIndex> Board::kingSquare(Color color) const {
         Piece king {Piece::Type::King, color};
-          for (uint8_t col = 0; col < m_size; col++) {
-              for (uint8_t row = 0; row < m_size; row++) {
+          for (uint8_t col = 0; col < size; col++) {
+              for (uint8_t row = 0; row < size; row++) {
                   if (pieceAt(col, row) == king) {
                       // if there are multiple kings we dont care
                       return std::make_pair(col, row);
                   }
               }
           }
-          return std::make_pair(m_size + 1, m_size + 1);
+          return std::make_pair(size + 1, size + 1);
     }
 
 

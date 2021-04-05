@@ -191,12 +191,12 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
         }
 
         SECTION("Diagonal row of rooks all have 14 moves") {
-            for (uint8_t i = 0; i < board.size(); i++) {
+            for (uint8_t i = 0; i < Board::size; i++) {
                 board.setPiece(i, i, Piece(Piece::Type::Rook, toMove));
             }
             MoveList list = generateAllMoves(board);
-            REQUIRE(list.size() == 14 * board.size());
-            for (uint8_t i = 0; i < board.size(); i++) {
+            REQUIRE(list.size() == 14 * Board::size);
+            for (uint8_t i = 0; i < Board::size; i++) {
                 unsigned count = 0;
                 list.forEachMoveFrom(i, i, [&](const Move &move) {
                     count++;
@@ -559,7 +559,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
     SECTION("Capture promotion") {
         uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
-        uint8_t captureCol = GENERATE_REF(filter([&](uint8_t i) { return i >= 0 && i < board.size(); }, values({col - 1, col + 1})));
+        uint8_t captureCol = GENERATE_REF(filter([&](uint8_t i) { return i >= 0 && i < Board::size; }, values({col - 1, col + 1})));
         CAPTURE(col, endRow);
 
         board.setPiece(col, endRow, Piece{Piece::Type::Pawn, toMove});

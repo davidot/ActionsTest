@@ -32,7 +32,7 @@ namespace Chess {
     }
 
 
-    constexpr static Index boardSize = 8;
+    constexpr static Index boardSize = Board::size;
 
     using Offsets = std::pair<Offset, Offset>;
 
@@ -380,8 +380,8 @@ namespace Chess {
         MoveList list{};
         Color color = board.colorToMove();
 
-        for (BI col = 0; col < board.size(); col++) {
-            for (BI row = 0; row < board.size(); row++) {
+        for (BI col = 0; col < Board::size; col++) {
+            for (BI row = 0; row < Board::size; row++) {
                 auto opt_piece = board.pieceAt(col, row);
                 if (!opt_piece || opt_piece->color() != color) {
                     continue;

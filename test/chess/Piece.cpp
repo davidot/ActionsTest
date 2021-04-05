@@ -152,6 +152,12 @@ TEST_CASE("Pieces", "[chess][base]") {
             REQUIRE_FALSE(Piece::isPiece(topBits | wrongColor | type));
         }
     }
+}
 
-
+TEST_CASE("Basic funcs", "[chess][base]") {
+    using namespace Chess;
+    Color white = Color::White;
+    Color black = Color::Black;
+    REQUIRE(opposite(white) == black);
+    REQUIRE(opposite(black) == white);
 }

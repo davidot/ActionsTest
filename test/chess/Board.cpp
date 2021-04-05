@@ -13,8 +13,6 @@ TEST_CASE("Board", "[chess][base]") {
     SECTION("Empty board has no pieces") {
         Board b = Board::emptyBoard();
 
-        REQUIRE(b.size() == 8);
-
         REQUIRE(b.countPieces(Color::White) == 0);
         REQUIRE(b.countPieces(Color::Black) == 0);
         REQUIRE_FALSE(b.hasValidPosition());
@@ -414,7 +412,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
     SECTION("Empty FEN") {
         Board board = is_valid_board("8/8/8/8/8/8/8/8 w - - 0 1");
-        REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == 0);
         CHECK(board.countPieces(Color::Black) == 0);
         CHECK_FALSE(board.hasValidPosition());
@@ -425,7 +422,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CAPTURE(color);
         Board board = is_valid_board("8/8/8/8/8/8/8/8 " + color + " - - 0 1");
 
-        REQUIRE(board.size() == 8);
         CHECK(board.colorToMove() == (color == "w" ? Color::White : Color::Black));
     }
 
@@ -435,7 +431,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         bool isWhite = pieceFEN == "P";
         Board board = is_valid_board(pieceFEN + "7/8/8/8/8/8/8/8 w - - 0 1");
 
-        REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == (isWhite ? 1 : 0));
         CHECK(board.countPieces(Color::Black) == (isWhite ? 0 : 1));
 
@@ -451,7 +446,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CAPTURE(pieceFEN);
         Board board = is_valid_board(pieceFEN + "6/8/8/8/8/8/8/8 w - - 0 1");
 
-        REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == 1);
         CHECK(board.countPieces(Color::Black) == 1);
 
@@ -484,7 +478,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
                                      "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN +
                                      " w - - 0 1");
 
-        REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == (upper ? 64 : 0));
         CHECK(board.countPieces(Color::Black) == (upper ? 0 : 64));
 
@@ -509,7 +502,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         };
         Board board = is_valid_board("pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK/pnkqrbPK w - - 0 1");
 
-        REQUIRE(board.size() == 8);
         CHECK(board.countPieces(Color::White) == 2 * 8);
         CHECK(board.countPieces(Color::Black) == 6 * 8);
 
@@ -596,7 +588,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             REQUIRE(board.toFEN() == position);
 
             Board standard = Board::standardBoard();
-            REQUIRE(board.size() == standard.size());
             REQUIRE(board.countPieces(Color::White) == standard.countPieces(Color::White));
             REQUIRE(board.countPieces(Color::Black) == standard.countPieces(Color::Black));
             // ehh not sure we want this
@@ -611,7 +602,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
         SECTION("Empty board") {
             Board empty = Board::emptyBoard();
-            REQUIRE(empty.size() == 8);
 
             std::string position = "8/8/8/8/8/8/8/8 w - - 0 1";
             REQUIRE(empty.toFEN() == position);
@@ -619,7 +609,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             Board board = is_valid_board(position);
             REQUIRE(board.toFEN() == position);
 
-            REQUIRE(board.size() == empty.size());
             REQUIRE(board.countPieces(Color::White) == empty.countPieces(Color::White));
             REQUIRE(board.countPieces(Color::Black) == empty.countPieces(Color::Black));
 
@@ -812,6 +801,9 @@ TEST_CASE("Basic FEN output", "[chess][parsing][fen]") {
 
 TEST_CASE("Basic chess checks", "[chess][rules]") {
     using namespace Chess;
+    STATIC_REQUIRE(Board::size == 8);
+    REQUIRE(Board::size == 8);
+
     Board board = Board::standardBoard();
     Color c = GENERATE(Color::White, Color::Black);
 

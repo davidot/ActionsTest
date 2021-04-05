@@ -55,8 +55,6 @@ namespace Chess {
 
         void setPiece(BoardIndex column, BoardIndex row, std::optional<Piece> piece);
 
-        [[nodiscard]] uint8_t size() const;
-
         [[nodiscard]] std::string toFEN() const;
 
         [[nodiscard]] static std::string columnRowToSAN(BoardIndex column, BoardIndex row);
@@ -84,6 +82,8 @@ namespace Chess {
         constexpr static Board::BoardIndex queenSideRookCol = 0;
         constexpr static Board::BoardIndex kingSideRookCol = 7;
 
+        constexpr static BoardIndex size = 8;
+
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 
@@ -101,8 +101,8 @@ namespace Chess {
 
         [[nodiscard]] static std::optional<BoardIndex> SANToIndex(std::string_view);
 
-        static constexpr const BoardIndex m_size = 8;
-        std::array<Piece::IntType, m_size * m_size> m_pieces;
+
+        std::array<Piece::IntType, size * size> m_pieces;
         std::array<uint8_t, 2> m_numPieces = {0, 0};
         Color m_nextTurnColor = Color::White;
         CastlingRight m_castlingRights = CastlingRight::NoCastling;
