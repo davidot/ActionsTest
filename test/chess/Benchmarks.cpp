@@ -63,7 +63,7 @@ TEST_CASE("MoveGen benchmarks", "[movegen]" BENCHMARK_TAGS) {
     // from https://chess.stackexchange.com/a/33905
     TEST_FEN("4Q2Q/4r3/6n1/1bbK1krn/RR1RRnRR/2qn1R1n/4n1nN/Q3Q3 w - - 1 2", "In check");
 
-    TEST_FEN("k7/2QQQQQQ/KQ1QQQQQ/QQQ1QQQQ/QQQQ1QQQ/QQQQQ1QQ/QQQQQQ1Q/QQQQQQQ1 w - - 0 1", "Lost of queens");
+    TEST_FEN("k7/2QQQQQQ/KQ1QQQQQ/QQQ1QQQQ/QQQQ1QQQ/QQQQQ1QQ/QQQQQQ1Q/QQQQQQQ1 w - - 0 1", "Lots of queens");
 
     TEST_FEN("kqQQqQqq/qq5Q/Q6q/q6Q/Q6q/Q6q/Q5QQ/qQqqQqQK w - - 0 1", "Many queens both W");
     TEST_FEN("kqQQqQqq/qq5Q/Q6q/q6Q/Q6q/Q6q/Q5QQ/qQqqQqQK b - - 0 1", "Many queens both B");
