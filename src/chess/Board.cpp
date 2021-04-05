@@ -49,12 +49,22 @@ namespace Chess {
         if (index >= size * size) {
             return;
         }
-        if (Piece::isPiece(m_pieces[index])) {
-            m_numPieces[colorIndex(Piece::colorFromInt(m_pieces[index]))]--;
+        if (auto p = pieceAt(index); p) {
+            m_numPieces[colorIndex(p->color())]--;
+#ifdef STORE_KING_POS
+            if (p->type() == Piece::Type::King) {
+                m_kingPos[colorIndex(p->color())] = -1;
+            }
+#endif
         }
         if (piece.has_value()) {
             m_numPieces[colorIndex(piece->color())]++;
             m_pieces[index] = piece->toInt();
+#ifdef STORE_KING_POS
+            if (piece->type() == Piece::Type::King) {
+                m_kingPos[colorIndex(piece->color())] = index;
+            }
+#endif
         } else {
             m_pieces[index] = Piece::none();
         }
@@ -473,16 +483,20 @@ namespace Chess {
     }
 
     std::pair<Board::BoardIndex, Board::BoardIndex> Board::kingSquare(Color color) const {
+#ifdef STORE_KING_POS
+        return indexToColumnRow(m_kingPos[colorIndex(color)]);
+#else
         Piece king {Piece::Type::King, color};
-          for (uint8_t col = 0; col < size; col++) {
-              for (uint8_t row = 0; row < size; row++) {
-                  if (pieceAt(col, row) == king) {
-                      // if there are multiple kings we dont care
-                      return std::make_pair(col, row);
-                  }
-              }
-          }
-          return std::make_pair(size + 1, size + 1);
+        for (uint8_t col = 0; col < size; col++) {
+            for (uint8_t row = 0; row < size; row++) {
+                if (pieceAt(col, row) == king) {
+                    // if there are multiple kings we dont care
+                    return std::make_pair(col, row);
+                }
+            }
+        }
+        return std::make_pair(size + 1, size + 1);
+#endif
     }
 
     bool Board::operator==(const Board &rhs) const {

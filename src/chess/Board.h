@@ -111,6 +111,9 @@ namespace Chess {
         std::optional<BoardIndex> m_enPassant = std::nullopt;
         uint32_t m_fullMoveNum = 1;
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;
+#ifdef STORE_KING_POS
+        std::array<BoardIndex, 2> m_kingPos = {size * size + size, size * size + size};
+#endif
 
         friend struct Move;
         friend class MoveList;
