@@ -84,6 +84,8 @@ namespace Chess {
 
         constexpr static BoardIndex size = 8;
 
+        bool operator==(const Board &rhs) const;
+
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 

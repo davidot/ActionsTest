@@ -6,15 +6,18 @@
 using namespace Chess;
 
 TEST_CASE("Board FEN parsing", "[fen]" BENCHMARK_TAGS) {
-#define TEST_FEN(fen, note) \
-    BENCHMARK("Loading FEN: " note) { \
+    // we validate it is a valid board first
+#define TEST_FEN(fen, note)            \
+    {                                  \
         auto eb = Board::fromFEN(fen); \
-        REQUIRE(eb); \
-        return eb.extract(); \
+        REQUIRE(eb);                   \
+    }                                  \
+    BENCHMARK("Loading FEN: " note) {  \
+        return Board::fromFEN(fen);    \
     };
 
     BENCHMARK("Loading empty board") {
-       return Board::emptyBoard();
+        return Board::emptyBoard();
     };
 
     BENCHMARK("Loading standard board") {
@@ -28,13 +31,13 @@ TEST_CASE("Board FEN parsing", "[fen]" BENCHMARK_TAGS) {
 #undef TEST_FEN
 
 TEST_CASE("MoveGen benchmarks", "[movegen]" BENCHMARK_TAGS) {
-#define TEST_FEN(fen, note) \
-    { \
+#define TEST_FEN(fen, note)                      \
+    {                                            \
         Board b = Board::fromFEN(fen).extract(); \
-        BENCHMARK("Moves from FEN " note) { \
-            return generateAllMoves(b); \
-        }; \
-    }                 \
+        BENCHMARK("Moves from FEN " note) {      \
+            return generateAllMoves(b);          \
+        };                                       \
+    }
 
     {
         Board standard = Board::standardBoard();

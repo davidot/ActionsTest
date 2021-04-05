@@ -798,7 +798,6 @@ TEST_CASE("Basic FEN output", "[chess][parsing][fen]") {
     }
 }
 
-
 TEST_CASE("Basic chess checks", "[chess][rules]") {
     using namespace Chess;
     STATIC_REQUIRE(Board::size == 8);
@@ -868,9 +867,33 @@ TEST_CASE("Basic chess checks", "[chess][rules]") {
             }
             row += moveDir;
         }
-
         REQUIRE(hitAfter == 6);
+    }
+}
+
+TEST_CASE("Board equality", "[chess][base]") {
+    SECTION("Empty board is equal to empty board") {
+        Board empty1 = Board::emptyBoard();
+        Board empty2 = Board::emptyBoard();
+
+        REQUIRE(empty1 == empty2);
+
+        SECTION("No longer the case if move is not the same") {
+            empty2.makeNullMove();
+            REQUIRE_FALSE(empty1 == empty2);
+        }
+    }
+
+    SECTION("Standard board is the same as from start position FEN") {
+        Board standard1 = Board::standardBoard();
+        Board standard2 = Board::fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").extract();
+
+        REQUIRE(standard1 == standard2);
+
+        SECTION("No longer the case if move is not the same") {
+            standard1.makeNullMove();
+            REQUIRE_FALSE(standard1 == standard2);
+        }
     }
 
 }
-
