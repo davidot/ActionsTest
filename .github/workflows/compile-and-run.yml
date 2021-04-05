@@ -75,9 +75,15 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/.ccache
-          key: TEMP-${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-time${{ steps.stamps.outputs.time }}
+          key: ${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-time${{ steps.stamps.outputs.time }}
           restore-keys: |
-            TEMP-${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-
+            ${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-
+
+      # we have 4 distinct CCaches which means we should! have 1gb left for other things (fuzzing etc.)
+      - name: Configure CCache limit
+        run: |
+          ccache -M 1000M
+          ccache -s
 
       - name: Install Dependencies (Windows)
         if: startsWith(matrix.config.os, 'windows')
