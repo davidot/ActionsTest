@@ -91,7 +91,7 @@ namespace Chess {
         return false;
     }
 
-    bool attacked(Index col, Index row, const Board &board, std::vector<std::tuple<Index, Index, bool>> specialSquares) {
+    bool attacked(Index col, Index row, const Board &board, std::initializer_list<std::tuple<Index, Index, bool>> specialSquares = {}) {
         // we assume it is a legal move
         Color us = board.colorToMove();
         Color other = opposite(us);
@@ -204,7 +204,7 @@ namespace Chess {
                 // queen side
                 Index finalKingSpot = colFrom - 2;
                 for (Index i = colFrom; i >= finalKingSpot; i--) {
-                    if (attacked(i, rowFrom, board, {})) {
+                    if (attacked(i, rowFrom, board)) {
                         return false;
                     }
                 }
@@ -212,7 +212,7 @@ namespace Chess {
                 // king side
                 Index finalKingSpot = colFrom + 2;
                 for (Index i = colFrom; i <= finalKingSpot; i++) {
-                    if (attacked(i, rowFrom, board, {})) {
+                    if (attacked(i, rowFrom, board)) {
                         return false;
                     }
                 }
@@ -413,7 +413,7 @@ namespace Chess {
         if (list.size() == 0) {
             // add king check to differentiate check and stale mate
             auto [kingCol, kingRow] = board.kingSquare(board.colorToMove());
-            if (attacked(kingCol, kingRow, board, {})) {
+            if (attacked(kingCol, kingRow, board)) {
                 list.kingAttacked();
             }
         }
