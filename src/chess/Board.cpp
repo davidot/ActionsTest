@@ -485,6 +485,14 @@ namespace Chess {
           return std::make_pair(size + 1, size + 1);
     }
 
+    bool Board::operator==(const Board &rhs) const {
+        return m_fullMoveNum == rhs.m_fullMoveNum
+            && m_halfMovesSinceCaptureOrPawn == rhs.m_halfMovesSinceCaptureOrPawn
+            && m_castlingRights == rhs.m_castlingRights
+            && m_enPassant == rhs.m_enPassant
+            && m_nextTurnColor == rhs.m_nextTurnColor
+            && m_pieces == rhs.m_pieces;
+    }
 
     Board::BoardIndex Board::homeRow(Color color) {
         return color == Color::White ? 0 : 7;
