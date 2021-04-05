@@ -1,6 +1,7 @@
 #include "TestUtil.h"
 #include <catch2/catch.hpp>
 #include <chess/Board.h>
+#include <set>
 
 using namespace Chess;
 
@@ -807,3 +808,67 @@ TEST_CASE("Basic FEN output", "[chess][parsing][fen]") {
         }
     }
 }
+
+
+TEST_CASE("Basic chess checks", "[chess][rules]") {
+    using namespace Chess;
+    Board board = Board::standardBoard();
+    Color c = GENERATE(Color::White, Color::Black);
+
+    SECTION("Home row has correct pieces") {
+        auto cHomeRow = homeRow(c);
+        std::multiset<Piece::Type> types;
+        for (uint8_t col = 0; col < 8; col++) {
+            auto piece = board.pieceAt(col, cHomeRow);
+            REQUIRE(piece);
+            CHECK(piece->color() == c);
+            types.insert(piece->type());
+        }
+        // no pawns in home row
+        CHECK(types.count(Piece::Type::Pawn) == 0);
+
+        CHECK(types.count(Piece::Type::King) == 1);
+        CHECK(types.count(Piece::Type::Queen) == 1);
+
+        CHECK(types.count(Piece::Type::Rook) == 2);
+        CHECK(types.count(Piece::Type::Knight) == 2);
+        CHECK(types.count(Piece::Type::Bishop) == 2);
+
+        CHECK(types.size() == 8);
+
+        auto king = board.pieceAt(kingCol, cHomeRow);
+        REQUIRE(king);
+        REQUIRE(king->type() == Piece::Type::King);
+        REQUIRE(king->color() == c);
+    }
+
+    SECTION("Pawn start at pawn home row") {
+        auto cPawnRow = pawnHomeRow(c);
+        for (uint8_t col = 0; col < 8; col++) {
+            auto piece = board.pieceAt(col, cPawnRow);
+            REQUIRE(piece);
+            REQUIRE(piece->type() == Piece::Type::Pawn);
+        }
+    }
+
+    SECTION("Can reach promotion from pawn home") {
+        const auto cPawnRow = pawnHomeRow(c);
+        const auto cPromoRow = pawnPromotionRow(c);
+        const auto moveDir = pawnDirection(c);
+
+        uint8_t row = cPawnRow;
+        uint8_t hitAfter = -1;
+
+        for (int i = 0; i < 10000; i++) {
+            if (row == cPromoRow) {
+                hitAfter = i;
+                break;
+            }
+            row += moveDir;
+        }
+
+        REQUIRE(hitAfter == 6);
+    }
+
+}
+

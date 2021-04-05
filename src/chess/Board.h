@@ -27,6 +27,7 @@ namespace Chess {
     class Board {
     public:
         using BoardIndex = uint8_t;
+        using BoardOffset = std::make_signed_t<Board::BoardIndex>;
 
         [[nodiscard]] static ExpectedBoard fromFEN(std::string_view);
 
@@ -72,6 +73,12 @@ namespace Chess {
 
         std::pair<Board::BoardIndex, Board::BoardIndex> kingSquare(Color color) const;
 
+        template<typename F>
+        void excursion(BoardIndex col, BoardIndex row, std::optional<Piece> piece, F func) const {
+            auto& mutableSelf = const_cast<Board&>(*this);
+            func(*this);
+        }
+
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 
@@ -102,9 +109,17 @@ namespace Chess {
         friend class MoveList;
     };
 
+    // technically board specific chess constants
+    Board::BoardIndex homeRow(Color);
+
+    Board::BoardOffset pawnDirection(Color);
+    Board::BoardIndex pawnHomeRow(Color);
+    Board::BoardIndex pawnPromotionRow(Color);
+
+    constexpr static Board::BoardIndex kingCol = 4;
+
     // TODO to make this actually fit in 16 bits use: struct __attribute__((packed)) Move {
     struct Move {
-        using BoardOffset = std::make_signed_t<Board::BoardIndex>;
         enum class Flag : uint8_t {
             None = 0,
             Castling = 1,
@@ -125,7 +140,7 @@ namespace Chess {
 
         Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flag flags = Flag::None);
 
-        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Flag flags = Flag::None);
+        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardOffset offset, Flag flags = Flag::None);
 
         Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow,
              Board::BoardIndex toCol, Board::BoardIndex toRow, Flag flags = Flag::None);

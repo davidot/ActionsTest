@@ -181,7 +181,7 @@ namespace Chess {
 
         auto error = b.parseFENBoard(parts[0]);
         if (error) {
-            return *error;
+            return error.value();
         }
 
         std::optional<Color> nextTurn = parseTurnColor(parts[1]);
@@ -458,6 +458,32 @@ namespace Chess {
           return std::make_pair(m_size + 1, m_size + 1);
     }
 
+
+    Board::BoardIndex homeRow(Color color) {
+        return color == Color::White ? 0 : 7;
+    }
+
+    Board::BoardOffset pawnDirection(Color color) {
+        return color == Color::White ? 1 : -1;
+    }
+
+    Board::BoardIndex pawnHomeRow(Color color) {
+        return homeRow(color) + pawnDirection(color);
+    }
+
+    Board::BoardIndex pawnPromotionRow(Color color) {
+        return pawnHomeRow(opposite(color)) + pawnDirection(color);
+    }
+
+    bool Board::makeMove(Move m) {
+        ASSERT(pieceAt(m.fromPosition).has_value());
+        Piece p = pieceAt(m.fromPosition).value();
+        setPiece(m.toPosition, p);
+        setPiece(m.fromPosition, std::nullopt);
+        // what do we want to return here??
+        return true;
+    }
+
 #define INT(x) static_cast<uint8_t>(x)
 #define TOCASTLE(x) static_cast<CastlingRight>(x)
 
@@ -480,7 +506,7 @@ namespace Chess {
           flag(flags) {
     }
 
-    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, BoardOffset offset, Move::Flag flags) : flag(flags) {
+    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardOffset offset, Move::Flag flags) : flag(flags) {
         Board::BoardIndex index = Board::columnRowToIndex(fromCol, fromRow);
         toPosition = index + offset;
         fromPosition = index;
