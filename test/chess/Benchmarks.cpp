@@ -6,20 +6,26 @@
 using namespace Chess;
 
 TEST_CASE("Board FEN parsing", "[fen]" BENCHMARK_TAGS) {
+#define TEST_FEN(fen, note) \
+    BENCHMARK("Loading FEN: " note) { \
+        auto eb = Board::fromFEN(fen); \
+        REQUIRE(eb); \
+        return eb.extract(); \
+    };
+
+    BENCHMARK("Loading empty board") {
+       return Board::emptyBoard();
+    };
+
     BENCHMARK("Loading standard board") {
         return Board::standardBoard();
     };
 
-    BENCHMARK("Loading empty board") {
-        return Board::emptyBoard();
-    };
+    TEST_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "Start pos");
 
-    BENCHMARK("Loading some FEN") {
-        auto eb = Board::fromFEN("4Q2Q/4r3/6n1/1bbK1krn/RR1RRnRR/2qn1R1n/4n1nN/Q3Q3 w - - 1 2");
-        REQUIRE(eb);
-        return eb.extract();
-    };
+    TEST_FEN("4Q2Q/4r3/6n1/1bbK1krn/RR1RRnRR/2qn1R1n/4n1nN/Q3Q3 w - - 1 2", "Some FEN");
 }
+#undef TEST_FEN
 
 TEST_CASE("MoveGen benchmarks", "[movegen]" BENCHMARK_TAGS) {
 #define TEST_FEN(fen, note) \
@@ -58,6 +64,5 @@ TEST_CASE("MoveGen benchmarks", "[movegen]" BENCHMARK_TAGS) {
     TEST_FEN("kqQQqQqq/qq5Q/Q6q/q6Q/Q6q/Q6q/Q5QQ/qQqqQqQK b - - 0 1", "Many queens both B");
 
     TEST_FEN("1n1r1b1r/P1P1P1P1/2BNq1k1/7R/3Q4/1P1N2K1/P1PBP3/5R2 w - - 15 45", "Legal pos many moves");
-
-
 }
+#undef TEST_FEN

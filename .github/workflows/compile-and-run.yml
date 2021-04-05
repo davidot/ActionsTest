@@ -96,11 +96,10 @@ jobs:
           ctest --output-on-failure
 
       - name: Run benchmarks
-        run: |
-          cd ${{ env.build_folder_location }}
-          ./ActionsTest --benchmark-no-analysis \
-            --benchmark-samples 1000 \
-            --benchmark-warmup-time 0 \
-            --benchmark-confidence-interval 0 \
-            [benchmark]
+        run: >
+          ${{ env.build_folder_location }}/ActionsTest --benchmark-no-analysis
+          --benchmark-samples 1000
+          --benchmark-warmup-time 0
+          --benchmark-confidence-interval 0
+          [benchmark]
 
