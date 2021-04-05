@@ -55,11 +55,30 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Prepare useful stamps
+        id: stamps
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
+          message("  set-output name=time::${current_date}")
+          message("::set-output name=time::${current_date}")
+          # log and set
+
       - name: Install Dependencies (Ubuntu)
         if: startsWith(matrix.config.os, 'ubuntu')
         run: |
-          sudo apt-get install ninja-build
-          ${{ matrix.config.compiler }} --version && cmake --version && ninja --version
+          sudo apt-get install ninja-build ccache
+          ${{ matrix.config.compiler }} --version && cmake --version && ninja --version && ccache --version
+
+#      - name: Cache CCache (Ubuntu only)
+#        if: startsWith(matrix.config.os, 'ubuntu')
+#        uses: actions/cache@v2
+#        with:
+#          path: /home/runner/.ccache
+#          key: TEMP-${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-time${{ steps.stamps.outputs.time }}
+#          restore-keys: |
+#            TEMP-${{ runner.os }}-ccache-${ matrix.build_type }-${{ matrix.config.compiler }}-
+
 
       - name: Install Dependencies (Windows)
         if: startsWith(matrix.config.os, 'windows')
@@ -89,6 +108,10 @@ jobs:
 
       - name: Build
         run: cmake --build ${{ env.build_folder_location }}
+
+      - name: Post-build ccache
+          if: startsWith(matrix.config.os, 'ubuntu')
+          run: ccache -s
 
       - name: Run tests
         run: |
