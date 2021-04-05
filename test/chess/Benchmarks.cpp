@@ -33,7 +33,9 @@ TEST_CASE("Board FEN parsing", "[fen]" BENCHMARK_TAGS) {
 TEST_CASE("MoveGen benchmarks", "[movegen]" BENCHMARK_TAGS) {
 #define TEST_FEN(fen, note)                      \
     {                                            \
-        Board b = Board::fromFEN(fen).extract(); \
+        auto eb = Board::fromFEN(fen);            \
+        REQUIRE(eb);                              \
+        Board b = eb.extract();\
         BENCHMARK("Moves from FEN " note) {      \
             return generateAllMoves(b);          \
         };                                       \
@@ -68,6 +70,6 @@ TEST_CASE("MoveGen benchmarks", "[movegen]" BENCHMARK_TAGS) {
 
     TEST_FEN("1n1r1b1r/P1P1P1P1/2BNq1k1/7R/3Q4/1P1N2K1/P1PBP3/5R2 w - - 15 45", "Legal pos many moves");
 
-    TEST_FEN("RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1", "Inverted start pos");
+    TEST_FEN("RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w - - 0 1", "Inverted start pos");
 }
 #undef TEST_FEN
