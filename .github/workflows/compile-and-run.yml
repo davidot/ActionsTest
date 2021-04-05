@@ -81,6 +81,7 @@ jobs:
 
       # we have 4 distinct CCaches which means we should! have 1gb left for other things (fuzzing etc.)
       - name: Configure CCache limit
+        if: startsWith(matrix.config.os, 'ubuntu')
         run: |
           ccache -M 1000M
           ccache -s
