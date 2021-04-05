@@ -34,6 +34,7 @@ endif()
 
 
 option(EXTENDED_TESTS "Run full tests" OFF)
+option(WITH_BENCHMARKS "Enable and run benchmarks" OFF)
 
 include(cmake/dependencies/catch.cmake)
 add_executable(ActionsTest test/main.cpp
@@ -44,6 +45,12 @@ if (EXTENDED_TESTS)
     target_compile_definitions(ActionsTest PRIVATE EXTENDED_TESTS=1)
     message(STATUS "Running full tests")
 endif()
+if (WITH_BENCHMARKS)
+    target_compile_definitions(ActionsTest PRIVATE CATCH_CONFIG_ENABLE_BENCHMARKING=1)
+    target_sources(ActionsTest PRIVATE test/chess/Benchmarks.cpp)
+    message(STATUS "Building with benchmarks")
+endif()
+
 
 enable_testing()
 
