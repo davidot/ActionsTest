@@ -61,7 +61,39 @@ namespace Chess {
     }
 
     Board Board::standardBoard() {
-        return Board::fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").extract();
+        Board board{};
+
+        auto bPawnRow = pawnHomeRow(Color::Black);
+        auto wPawnRow = pawnHomeRow(Color::White);
+
+        for (BoardIndex col = 0; col < size; col++) {
+            board.setPiece(col, bPawnRow, Piece{Piece::Type::Pawn, Color::Black});
+            board.setPiece(col, wPawnRow, Piece{Piece::Type::Pawn, Color::White});
+        }
+
+        auto bHome = homeRow(Color::Black);
+        auto wHome = homeRow(Color::White);
+
+        BoardIndex col = 0;
+        for (Piece::Type tp : {Piece::Type::Rook, Piece::Type::Knight, Piece::Type::Bishop}) {
+            board.setPiece(col, bHome, Piece{tp, Color::Black});
+            board.setPiece(size - 1 - col, bHome, Piece{tp, Color::Black});
+
+            board.setPiece(col, wHome, Piece{tp, Color::White});
+            board.setPiece(size - 1 - col, wHome, Piece{tp, Color::White});
+            col++;
+        }
+
+        board.setPiece(kingCol, bHome, Piece{Piece::Type::King, Color::Black});
+        board.setPiece(kingCol, wHome, Piece{Piece::Type::King, Color::White});
+
+        board.setPiece(kingCol - 1, bHome, Piece{Piece::Type::Queen, Color::Black});
+        board.setPiece(kingCol - 1, wHome, Piece{Piece::Type::Queen, Color::White});
+
+        board.m_castlingRights |= CastlingRight::WhiteCastling;
+        board.m_castlingRights |= CastlingRight::BlackCastling;
+
+        return board;
     }
 
     std::optional<std::string> Board::parseFENBoard(std::string_view view) {
