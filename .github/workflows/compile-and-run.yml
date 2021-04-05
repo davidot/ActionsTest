@@ -70,15 +70,14 @@ jobs:
           sudo apt-get install ninja-build ccache
           ${{ matrix.config.compiler }} --version && cmake --version && ninja --version && ccache --version
 
-#      - name: Cache CCache (Ubuntu only)
-#        if: startsWith(matrix.config.os, 'ubuntu')
-#        uses: actions/cache@v2
-#        with:
-#          path: /home/runner/.ccache
-#          key: TEMP-${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-time${{ steps.stamps.outputs.time }}
-#          restore-keys: |
-#            TEMP-${{ runner.os }}-ccache-${ matrix.build_type }-${{ matrix.config.compiler }}-
-
+      - name: Cache CCache (Ubuntu only)
+        if: startsWith(matrix.config.os, 'ubuntu')
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/.ccache
+          key: TEMP-${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-time${{ steps.stamps.outputs.time }}
+          restore-keys: |
+            TEMP-${{ runner.os }}-ccache-${ matrix.build_type }-${{ matrix.config.compiler }}-
 
       - name: Install Dependencies (Windows)
         if: startsWith(matrix.config.os, 'windows')
