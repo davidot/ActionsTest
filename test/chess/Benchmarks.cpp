@@ -67,5 +67,7 @@ TEST_CASE("MoveGen benchmarks", "[movegen]" BENCHMARK_TAGS) {
     TEST_FEN("kqQQqQqq/qq5Q/Q6q/q6Q/Q6q/Q6q/Q5QQ/qQqqQqQK b - - 0 1", "Many queens both B");
 
     TEST_FEN("1n1r1b1r/P1P1P1P1/2BNq1k1/7R/3Q4/1P1N2K1/P1PBP3/5R2 w - - 15 45", "Legal pos many moves");
+
+    TEST_FEN("RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1", "Inverted start pos");
 }
 #undef TEST_FEN
