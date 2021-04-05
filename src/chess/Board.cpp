@@ -475,15 +475,6 @@ namespace Chess {
         return pawnHomeRow(opposite(color)) + pawnDirection(color);
     }
 
-    bool Board::makeMove(Move m) {
-        ASSERT(pieceAt(m.fromPosition).has_value());
-        Piece p = pieceAt(m.fromPosition).value();
-        setPiece(m.toPosition, p);
-        setPiece(m.fromPosition, std::nullopt);
-        // what do we want to return here??
-        return true;
-    }
-
 #define INT(x) static_cast<uint8_t>(x)
 #define TOCASTLE(x) static_cast<CastlingRight>(x)
 

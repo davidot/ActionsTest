@@ -73,12 +73,6 @@ namespace Chess {
 
         std::pair<Board::BoardIndex, Board::BoardIndex> kingSquare(Color color) const;
 
-        template<typename F>
-        void excursion(BoardIndex col, BoardIndex row, std::optional<Piece> piece, F func) const {
-            auto& mutableSelf = const_cast<Board&>(*this);
-            func(*this);
-        }
-
         // technically board specific chess constants
         static Board::BoardIndex homeRow(Color);
 
