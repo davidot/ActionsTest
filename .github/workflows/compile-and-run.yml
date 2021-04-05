@@ -84,6 +84,7 @@ jobs:
           -DCMAKE_CXX_COMPILER="${{ matrix.config.compiler }}"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DEXTENDED_TESTS=1
+          -DWITH_BENCHMARKS=1
           -DCMAKE_CXX_FLAGS="${{ matrix.config.extra-flags }}"
 
       - name: Build
@@ -93,4 +94,13 @@ jobs:
         run: |
           cd ${{ env.build_folder_location }}
           ctest --output-on-failure
+
+      - name: Run benchmarks
+        run: |
+          cd ${{ env.build_folder_location }}
+          ./ActionsTest --benchmark-no-analysis \
+            --benchmark-samples 1000 \
+            --benchmark-warmup-time 0 \
+            --benchmark-confidence-interval 0 \
+            [benchmark]
 
