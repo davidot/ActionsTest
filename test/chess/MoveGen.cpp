@@ -1397,5 +1397,73 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
             }
         }
 
+
+        SECTION("Weird stale/check mate depending on side to move") {
+            Board board = Board::fromFEN("qrb5/bk1p4/rp1P4/pPp2p1p/P1P2PpP/4p1PR/4P1KB/5BRQ w - - 0 1").extract();
+            if (GENERATE(true, false)) {
+                board.makeNullMove();
+            }
+            Color toMove = board.colorToMove();
+            Color other = opposite(toMove);
+
+            bool checkMate = GENERATE(true, false);
+            CAPTURE(toMove, checkMate);
+
+            {
+                MoveList list = generateAllMoves(board);
+                REQUIRE(list.size() == 1);
+                MOVES_NOT_CHECK_OR_STALEMATE();
+                bool madeMove = false;
+                list.forEachMove([&](const Move& move) {
+                  REQUIRE_FALSE(madeMove);
+                  auto [colTo, rowTo] = move.colRowToPosition();
+                  auto rook = board.pieceAt(colTo, rowTo);
+                  REQUIRE(rook);
+                  REQUIRE(rook->type() == Piece::Type::Rook);
+                  REQUIRE(rook->color() == other);
+                  fakeMove(board, move);
+                  madeMove = true;
+                });
+                REQUIRE(madeMove);
+            }
+
+            {
+                MoveList list = generateAllMoves(board);
+                REQUIRE(list.size() == 2);
+                MOVES_NOT_CHECK_OR_STALEMATE();
+                Move toMake;
+                bool foundMove = false;
+                list.forEachMove([&](const Move& move) {
+                  auto [colFrom, rowFrom] = move.colRowFromPosition();
+
+                  auto king = board.pieceAt(colFrom, rowFrom);
+                  REQUIRE(king);
+                  REQUIRE(king->type() == Piece::Type::King);
+                  REQUIRE(king->color() == other);
+
+                  auto [colTo, rowTo] = move.colRowToPosition();
+                  auto piece = board.pieceAt(colTo, rowTo);
+                  if (piece) {
+                      REQUIRE(piece->type() == Piece::Type::Pawn);
+                      // actually a move from the opponent
+                      REQUIRE(piece->color() == toMove);
+                  }
+
+                  if (piece.has_value() == checkMate) {
+                      REQUIRE_FALSE(foundMove);
+                      toMake = move;
+                      foundMove = true;
+                  }
+                });
+                REQUIRE(foundMove);
+                fakeMove(board, toMake);
+            }
+
+            MoveList list = generateAllMoves(board);
+
+            REQUIRE(list.isCheckMate() == checkMate);
+            REQUIRE(list.isStaleMate() != checkMate);
+            REQUIRE(list.size() == 0);
+        }
     }
 }
