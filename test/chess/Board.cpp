@@ -816,7 +816,7 @@ TEST_CASE("Basic chess checks", "[chess][rules]") {
     Color c = GENERATE(Color::White, Color::Black);
 
     SECTION("Home row has correct pieces") {
-        auto cHomeRow = homeRow(c);
+        auto cHomeRow = Board::homeRow(c);
         std::multiset<Piece::Type> types;
         for (uint8_t col = 0; col < 8; col++) {
             auto piece = board.pieceAt(col, cHomeRow);
@@ -836,14 +836,24 @@ TEST_CASE("Basic chess checks", "[chess][rules]") {
 
         CHECK(types.size() == 8);
 
-        auto king = board.pieceAt(kingCol, cHomeRow);
-        REQUIRE(king);
-        REQUIRE(king->type() == Piece::Type::King);
-        REQUIRE(king->color() == c);
+#define IS_TYPE(tp, col) \
+        {           \
+            auto piece = board.pieceAt((col), cHomeRow); \
+            REQUIRE(piece); \
+            REQUIRE(piece->type() == (tp)); \
+            REQUIRE(piece->color() == c);              \
+        }
+
+        IS_TYPE(Piece::Type::King, Board::kingCol);
+        IS_TYPE(Piece::Type::Rook, Board::queenSideRookCol);
+        IS_TYPE(Piece::Type::Rook, Board::kingSideRookCol);
+
+#undef IS_TYPE
+
     }
 
     SECTION("Pawn start at pawn home row") {
-        auto cPawnRow = pawnHomeRow(c);
+        auto cPawnRow = Board::pawnHomeRow(c);
         for (uint8_t col = 0; col < 8; col++) {
             auto piece = board.pieceAt(col, cPawnRow);
             REQUIRE(piece);
@@ -852,9 +862,9 @@ TEST_CASE("Basic chess checks", "[chess][rules]") {
     }
 
     SECTION("Can reach promotion from pawn home") {
-        const auto cPawnRow = pawnHomeRow(c);
-        const auto cPromoRow = pawnPromotionRow(c);
-        const auto moveDir = pawnDirection(c);
+        const auto cPawnRow = Board::pawnHomeRow(c);
+        const auto cPromoRow = Board::pawnPromotionRow(c);
+        const auto moveDir = Board::pawnDirection(c);
 
         uint8_t row = cPawnRow;
         uint8_t hitAfter = -1;

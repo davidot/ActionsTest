@@ -53,7 +53,7 @@ TEST_CASE("Basic move checks", "[chess][move]") {
     REQUIRE_FALSE(list.isCheckMate())
 
 #define CHECK_BOTH_COLORS() \
-    if (TRUE_FALSE()) board.makeNullMove(); \
+    if (TRUE_FALSE()) board.makeNullMove();
 
 TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
     using namespace Chess;
@@ -296,7 +296,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
         SECTION("King can capture on all spots around") {
             Piece p{GENERATE(CAPTURABLE_TYPES), other};
             uint8_t col = GENERATE(range(3, 5));
-            uint8_t row = GENERATE_COPY(filter([=](uint8_t r){ return r != 4 || col != 4;}, range(3, 5)));
+            uint8_t row = GENERATE_COPY(filter([=](uint8_t r) { return r != 4 || col != 4; }, range(3, 5)));
             board.setPiece(col, row, p);
 
             board.setPiece(4, 4, Piece{Piece::Type::Queen, toMove});
@@ -305,14 +305,14 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             MoveList list = generateAllMoves(board);
             unsigned captures = 0;
             list.forEachMoveFrom(4, 4, [&](const Move &move) {
-              REQUIRE(move.toPosition != move.fromPosition);
-              auto [col, row] = move.colRowToPosition();
-              auto piece = board.pieceAt(col, row);
-              if (!piece) {
-                  return;
-              }
-              captures++;
-              REQUIRE(board.pieceAt(col, row) == p);
+                REQUIRE(move.toPosition != move.fromPosition);
+                auto [col, row] = move.colRowToPosition();
+                auto piece = board.pieceAt(col, row);
+                if (!piece) {
+                    return;
+                }
+                captures++;
+                REQUIRE(board.pieceAt(col, row) == p);
             });
             REQUIRE(captures == 1);
         }
@@ -702,12 +702,12 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
             MoveList list = generateAllMoves(board);
             list.forEachMoveFrom(myCol, rowAfterDoublePushOther, [&](const Move &move) {
-              REQUIRE(move.toPosition != move.fromPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row] = move.colRowToPosition();
+                REQUIRE(move.toPosition != move.fromPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row] = move.colRowToPosition();
 
-              auto pieceAt = board.pieceAt(col2, row);
-              REQUIRE_FALSE(pieceAt.has_value());
+                auto pieceAt = board.pieceAt(col2, row);
+                REQUIRE_FALSE(pieceAt.has_value());
             });
         }
     }
@@ -722,10 +722,10 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
     Color toMove = board.colorToMove();
     Color other = opposite(toMove);
 
-    uint8_t homeRow = toMove == Color::White ? 0 : 7;
-    const uint8_t queenSideRook = 0;
-    const uint8_t kingSideRook = 7;
-    const uint8_t kingCol = 4;
+    const uint8_t homeRow = Board::homeRow(toMove);
+    const uint8_t queenSideRook = Board::queenSideRookCol;
+    const uint8_t kingSideRook = Board::kingSideRookCol;
+    const uint8_t kingCol = Board::kingCol;
 
     SECTION("Verify positions") {
         Board startPosition = Board::standardBoard();
@@ -735,13 +735,13 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
     }
 
     bool kingSide = GENERATE(true, false);
-    bool queenSide = GENERATE_COPY(filter([=](bool b) { return b || kingSide; }, values({0, 1})));
+    bool queenSide = GENERATE_COPY(filter([=](bool b) { return b || kingSide; }, values({1, 0})));
 
     bool withOppositeRook =
 #ifdef EXTENDED_TESTS
             GENERATE_COPY(filter([=](bool b) { return b || (!queenSide || !kingSide); }, values({0, 1})));
 #else
-      false;
+            false;
 #endif
 
     CAPTURE(toMove, kingSide, queenSide, withOppositeRook);
@@ -892,7 +892,7 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
         }
     }
 
-    SECTION("King is in check") {
+    SECTION("Cannot castle when king is in check") {
         board.setPiece(kingCol, 4, Piece{Piece::Type::Rook, other});
         NO_CASTLING_MOVES();
     }
@@ -937,10 +937,10 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             CAPTURE(board.toFEN());
             MoveList list = generateAllMoves(board);
             list.forEachMoveFrom(3, 4, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row2] = move.colRowToPosition();
-              REQUIRE(col2 != col);
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row2] = move.colRowToPosition();
+                REQUIRE(col2 != col);
             });
             MOVES_NOT_CHECK_OR_STALEMATE();
         }
@@ -954,12 +954,12 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
             list.forEachMoveFrom(1, 1, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row2] = move.colRowToPosition();
-              CHECK(col2 == 0);
-              CHECK(row2 == 1);
-              calls++;
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row2] = move.colRowToPosition();
+                CHECK(col2 == 0);
+                CHECK(row2 == 1);
+                calls++;
             });
             CHECK(calls == 1);
             REQUIRE(list.size() == 2);
@@ -971,18 +971,18 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             board.setPiece(0, 7, Piece{Piece::Type::Rook, other});
             board.setPiece(1, 7, Piece{Piece::Type::Rook, toMove});
 
-            board.setPiece(7, 7, Piece{Piece::Type::Pawn, toMove}); // this cannot move!
+            board.setPiece(7, 7, Piece{Piece::Type::Pawn, toMove});// this cannot move!
             CAPTURE(board.toFEN());
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
             list.forEachMoveFrom(1, 7, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row2] = move.colRowToPosition();
-              CHECK(col2 == 0);
-              CHECK(row2 == 7);
-              REQUIRE(board.pieceAt(col2, row2) == Piece{Piece::Type::Rook, other});
-              calls++;
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row2] = move.colRowToPosition();
+                CHECK(col2 == 0);
+                CHECK(row2 == 7);
+                REQUIRE(board.pieceAt(col2, row2) == Piece{Piece::Type::Rook, other});
+                calls++;
             });
             CHECK(calls == 1);
             REQUIRE(list.size() == 3);
@@ -998,15 +998,15 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
                 board.setPiece(2, 1, Piece{Piece::Type::Knight, other});
             }
 
-            board.setPiece(0, 7, Piece{Piece::Type::Pawn, toMove}); // this cannot move!
+            board.setPiece(0, 7, Piece{Piece::Type::Pawn, toMove});// this cannot move!
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
             list.forEachMoveFrom(0, 0, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              calls++;
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                calls++;
             });
             CHECK(calls == 3);
             REQUIRE(list.size() == 3);
@@ -1018,15 +1018,15 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             uint8_t coord = GENERATE(TEST_SOME(range(2, 8)));
             board.setPiece(coord, coord, Piece{Piece::Type::Bishop, other});
 
-            board.setPiece(0, 7, Piece{Piece::Type::Pawn, toMove}); // this cannot move!
+            board.setPiece(0, 7, Piece{Piece::Type::Pawn, toMove});// this cannot move!
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
             list.forEachMoveFrom(0, 0, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              calls++;
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                calls++;
             });
             CHECK(calls == 2);
             REQUIRE(list.size() == 2);
@@ -1039,26 +1039,26 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             board.setPiece(coord, coord, Piece{Piece::Type::Bishop, other});
             board.setPiece(coord, 1, Piece{Piece::Type::Queen, toMove});
 
-            board.setPiece(0, 7, Piece{Piece::Type::Pawn, toMove}); // this cannot move!
+            board.setPiece(0, 7, Piece{Piece::Type::Pawn, toMove});// this cannot move!
 
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
             int calls = 0;
             list.forEachMoveFrom(coord, 1, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row2] = move.colRowToPosition();
-              REQUIRE(col2 == row2);
-              auto p = board.pieceAt(col2, row2);
-              if (col2 == coord) {
-                  CHECK(p == Piece{Piece::Type::Bishop, other});
-              } else {
-                  CHECK_FALSE(p.has_value());
-              }
-              calls++;
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row2] = move.colRowToPosition();
+                REQUIRE(col2 == row2);
+                auto p = board.pieceAt(col2, row2);
+                if (col2 == coord) {
+                    CHECK(p == Piece{Piece::Type::Bishop, other});
+                } else {
+                    CHECK_FALSE(p.has_value());
+                }
+                calls++;
             });
-            CHECK(calls == 2 + (coord % 2)); // on the diagonal we can actually block twice
+            CHECK(calls == 2 + (coord % 2));// on the diagonal we can actually block twice
             REQUIRE(list.size() == calls + 2u);
             MOVES_NOT_CHECK_OR_STALEMATE();
         }
@@ -1075,19 +1075,19 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             }
 
 
-            board.setPiece(7, 4, Piece{Piece::Type::Pawn, toMove}); // this cannot move!
+            board.setPiece(7, 4, Piece{Piece::Type::Pawn, toMove});// this cannot move!
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
             auto [kingCol, kingRow] = board.kingSquare(toMove);
             list.forEachMoveFrom(kingCol, kingRow, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row2] = move.colRowToPosition();
-              REQUIRE(col2 == row2);
-              REQUIRE(board.pieceAt(col2, row2) == Piece{Piece::Type::Pawn, other});
-              calls++;
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row2] = move.colRowToPosition();
+                REQUIRE(col2 == row2);
+                REQUIRE(board.pieceAt(col2, row2) == Piece{Piece::Type::Pawn, other});
+                calls++;
             });
             CHECK(calls == 1);
             REQUIRE(list.size() == 1);
@@ -1103,22 +1103,22 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
                 board.setPiece(5, 5, Piece{Piece::Type::Pawn, other});
             }
 
-            board.setPiece(7, 4, Piece{Piece::Type::Pawn, toMove}); // this cannot move!
+            board.setPiece(7, 4, Piece{Piece::Type::Pawn, toMove});// this cannot move!
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
             auto [kingCol, kingRow] = board.kingSquare(toMove);
             list.forEachMoveFrom(kingCol, kingRow, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row2] = move.colRowToPosition();
-              REQUIRE(col2 != row2);
-              REQUIRE_FALSE(board.pieceAt(col2, row2));
-              calls++;
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row2] = move.colRowToPosition();
+                REQUIRE(col2 != row2);
+                REQUIRE_FALSE(board.pieceAt(col2, row2));
+                calls++;
             });
             unsigned otherCalls = 0;
-            list.forEachMoveFrom(7, 4, [&](const Move& move) {
+            list.forEachMoveFrom(7, 4, [&](const Move &move) {
                 otherCalls++;
             });
             CHECK(calls == 2);
@@ -1136,11 +1136,11 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             int calls = 0;
             MoveList list = generateAllMoves(board);
             list.forEachMoveFrom(0, 0, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row2] = move.colRowToPosition();
-              REQUIRE(col2 == 0); // can only move up
-              calls++;
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row2] = move.colRowToPosition();
+                REQUIRE(col2 == 0);// can only move up
+                calls++;
             });
             REQUIRE(calls == 1);
             MOVES_NOT_CHECK_OR_STALEMATE();
@@ -1160,18 +1160,18 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             int calls = 0;
             MoveList list = generateAllMoves(board);
             list.forEachMoveFrom(0, 0, [&](const Move &move) {
-              REQUIRE(move.fromPosition != move.toPosition);
-              REQUIRE(move.flag == Move::Flag::None);
-              auto [col2, row2] = move.colRowToPosition();
-              REQUIRE(col2 == 1); // can only move up
-              calls++;
+                REQUIRE(move.fromPosition != move.toPosition);
+                REQUIRE(move.flag == Move::Flag::None);
+                auto [col2, row2] = move.colRowToPosition();
+                REQUIRE(col2 == 1);// can only move up
+                calls++;
             });
             REQUIRE(calls == 2);
-            list.forEachMoveFrom(0, 1, [&](const Move& move) {
-               REQUIRE(false);
+            list.forEachMoveFrom(0, 1, [&](const Move &move) {
+                REQUIRE(false);
             });
-            list.forEachMoveFrom(7, 4, [&](const Move& move) {
-              REQUIRE(false);
+            list.forEachMoveFrom(7, 4, [&](const Move &move) {
+                REQUIRE(false);
             });
             REQUIRE(list.size() == 2);
             MOVES_NOT_CHECK_OR_STALEMATE();
@@ -1201,12 +1201,11 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
 
             MoveList list = generateAllMoves(board);
             list.forEachMoveFrom(4, 0, [&](const Move &move) {
-              REQUIRE(false);
+                REQUIRE(false);
             });
             REQUIRE(list.size() > 0);
             MOVES_NOT_CHECK_OR_STALEMATE();
         }
-
     }
 
     SECTION("Cannot move into check") {
@@ -1290,7 +1289,6 @@ TEST_CASE("Stale/check mate", "[chess][rules][movegen]") {
         REQUIRE(list.isCheckMate());
         REQUIRE_FALSE(list.isStaleMate());
     }
-
 }
 
 TEST_CASE("Specific examples", "[chess][movegen]") {
@@ -1369,6 +1367,18 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
         }
     }
 
+    auto fakeMove = [](Board &board, const Move &move) {
+        auto [colFrom, rowFrom] = move.colRowFromPosition();
+        auto [colTo, rowTo] = move.colRowToPosition();
+        auto optPiece = board.pieceAt(colFrom, rowFrom);
+        REQUIRE(optPiece.has_value());
+        REQUIRE(optPiece->color() == board.colorToMove());
+        board.setPiece(colTo, rowTo, optPiece.value());
+        board.setPiece(colFrom, rowFrom, std::nullopt);
+
+        board.makeNullMove();
+    };
+
     SECTION("Single move possible") {
 
         SECTION("Sequence of 13 (!) consecutive forced moves") {
@@ -1378,18 +1388,12 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
                 REQUIRE(list.size() == 1);
                 // fake make the move
                 bool madeMove = false;
-                list.forEachMove([&](const Move &move) {
+                list.forEachMove([&](const Move& move) {
                     REQUIRE_FALSE(madeMove);
-                    auto [colFrom, rowFrom] = move.colRowFromPosition();
-                    auto [colTo, rowTo] = move.colRowToPosition();
-                    auto optPiece = board.pieceAt(colFrom, rowFrom);
-                    REQUIRE(optPiece.has_value());
-                    board.setPiece(colTo, rowTo, optPiece.value());
-                    board.setPiece(colFrom, rowFrom, std::nullopt);
+                    fakeMove(board, move);
                     madeMove = true;
                 });
                 REQUIRE(madeMove);
-                board.makeNullMove();
             }
         }
 

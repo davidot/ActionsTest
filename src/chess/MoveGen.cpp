@@ -6,7 +6,7 @@
 
 namespace Chess {
     using Index = Board::BoardIndex;
-    using Offset = Move::BoardOffset;
+    using Offset = Board::BoardOffset;
 
 
     void MoveList::addMove(Move move) {
@@ -287,28 +287,11 @@ namespace Chess {
         }
     }
 
-    Index pawnStartRow(Color color) {
-        if (color == Color::White) {
-            return 1;
-        } else {
-            ASSERT(color == Color::Black);
-            return boardSize - 2;
-        }
-    }
-
-    Index pawnPromotionRow(Color color) {
-        if (color == Color::White) {
-            return boardSize - 1;
-        } else {
-            ASSERT(color == Color::Black);
-            return 0;
-        }
-    }
 
     void addPawnMoves(MoveList &list, const Board &board, const Index col, const Index row, Color color) {
         Offset forward = color == Color::White ? Up : Down;
 
-        auto addMove = [col, row, promoRow = pawnPromotionRow(color), &list, &board](Index newCol, Index newRow, Move::Flag flags = Move::Flag::None) {
+        auto addMove = [col, row, promoRow = Board::pawnPromotionRow(color), &list, &board](Index newCol, Index newRow, Move::Flag flags = Move::Flag::None) {
             if (newRow == promoRow) {
                 // we do not want double push and promotion (on 4x4 board which we do not support)
                 ASSERT(flags == Move::Flag::None);
@@ -331,7 +314,7 @@ namespace Chess {
 
                 addMove(newCol, newRow);
 
-                if (row == pawnStartRow(color) && validOffset(newCol, newRow, offsets[forward]) && board.pieceAt(newCol, newRow) == std::nullopt) {
+                if (row == Board::pawnHomeRow(color) && validOffset(newCol, newRow, offsets[forward]) && board.pieceAt(newCol, newRow) == std::nullopt) {
                     // note it is always valid but this changes the position
 
                     addMove(newCol, newRow, Move::Flag::DoublePushPawn);
@@ -357,14 +340,6 @@ namespace Chess {
         }
     }
 
-    const Index queenSideRook = 0;
-    const Index kingSideRook = 7;
-    const Index kingCol = 4;
-
-    Index homeRow(Color col) {
-        return col == Color::White ? 0 : 7;
-    }
-
     bool empty(const Board &board, Index colFrom, Index colTo, Index row) {
         Index start = std::min(colFrom, colTo) + 1u;
         Index end = std::max(colFrom, colTo);
@@ -384,18 +359,18 @@ namespace Chess {
             || (color == Color::Black && (rights & CastlingRight::BlackCastling) == CastlingRight::NoCastling)) {
             return;
         }
-        auto home = homeRow(color);
-        if (home != row || col != kingCol) {
+        auto home = Board::homeRow(color);
+        if (home != row || col != Board::kingCol) {
             // this is technically not valid since we have castling rights but solves things for multiple kings...
             return;
         }
         auto addCastleMove = [&](CastlingRight required, Index rookCol) {
-            if ((rights & required) != CastlingRight::NoCastling && empty(board, kingCol, rookCol, home) && board.pieceAt(rookCol, home) == Piece{Piece::Type::Rook, color}) {
-                validateMove(list, board, Move{kingCol, home, rookCol, home, Move::Flag::Castling});
+            if ((rights & required) != CastlingRight::NoCastling && empty(board, Board::kingCol, rookCol, home) && board.pieceAt(rookCol, home) == Piece{Piece::Type::Rook, color}) {
+                validateMove(list, board, Move{Board::kingCol, home, rookCol, home, Move::Flag::Castling});
             }
         };
-        addCastleMove(CastlingRight::KingSideCastling, kingSideRook);
-        addCastleMove(CastlingRight::QueenSideCastling, queenSideRook);
+        addCastleMove(CastlingRight::KingSideCastling, Board::kingSideRookCol);
+        addCastleMove(CastlingRight::QueenSideCastling, Board::queenSideRookCol);
     }
 
     MoveList generateAllMoves(const Board &board) {

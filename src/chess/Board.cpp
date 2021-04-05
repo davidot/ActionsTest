@@ -459,19 +459,19 @@ namespace Chess {
     }
 
 
-    Board::BoardIndex homeRow(Color color) {
+    Board::BoardIndex Board::homeRow(Color color) {
         return color == Color::White ? 0 : 7;
     }
 
-    Board::BoardOffset pawnDirection(Color color) {
+    Board::BoardOffset Board::pawnDirection(Color color) {
         return color == Color::White ? 1 : -1;
     }
 
-    Board::BoardIndex pawnHomeRow(Color color) {
+    Board::BoardIndex Board::pawnHomeRow(Color color) {
         return homeRow(color) + pawnDirection(color);
     }
 
-    Board::BoardIndex pawnPromotionRow(Color color) {
+    Board::BoardIndex Board::pawnPromotionRow(Color color) {
         return pawnHomeRow(opposite(color)) + pawnDirection(color);
     }
 

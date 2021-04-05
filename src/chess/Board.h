@@ -79,6 +79,17 @@ namespace Chess {
             func(*this);
         }
 
+        // technically board specific chess constants
+        static Board::BoardIndex homeRow(Color);
+
+        static Board::BoardOffset pawnDirection(Color);
+        static Board::BoardIndex pawnHomeRow(Color);
+        static Board::BoardIndex pawnPromotionRow(Color);
+
+        constexpr static Board::BoardIndex kingCol = 4;
+        constexpr static Board::BoardIndex queenSideRookCol = 0;
+        constexpr static Board::BoardIndex kingSideRookCol = 7;
+
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 
@@ -108,15 +119,6 @@ namespace Chess {
         friend struct Move;
         friend class MoveList;
     };
-
-    // technically board specific chess constants
-    Board::BoardIndex homeRow(Color);
-
-    Board::BoardOffset pawnDirection(Color);
-    Board::BoardIndex pawnHomeRow(Color);
-    Board::BoardIndex pawnPromotionRow(Color);
-
-    constexpr static Board::BoardIndex kingCol = 4;
 
     // TODO to make this actually fit in 16 bits use: struct __attribute__((packed)) Move {
     struct Move {
