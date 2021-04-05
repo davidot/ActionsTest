@@ -1311,6 +1311,8 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
         SECTION("Examples from chessprogramming") {
             HAS_N_MOVES("3Q4/1Q4Q1/4Q3/2Q4R/Q4Q2/3Q4/1Q4Rp/1K1BBNNk w - - 0 1", 218);
             HAS_N_MOVES("R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1", 218);
+            // only more because we separate promotions (4 possible promos)
+            HAS_N_MOVES("1b1Q2b1/PQ4QP/4Q3/2Q4R/Q4Q2/3Q4/1Q4Rp/1K1BBNNk w - - 0 1", 224);
         }
 
         SECTION("Standard position") {
@@ -1466,4 +1468,21 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
             REQUIRE(list.size() == 0);
         }
     }
+
+    SECTION("Every special move") {
+        Board board = Board::fromFEN("5n2/6P1/8/k1pP4/pp6/8/7P/R3K2R w KQ c6 0 1").extract();
+        MoveList list = generateAllMoves(board);
+        std::multiset<Move::Flag> flags;
+        list.forEachMove([&](const Move& move) {
+            flags.insert(move.flag);
+        });
+        REQUIRE(flags.count(Move::Flag::EnPassant) == 1);
+        REQUIRE(flags.count(Move::Flag::DoublePushPawn) == 1);
+        REQUIRE(flags.count(Move::Flag::Castling) == 2);
+        REQUIRE(flags.count(Move::Flag::PromotionToQueen) == 2);
+        REQUIRE(flags.count(Move::Flag::PromotionToBishop) == 2);
+        REQUIRE(flags.count(Move::Flag::PromotionToRook) == 2);
+        REQUIRE(flags.count(Move::Flag::PromotionToKnight) == 2);
+    }
+
 }
