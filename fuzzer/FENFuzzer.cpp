@@ -17,7 +17,34 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size) {
                       << "Output: " << output << '\n';
             __builtin_trap();
         }
-        [[maybe_unused]] auto list = Chess::generateAllMoves(parsed.value());
+
+        Board copy = parsed.value();
+        Board board = parsed.extract();
+        if (!(copy == board)) {
+            __builtin_trap();
+        }
+
+        auto list = Chess::generateAllMoves(board);
+
+        list.forEachMove([&](const Move& move) {
+            if (board.undoMove()) {
+                std::cout << "Could undo move while there was none!\n";
+                __builtin_trap();
+            }
+            if (!board.makeMove(move)) {
+                std::cout << "Generated illegal move\n";
+                __builtin_trap();
+            }
+            if (!board.undoMove()) {
+                std::cout << "Could not perform undo\n";
+                __builtin_trap();
+            }
+            if (!(copy == board)) {
+                std::cout << "Board not the same after undo\n";
+                __builtin_trap();
+            }
+        });
+
     } else {
         if (parsed.error().empty()) {
             std::cout << "No error specified!\n";
