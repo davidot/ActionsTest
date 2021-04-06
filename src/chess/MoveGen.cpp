@@ -5,9 +5,6 @@
 
 
 namespace Chess {
-    using Index = Board::BoardIndex;
-    using Offset = Board::BoardOffset;
-
 
     void MoveList::addMove(Move move) {
         // not sure we actually want to reject none moves?
@@ -32,9 +29,9 @@ namespace Chess {
     }
 
 
-    constexpr static Index boardSize = Board::size;
+    constexpr static BoardIndex boardSize = Board::size;
 
-    using Offsets = std::pair<Offset, Offset>;
+    using Offsets = std::pair<BoardOffset, BoardOffset>;
 
     constexpr static Offsets offsets[] = {
             {-1, 1},
@@ -75,14 +72,14 @@ namespace Chess {
 
 #define ALL_DIRECTIONS LeftUp, Up, RightUp, Left, Right, LeftDown, Down, RightDown
 
-    bool withinRange(Index v, Offset o) {
+    bool withinRange(BoardIndex v, BoardOffset o) {
         if (o < 0) {
             return v >= -o;
         }
         return (boardSize - v) > o;
     }
 
-    bool validOffset(Index &col, Index &row, Offsets offset) {
+    bool validOffset(BoardIndex &col, BoardIndex &row, Offsets offset) {
         if (withinRange(col, offset.first) && withinRange(row, offset.second)) {
             col += offset.first;
             row += offset.second;
@@ -91,11 +88,11 @@ namespace Chess {
         return false;
     }
 
-    bool attacked(Index col, Index row, const Board &board, std::initializer_list<std::tuple<Index, Index, bool>> specialSquares = {}) {
+    bool attacked(BoardIndex col, BoardIndex row, const Board &board, std::initializer_list<std::tuple<BoardIndex, BoardIndex, bool>> specialSquares = {}) {
         // we assume it is a legal move
         Color us = board.colorToMove();
         Color other = opposite(us);
-        auto hasKnight = [&](Index col, Index row) {
+        auto hasKnight = [&](BoardIndex col, BoardIndex row) {
             return board.pieceAt(col, row) == Piece{Piece::Type::Knight, other};
         };
 
@@ -110,8 +107,8 @@ namespace Chess {
                 continue;
             }
 
-            Index currCol = col;
-            Index currRow = row;
+            BoardIndex currCol = col;
+            BoardIndex currRow = row;
             unsigned steps = 0;
             while (validOffset(currCol, currRow, direction)) {
                 auto p = board.pieceAt(currCol, currRow);
@@ -141,7 +138,7 @@ namespace Chess {
                     case Piece::Type::Queen:
                         return true;
                     case Piece::Type::Pawn: {
-                        Offset forward = other == Color::White ? Down : Up;
+                        BoardOffset forward = other == Color::White ? Down : Up;
                         if (steps == 0 && (direction == offsets[forward + ToLeft] || direction == offsets[forward + ToRight])) {
                             return true;
                         }
@@ -178,7 +175,7 @@ namespace Chess {
         auto pieceAtFromLocation = board.pieceAt(m.colRowFromPosition());
         ASSERT(pieceAtFromLocation.has_value() && pieceAtFromLocation->color() == board.colorToMove());
 
-        auto isAttacked = [&](Index col, Index row) -> bool {
+        auto isAttacked = [&](BoardIndex col, BoardIndex row) -> bool {
             if (col >= boardSize || row >= boardSize) {
                 return false;
             }
@@ -202,16 +199,16 @@ namespace Chess {
             // we assume empty here for now
             if (colFrom > colTo) {
                 // queen side
-                Index finalKingSpot = colFrom - 2;
-                for (Index i = colFrom; i >= finalKingSpot; i--) {
+                BoardIndex finalKingSpot = colFrom - 2;
+                for (BoardIndex i = colFrom; i >= finalKingSpot; i--) {
                     if (attacked(i, rowFrom, board)) {
                         return false;
                     }
                 }
             } else {
                 // king side
-                Index finalKingSpot = colFrom + 2;
-                for (Index i = colFrom; i <= finalKingSpot; i++) {
+                BoardIndex finalKingSpot = colFrom + 2;
+                for (BoardIndex i = colFrom; i <= finalKingSpot; i++) {
                     if (attacked(i, rowFrom, board)) {
                         return false;
                     }
@@ -246,24 +243,24 @@ namespace Chess {
     }
 
     template<Direction direction>
-    void addMove(MoveList &list, const Board &board, Index col, Index row) {
+    void addMove(MoveList &list, const Board &board, BoardIndex col, BoardIndex row) {
         constexpr auto off = offsets[direction];
-        Index newCol = col;
-        Index newRow = row;
+        BoardIndex newCol = col;
+        BoardIndex newRow = row;
         if (validOffset(newCol, newRow, off)) {
             validateMove(list, board, Move{col, row, newCol, newRow});
         }
     }
 
     template<Direction... directions>
-    void addMoves(MoveList &list, const Board &board, Index col, Index row) {
+    void addMoves(MoveList &list, const Board &board, BoardIndex col, BoardIndex row) {
         (addMove<directions>(list, board, col, row), ...);
     }
 
     template<Direction d>
-    void addSlidingMoves(MoveList &list, const Board &board, Index col, Index row) {
-        Index toCol = col;
-        Index toRow = row;
+    void addSlidingMoves(MoveList &list, const Board &board, BoardIndex col, BoardIndex row) {
+        BoardIndex toCol = col;
+        BoardIndex toRow = row;
         auto &offset = offsets[d];
         while (validOffset(toCol, toRow, offset)) {
             if (!validateMove(list, board, Move{col, row, toCol, toRow})) {
@@ -273,14 +270,14 @@ namespace Chess {
     }
 
     template<Direction... Directions>
-    void addAllSlidingMoves(MoveList &list, const Board &board, Index col, Index row) {
+    void addAllSlidingMoves(MoveList &list, const Board &board, BoardIndex col, BoardIndex row) {
         (addSlidingMoves<Directions>(list, board, col, row), ...);
     }
 
-    void addKnightMoves(MoveList &list, const Board &board, Index col, Index row) {
+    void addKnightMoves(MoveList &list, const Board &board, BoardIndex col, BoardIndex row) {
         for (auto &off : knightOffsets) {
-            Index newCol = col;
-            Index newRow = row;
+            BoardIndex newCol = col;
+            BoardIndex newRow = row;
             if (validOffset(newCol, newRow, off)) {
                 validateMove(list, board, Move{col, row, newCol, newRow});
             }
@@ -288,10 +285,10 @@ namespace Chess {
     }
 
 
-    void addPawnMoves(MoveList &list, const Board &board, const Index col, const Index row, Color color) {
-        Offset forward = color == Color::White ? Up : Down;
+    void addPawnMoves(MoveList &list, const Board &board, const BoardIndex col, const BoardIndex row, Color color) {
+        BoardOffset forward = Board::pawnDirection(color) > 0 ? Up : Down;
 
-        auto addMove = [col, row, promoRow = Board::pawnPromotionRow(color), &list, &board](Index newCol, Index newRow, Move::Flag flags = Move::Flag::None) {
+        auto addMove = [col, row, promoRow = Board::pawnPromotionRow(color), &list, &board](BoardIndex newCol, BoardIndex newRow, Move::Flag flags = Move::Flag::None) {
             if (newRow == promoRow) {
                 // we do not want double push and promotion (on 4x4 board which we do not support)
                 ASSERT(flags == Move::Flag::None);
@@ -308,8 +305,8 @@ namespace Chess {
         };
 
         {
-            Index newCol = col;
-            Index newRow = row;
+            BoardIndex newCol = col;
+            BoardIndex newRow = row;
             if (validOffset(newCol, newRow, offsets[forward]) && board.pieceAt(newCol, newRow) == std::nullopt) {
 
                 addMove(newCol, newRow);
@@ -326,8 +323,8 @@ namespace Chess {
 
         for (auto change : {ToLeft, ToRight}) {
             auto offset = offsets[forward + change];
-            Index newCol = col;
-            Index newRow = row;
+            BoardIndex newCol = col;
+            BoardIndex newRow = row;
             if (!validOffset(newCol, newRow, offset)) {
                 continue;
             }
@@ -340,9 +337,9 @@ namespace Chess {
         }
     }
 
-    bool empty(const Board &board, Index colFrom, Index colTo, Index row) {
-        Index start = std::min(colFrom, colTo) + 1u;
-        Index end = std::max(colFrom, colTo);
+    bool empty(const Board &board, BoardIndex colFrom, BoardIndex colTo, BoardIndex row) {
+        BoardIndex start = std::min(colFrom, colTo) + 1u;
+        BoardIndex end = std::max(colFrom, colTo);
         while (start < end) {
             if (board.pieceAt(start, row) != std::nullopt) {
                 return false;
@@ -353,7 +350,7 @@ namespace Chess {
         return true;
     }
 
-    void addCastles(MoveList &list, const Board &board, Index col, Index row, Color color) {
+    void addCastles(MoveList &list, const Board &board, BoardIndex col, BoardIndex row, Color color) {
         auto rights = board.castlingRights();
         if ((color == Color::White && (rights & CastlingRight::WhiteCastling) == CastlingRight::NoCastling)
             || (color == Color::Black && (rights & CastlingRight::BlackCastling) == CastlingRight::NoCastling)) {
@@ -364,7 +361,7 @@ namespace Chess {
             // this is technically not valid since we have castling rights but solves things for multiple kings...
             return;
         }
-        auto addCastleMove = [&](CastlingRight required, Index rookCol) {
+        auto addCastleMove = [&](CastlingRight required, BoardIndex rookCol) {
             if ((rights & required) != CastlingRight::NoCastling && empty(board, Board::kingCol, rookCol, home) && board.pieceAt(rookCol, home) == Piece{Piece::Type::Rook, color}) {
                 validateMove(list, board, Move{Board::kingCol, home, rookCol, home, Move::Flag::Castling});
             }
@@ -374,8 +371,10 @@ namespace Chess {
     }
 
     MoveList generateAllMoves(const Board &board) {
-        //        std::cout << board.toFEN() << '\n';
-        using BI = Board::BoardIndex;
+#ifdef OUTPUT_FEN
+        std::cout << board.toFEN() << '\n';
+#endif
+        using BI = BoardIndex;
 
         MoveList list{};
         Color color = board.colorToMove();

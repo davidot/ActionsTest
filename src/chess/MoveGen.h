@@ -24,7 +24,7 @@ namespace Chess {
         }
 
         template<typename Func>
-        void forEachMoveFrom(Board::BoardIndex col, Board::BoardIndex row, Func func) const {
+        void forEachMoveFrom(BoardIndex col, BoardIndex row, Func func) const {
             forEachFilteredMove([index = Board::columnRowToIndex(col, row)](const Move& move){
                 return move.fromPosition == index;
             }, func);

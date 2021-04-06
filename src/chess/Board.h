@@ -10,6 +10,41 @@
 
 namespace Chess {
 
+    // TODO to make this actually fit in 16 bits use: struct __attribute__((packed)) Move {
+    struct Move {
+        enum class Flag : uint8_t {
+            None = 0,
+            Castling = 1,
+            DoublePushPawn = 2,
+            EnPassant = 3,
+            PromotionToKnight = 4,
+            PromotionToBishop = 5,
+            PromotionToRook = 6,
+            PromotionToQueen = 7
+        };
+
+        BoardIndex toPosition: 6;
+        BoardIndex fromPosition : 6;
+
+        Flag flag : 3;
+
+        Move();
+
+        Move(BoardIndex fromPosition, BoardIndex toPosition, Flag flags = Flag::None);
+
+        Move(BoardIndex fromCol, BoardIndex fromRow, BoardOffset offset, Flag flags = Flag::None);
+
+        Move(BoardIndex fromCol, BoardIndex fromRow,
+             BoardIndex toCol, BoardIndex toRow, Flag flags = Flag::None);
+
+        [[nodiscard]] std::pair<BoardIndex, BoardIndex> colRowFromPosition() const;
+        [[nodiscard]] std::pair<BoardIndex, BoardIndex> colRowToPosition() const;
+
+        [[nodiscard]] bool isPromotion() const;
+
+        [[nodiscard]] Piece::Type promotedType() const;
+    };
+
     enum class CastlingRight : uint8_t {
         NoCastling = 0u,
         WhiteKingSide = 1u,
@@ -26,9 +61,6 @@ namespace Chess {
 
     class Board {
     public:
-        using BoardIndex = uint8_t;
-        using BoardOffset = std::make_signed_t<Board::BoardIndex>;
-
         [[nodiscard]] static ExpectedBoard fromFEN(std::string_view);
 
         [[nodiscard]] static Board standardBoard();
@@ -65,22 +97,22 @@ namespace Chess {
 
         void undoNullMove();
 
-        [[nodiscard]] std::optional<std::pair<Board::BoardIndex, Board::BoardIndex>> enPassantColRow() const;
+        [[nodiscard]] std::optional<std::pair<BoardIndex, BoardIndex>> enPassantColRow() const;
 
         [[nodiscard]] CastlingRight castlingRights() const;
 
-        std::pair<Board::BoardIndex, Board::BoardIndex> kingSquare(Color color) const;
+        std::pair<BoardIndex, BoardIndex> kingSquare(Color color) const;
 
         // technically board specific chess constants
-        static Board::BoardIndex homeRow(Color);
+        static BoardIndex homeRow(Color);
 
-        static Board::BoardOffset pawnDirection(Color);
-        static Board::BoardIndex pawnHomeRow(Color);
-        static Board::BoardIndex pawnPromotionRow(Color);
+        static BoardOffset pawnDirection(Color);
+        static BoardIndex pawnHomeRow(Color);
+        static BoardIndex pawnPromotionRow(Color);
 
-        constexpr static Board::BoardIndex kingCol = 4;
-        constexpr static Board::BoardIndex queenSideRookCol = 0;
-        constexpr static Board::BoardIndex kingSideRookCol = 7;
+        constexpr static BoardIndex kingCol = 4;
+        constexpr static BoardIndex queenSideRookCol = 0;
+        constexpr static BoardIndex kingSideRookCol = 7;
 
         constexpr static BoardIndex size = 8;
 
@@ -112,50 +144,13 @@ namespace Chess {
         uint32_t m_fullMoveNum = 1;
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;
 #ifdef STORE_KING_POS
-        std::array<BoardIndex, 2> m_kingPos = {size * size + size, size * size + size};
+        std::array<BoardIndex, 2> m_kingPos = {-1, -1};
+        static_assert(BoardIndex(-1) > size, "-1 is used as out of bounds");
 #endif
 
         friend struct Move;
         friend class MoveList;
     };
-
-    // TODO to make this actually fit in 16 bits use: struct __attribute__((packed)) Move {
-    struct Move {
-        enum class Flag : uint8_t {
-            None = 0,
-            Castling = 1,
-            DoublePushPawn = 2,
-            EnPassant = 3,
-            PromotionToKnight = 4,
-            PromotionToBishop = 5,
-            PromotionToRook = 6,
-            PromotionToQueen = 7
-        };
-
-        Board::BoardIndex toPosition: 6;
-        Board::BoardIndex fromPosition : 6;
-
-        Flag flag : 3;
-
-        Move();
-
-        Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flag flags = Flag::None);
-
-        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardOffset offset, Flag flags = Flag::None);
-
-        Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow,
-             Board::BoardIndex toCol, Board::BoardIndex toRow, Flag flags = Flag::None);
-
-
-        std::pair<Board::BoardIndex, Board::BoardIndex> colRowFromPosition() const;
-        std::pair<Board::BoardIndex, Board::BoardIndex> colRowToPosition() const;
-
-        bool isPromotion() const;
-
-        Piece::Type promotedType() const;
-    };
-
-
 
     CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);
     CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs);

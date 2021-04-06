@@ -78,12 +78,12 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
         CHECK_BOTH_COLORS()
         Color toMove = board.colorToMove();
 
-        auto validateCountAndFrom = [](const MoveList &list, Board::BoardIndex col, Board::BoardIndex row, unsigned count) {
+        auto validateCountAndFrom = [](const MoveList &list, BoardIndex col, BoardIndex row, unsigned count) {
             REQUIRE(list.size() == count);
             if (count > 0) {
                 MOVES_NOT_CHECK_OR_STALEMATE();
             }
-            std::set<Board::BoardIndex> destinations;
+            std::set<BoardIndex> destinations;
 
             list.forEachMove([&](const Move &move) {
                 CAPTURE(move);
@@ -726,13 +726,6 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
     const uint8_t queenSideRook = Board::queenSideRookCol;
     const uint8_t kingSideRook = Board::kingSideRookCol;
     const uint8_t kingCol = Board::kingCol;
-
-    SECTION("Verify positions") {
-        Board startPosition = Board::standardBoard();
-        REQUIRE(startPosition.pieceAt(kingCol, homeRow) == Piece{Piece::Type::King, toMove});
-        REQUIRE(startPosition.pieceAt(kingSideRook, homeRow) == Piece{Piece::Type::Rook, toMove});
-        REQUIRE(startPosition.pieceAt(queenSideRook, homeRow) == Piece{Piece::Type::Rook, toMove});
-    }
 
     bool kingSide = GENERATE(true, false);
     bool queenSide = GENERATE_COPY(filter([=](bool b) { return b || kingSide; }, values({1, 0})));

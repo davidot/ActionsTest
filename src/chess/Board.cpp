@@ -3,10 +3,13 @@
 #include "../util/StringUtil.h"
 #include <array>
 #include <charconv>
-#include <iostream>
 #include <sstream>
 #include <string>
 #include <utility>
+
+#ifdef OUTPUT_FEN
+#include <iostream>
+#endif
 
 namespace Chess {
 
@@ -212,6 +215,9 @@ namespace Chess {
 
 
     ExpectedBoard Board::fromFEN(std::string_view str) {
+#ifdef OUTPUT_FEN
+        std::cout << str << '\n';
+#endif
         Board b{};
 
         //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
@@ -275,11 +281,11 @@ namespace Chess {
         return m_nextTurnColor;
     }
 
-    Board::BoardIndex Board::columnRowToIndex(BoardIndex column, BoardIndex row) {
+    BoardIndex Board::columnRowToIndex(BoardIndex column, BoardIndex row) {
         return column + uint16_t(size) * (uint16_t(size) - 1 - row);
     }
 
-    std::pair<Board::BoardIndex, Board::BoardIndex> Board::indexToColumnRow(BoardIndex index) {
+    std::pair<BoardIndex, BoardIndex> Board::indexToColumnRow(BoardIndex index) {
         return std::make_pair(index % size, (size - 1) - index / size);
     }
 
@@ -317,7 +323,7 @@ namespace Chess {
         }
     }
 
-    std::optional<Board::BoardIndex> Board::SANToIndex(std::string_view vw) {
+    std::optional<BoardIndex> Board::SANToIndex(std::string_view vw) {
         if (vw.size() != 2) {
             return std::nullopt;
         }
@@ -336,7 +342,7 @@ namespace Chess {
         return columnRowToIndex(col, row);
     }
 
-    std::optional<std::pair<Board::BoardIndex, Board::BoardIndex>> Board::SANToColRow(std::string_view vw) {
+    std::optional<std::pair<BoardIndex, BoardIndex>> Board::SANToColRow(std::string_view vw) {
         auto pos = SANToIndex(vw);
         if (pos) {
             return indexToColumnRow(pos.value());
@@ -351,7 +357,7 @@ namespace Chess {
         return str;
     }
 
-    std::string Board::indexToSAN(Board::BoardIndex index) {
+    std::string Board::indexToSAN(BoardIndex index) {
         auto [col, row] = indexToColumnRow(index);
         return columnRowToSAN(col, row);
     }
@@ -365,7 +371,7 @@ namespace Chess {
 
     struct CstlChk {
         CastlingRight right;
-        Board::BoardIndex col;
+        BoardIndex col;
         Piece piece;
     };
 
@@ -426,7 +432,7 @@ namespace Chess {
         return stream.str();
     }
 
-    std::optional<std::pair<Board::BoardIndex, Board::BoardIndex>> Board::enPassantColRow() const {
+    std::optional<std::pair<BoardIndex, BoardIndex>> Board::enPassantColRow() const {
         if (!m_enPassant.has_value()) {
             return std::nullopt;
         }
@@ -482,7 +488,7 @@ namespace Chess {
         return m_castlingRights;
     }
 
-    std::pair<Board::BoardIndex, Board::BoardIndex> Board::kingSquare(Color color) const {
+    std::pair<BoardIndex, BoardIndex> Board::kingSquare(Color color) const {
 #ifdef STORE_KING_POS
         return indexToColumnRow(m_kingPos[colorIndex(color)]);
 #else
@@ -508,19 +514,19 @@ namespace Chess {
             && m_pieces == rhs.m_pieces;
     }
 
-    Board::BoardIndex Board::homeRow(Color color) {
+    BoardIndex Board::homeRow(Color color) {
         return color == Color::White ? 0 : 7;
     }
 
-    Board::BoardOffset Board::pawnDirection(Color color) {
+    BoardOffset Board::pawnDirection(Color color) {
         return color == Color::White ? 1 : -1;
     }
 
-    Board::BoardIndex Board::pawnHomeRow(Color color) {
+    BoardIndex Board::pawnHomeRow(Color color) {
         return homeRow(color) + pawnDirection(color);
     }
 
-    Board::BoardIndex Board::pawnPromotionRow(Color color) {
+    BoardIndex Board::pawnPromotionRow(Color color) {
         return pawnHomeRow(opposite(color)) + pawnDirection(color);
     }
 
@@ -540,19 +546,19 @@ namespace Chess {
 #undef INT
 #undef TOCASTLE
 
-    Move::Move(Board::BoardIndex fromPosition, Board::BoardIndex toPosition, Flag flags)
+    Move::Move(BoardIndex fromPosition, BoardIndex toPosition, Flag flags)
         :  toPosition(toPosition),
            fromPosition(fromPosition),
           flag(flags) {
     }
 
-    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardOffset offset, Move::Flag flags) : flag(flags) {
-        Board::BoardIndex index = Board::columnRowToIndex(fromCol, fromRow);
+    Move::Move(BoardIndex fromCol, BoardIndex fromRow, BoardOffset offset, Move::Flag flags) : flag(flags) {
+        BoardIndex index = Board::columnRowToIndex(fromCol, fromRow);
         toPosition = index + offset;
         fromPosition = index;
     }
 
-    Move::Move(Board::BoardIndex fromCol, Board::BoardIndex fromRow, Board::BoardIndex toCol, Board::BoardIndex toRow, Move::Flag flags) :
+    Move::Move(BoardIndex fromCol, BoardIndex fromRow, BoardIndex toCol, BoardIndex toRow, Move::Flag flags) :
         toPosition(Board::columnRowToIndex(toCol, toRow)),
         fromPosition(Board::columnRowToIndex(fromCol, fromRow)),
                                                                                                                                             flag(flags) {
@@ -579,11 +585,11 @@ namespace Chess {
         }
     }
 
-    std::pair<Board::BoardIndex, Board::BoardIndex> Move::colRowFromPosition() const {
+    std::pair<BoardIndex, BoardIndex> Move::colRowFromPosition() const {
         return Board::indexToColumnRow(fromPosition);
     }
 
-    std::pair<Board::BoardIndex, Board::BoardIndex> Move::colRowToPosition() const {
+    std::pair<BoardIndex, BoardIndex> Move::colRowToPosition() const {
         return Board::indexToColumnRow(toPosition);
     }
 
