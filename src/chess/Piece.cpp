@@ -81,6 +81,8 @@ namespace Chess {
                 return T::Queen;
             case 'K':
                 return T::King;
+            default:
+                break;
         }
         ASSERT_NOT_REACHED();
     }

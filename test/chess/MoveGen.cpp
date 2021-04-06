@@ -306,13 +306,13 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             unsigned captures = 0;
             list.forEachMoveFrom(4, 4, [&](const Move &move) {
                 REQUIRE(move.toPosition != move.fromPosition);
-                auto [col, row] = move.colRowToPosition();
-                auto piece = board.pieceAt(col, row);
+                auto [colTo, rowTo] = move.colRowToPosition();
+                auto piece = board.pieceAt(colTo, rowTo);
                 if (!piece) {
                     return;
                 }
                 captures++;
-                REQUIRE(board.pieceAt(col, row) == p);
+                REQUIRE(board.pieceAt(colTo, rowTo) == p);
             });
             REQUIRE(captures == 1);
         }

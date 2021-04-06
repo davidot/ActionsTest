@@ -30,7 +30,7 @@ namespace Chess {
 
         Move();
 
-        Move(BoardIndex fromPosition, BoardIndex toPosition, Flag flags = Flag::None);
+        Move(BoardIndex fromIndex, BoardIndex toIndex, Flag flags = Flag::None);
 
         Move(BoardIndex fromCol, BoardIndex fromRow, BoardOffset offset, Flag flags = Flag::None);
 
@@ -69,7 +69,7 @@ namespace Chess {
 
         bool makeMove(Move);
 
-        bool undoMove(Move);
+        bool undoMove();
 
         [[nodiscard]] Color colorToMove() const;
 

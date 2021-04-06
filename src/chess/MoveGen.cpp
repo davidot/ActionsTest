@@ -92,8 +92,8 @@ namespace Chess {
         // we assume it is a legal move
         Color us = board.colorToMove();
         Color other = opposite(us);
-        auto hasKnight = [&](BoardIndex col, BoardIndex row) {
-            return board.pieceAt(col, row) == Piece{Piece::Type::Knight, other};
+        auto hasKnight = [&](BoardIndex c, BoardIndex r) {
+            return board.pieceAt(c, r) == Piece{Piece::Type::Knight, other};
         };
 
         for (auto &off : knightOffsets) {

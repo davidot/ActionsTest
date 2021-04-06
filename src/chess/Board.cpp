@@ -546,9 +546,9 @@ namespace Chess {
 #undef INT
 #undef TOCASTLE
 
-    Move::Move(BoardIndex fromPosition, BoardIndex toPosition, Flag flags)
-        :  toPosition(toPosition),
-           fromPosition(fromPosition),
+    Move::Move(BoardIndex fromIndex, BoardIndex toIndex, Flag flags)
+        :  toPosition(toIndex),
+           fromPosition(fromIndex),
           flag(flags) {
     }
 
@@ -581,8 +581,9 @@ namespace Chess {
             case Flag::PromotionToQueen:
                 return Piece::Type::Queen;
             default:
-                ASSERT_NOT_REACHED();
+                break;
         }
+        ASSERT_NOT_REACHED();
     }
 
     std::pair<BoardIndex, BoardIndex> Move::colRowFromPosition() const {
