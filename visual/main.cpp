@@ -99,6 +99,8 @@ int main() {
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
+        auto list = Chess::generateAllMoves(board);
+
         if (ImGui::Begin("Hello, world!")) {
             std::string FEN = board.toFEN();
 
@@ -127,6 +129,9 @@ int main() {
             }
 
             ImGui::Text("%s", fenStatus.c_str());
+
+            ImGui::Separator();
+            ImGui::Text("%zu moves!", list.size());
         }
         ImGui::End();
 
@@ -186,7 +191,6 @@ int main() {
         }
 
         if (selectedSquare.x >= 0) {
-            auto list = Chess::generateAllMoves(board);
             sf::Vector2f position = colRowToRect(selectedSquare.x, selectedSquare.y);
             highlightSquare.setPosition(position);
 
