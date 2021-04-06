@@ -148,6 +148,9 @@ namespace Chess {
         static_assert(BoardIndex(-1) > size, "-1 is used as out of bounds");
 #endif
 
+        std::optional<Move> m_lastMove = std::nullopt;
+        std::optional<Piece> m_capturedPiece = std::nullopt;
+
         friend struct Move;
         friend class MoveList;
     };

@@ -530,6 +530,34 @@ namespace Chess {
         return pawnHomeRow(opposite(color)) + pawnDirection(color);
     }
 
+    bool Board::makeMove(Move m) {
+        ASSERT(pieceAt(m.fromPosition).has_value());
+        Piece p = pieceAt(m.fromPosition).value();
+
+        m_capturedPiece = pieceAt(m.toPosition);
+        setPiece(m.toPosition, p);
+        setPiece(m.fromPosition, std::nullopt);
+        // what do we want to return here??
+        m_lastMove = m;
+        return true;
+    }
+
+    bool Board::undoMove() {
+        if (!m_lastMove.has_value()) {
+            return false;
+        }
+
+        Move m = m_lastMove.value();
+        m_lastMove = std::nullopt;
+
+        ASSERT(pieceAt(m.toPosition).has_value());
+        Piece p = pieceAt(m.toPosition).value();
+        setPiece(m.fromPosition, p);
+        setPiece(m.toPosition, m_capturedPiece);
+
+        return true;
+    }
+
 #define INT(x) static_cast<uint8_t>(x)
 #define TOCASTLE(x) static_cast<CastlingRight>(x)
 
