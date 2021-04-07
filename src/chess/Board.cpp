@@ -532,28 +532,57 @@ namespace Chess {
 
     bool Board::makeMove(Move m) {
         ASSERT(pieceAt(m.fromPosition).has_value());
-        Piece p = pieceAt(m.fromPosition).value();
+        ASSERT(pieceAt(m.fromPosition)->color() == m_nextTurnColor);
 
-        m_capturedPiece = pieceAt(m.toPosition);
+        Piece p = pieceAt(m.fromPosition).value();
+        MoveData data;
+
+        data.capturedPiece = pieceAt(m.toPosition);
+        data.previousEnPassant = m_enPassant;
+
         setPiece(m.toPosition, p);
         setPiece(m.fromPosition, std::nullopt);
         // what do we want to return here??
-        m_lastMove = m;
+        data.performedMove = m;
+
+        if (m.isPromotion()) {
+            setPiece(m.toPosition, Piece{m.promotedType(), m_nextTurnColor});
+        }
+
+        if (m.flag == Move::Flag::DoublePushPawn) {
+            auto [colFrom, rowFrom] = indexToColumnRow(m.fromPosition);
+            m_enPassant = columnRowToIndex(colFrom, rowFrom + pawnDirection(m_nextTurnColor));
+        }
+
+        m_nextTurnColor = opposite(m_nextTurnColor);
+
+        m_history.push_back(data);
+
         return true;
     }
 
     bool Board::undoMove() {
-        if (!m_lastMove.has_value()) {
+        if (m_history.empty()) {
             return false;
         }
 
-        Move m = m_lastMove.value();
-        m_lastMove = std::nullopt;
+        m_nextTurnColor = opposite(m_nextTurnColor);
+
+        MoveData data = m_history.back();
+        m_history.pop_back();
+
+        Move& m = data.performedMove;
 
         ASSERT(pieceAt(m.toPosition).has_value());
         Piece p = pieceAt(m.toPosition).value();
         setPiece(m.fromPosition, p);
-        setPiece(m.toPosition, m_capturedPiece);
+        setPiece(m.toPosition, data.capturedPiece);
+
+        if (m.isPromotion()) {
+            setPiece(m.fromPosition, Piece{Piece::Type::Pawn, m_nextTurnColor});
+        }
+
+        m_enPassant = data.previousEnPassant;
 
         return true;
     }

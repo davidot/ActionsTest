@@ -4,8 +4,8 @@
 #include <optional>
 #include <string_view>
 #include <variant>
-#include <vector>
 #include <array>
+#include <deque>
 #include "Forward.h"
 
 namespace Chess {
@@ -148,8 +148,13 @@ namespace Chess {
         static_assert(BoardIndex(-1) > size, "-1 is used as out of bounds");
 #endif
 
-        std::optional<Move> m_lastMove = std::nullopt;
-        std::optional<Piece> m_capturedPiece = std::nullopt;
+        struct MoveData {
+            Move performedMove;
+            std::optional<Piece> capturedPiece;
+            std::optional<BoardIndex> previousEnPassant;
+        };
+
+        std::deque<MoveData> m_history;
 
         friend struct Move;
         friend class MoveList;

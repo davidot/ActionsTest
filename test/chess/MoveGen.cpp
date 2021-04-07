@@ -714,12 +714,90 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 #undef IS_BLOCKED
 }
 
+Chess::Board generateBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook) {
+    using namespace Chess;
+    const uint8_t homeRow = Board::homeRow(toMove);
+    const uint8_t queenSideRook = Board::queenSideRookCol;
+    const uint8_t kingSideRook = Board::kingSideRookCol;
+    const uint8_t kingCol = Board::kingCol;
+
+    Board board = Board::emptyBoard();
+    if (board.colorToMove() != toMove) {
+        board.makeNullMove();
+    }
+
+    // setup en passant square via FEN (we do not want a method to set this)
+    board.setPiece(kingCol, homeRow, Piece{Piece::Type::King, toMove});
+
+    std::string castles;
+
+    if (kingSide || withOppositeRook) {
+        board.setPiece(kingSideRook, homeRow, Piece{Piece::Type::Rook, toMove});
+        if (kingSide) {
+            castles += Piece{Piece::Type::King, toMove}.toFEN();
+        }
+    }
+
+    if (queenSide || withOppositeRook) {
+        board.setPiece(queenSideRook, homeRow, Piece{Piece::Type::Rook, toMove});
+        if (queenSide) {
+            castles += Piece{Piece::Type::Queen, toMove}.toFEN();
+        }
+    }
+
+    std::string baseFEN = board.toFEN();
+    auto loc = baseFEN.rfind("- - ");
+    REQUIRE(loc != std::string::npos);
+    baseFEN.replace(loc, 1, castles);
+    auto eBoard = Board::fromFEN(baseFEN);
+    if (!eBoard) {
+        INFO("Error - " << eBoard.error());
+        REQUIRE(eBoard);
+    }
+    board = eBoard.extract();
+    REQUIRE((board.castlingRights() & CastlingRight::AnyCastling) != CastlingRight::NoCastling);
+    if (toMove == Color::White) {
+        REQUIRE((board.castlingRights() & CastlingRight::WhiteCastling) != CastlingRight::NoCastling);
+    } else {
+        REQUIRE((board.castlingRights() & CastlingRight::BlackCastling) != CastlingRight::NoCastling);
+    }
+    return board;
+}
+
+
+Chess::Board getBoard(Chess::Color c, bool kingSide, bool queenSide, bool withOpposite) {
+    using namespace Chess;
+    struct BoardCache {
+        Color col;
+        bool king;
+        bool queen;
+        bool opposite;
+        Board board;
+    };
+    static std::vector<BoardCache> boards;
+    if (boards.empty()) {
+        boards.reserve(10);
+    }
+
+    for (const BoardCache& cache : boards) {
+        if (cache.col == c
+            && cache.king == kingSide
+            && cache.queen == queenSide
+            && cache.opposite == withOpposite) {
+            return cache.board;
+        }
+    }
+
+    boards.push_back(BoardCache{c, kingSide, queenSide, withOpposite,
+                                generateBoard(c, kingSide, queenSide, withOpposite)});
+
+    return boards.back().board;
+}
+
 TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
     using namespace Chess;
 
-    Board board = Board::emptyBoard();
-    CHECK_BOTH_COLORS()
-    Color toMove = board.colorToMove();
+    Color toMove = TRUE_FALSE() ? Color::White : Color::Black;
     Color other = opposite(toMove);
 
     const uint8_t homeRow = Board::homeRow(toMove);
@@ -734,47 +812,11 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
 #ifdef EXTENDED_TESTS
             GENERATE_COPY(filter([=](bool b) { return b || (!queenSide || !kingSide); }, values({0, 1})));
 #else
-            false;
+    false;
 #endif
 
     CAPTURE(toMove, kingSide, queenSide, withOppositeRook);
-
-    {
-        // setup en passant square via FEN (we do not want a method to set this)
-        board.setPiece(kingCol, homeRow, Piece{Piece::Type::King, toMove});
-
-        std::string castles;
-
-        if (kingSide || withOppositeRook) {
-            board.setPiece(kingSideRook, homeRow, Piece{Piece::Type::Rook, toMove});
-            if (kingSide) {
-                castles += Piece{Piece::Type::King, toMove}.toFEN();
-            }
-        }
-
-        if (queenSide || withOppositeRook) {
-            board.setPiece(queenSideRook, homeRow, Piece{Piece::Type::Rook, toMove});
-            if (queenSide) {
-                castles += Piece{Piece::Type::Queen, toMove}.toFEN();
-            }
-        }
-
-        std::string baseFEN = board.toFEN();
-        auto loc = baseFEN.rfind("- - ");
-        baseFEN.replace(loc, 1, castles);
-        auto eBoard = Board::fromFEN(baseFEN);
-        if (!eBoard) {
-            INFO("Error - " << eBoard.error());
-            REQUIRE(eBoard);
-        }
-        board = eBoard.extract();
-        REQUIRE((board.castlingRights() & CastlingRight::AnyCastling) != CastlingRight::NoCastling);
-        if (toMove == Color::White) {
-            REQUIRE((board.castlingRights() & CastlingRight::WhiteCastling) != CastlingRight::NoCastling);
-        } else {
-            REQUIRE((board.castlingRights() & CastlingRight::BlackCastling) != CastlingRight::NoCastling);
-        }
-    }
+    Board board = getBoard(toMove, kingSide, queenSide, withOppositeRook);
 
     SECTION("Can castle") {
         MoveList list = generateAllMoves(board);
@@ -918,10 +960,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
 
     Piece king{Piece::Type::King, toMove};
 
-    // TODO: oh oh gonna be hard!
-
     SECTION("In check") {
-        // TODO: oh oh gonna be hard!
         SECTION("Move the king away from being attacked") {
             uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
             uint8_t row = GENERATE(TEST_SOME(range(0, 6)));
