@@ -2,6 +2,7 @@
 
 #include "Board.h"
 #include <algorithm>
+#include <vector>
 
 namespace Chess {
 
