@@ -3,9 +3,9 @@
 #include <chess/MoveGen.h>
 #include <set>
 
-TEST_CASE("Basic move checks", "[chess][move]") {
-    using namespace Chess;
+using namespace Chess;
 
+TEST_CASE("Basic move checks", "[chess][move]") {
     auto isPromo = [](Move::Flag flag) {
         Move mv = Move{0, 0, flag};
         return mv.isPromotion();
@@ -56,8 +56,6 @@ TEST_CASE("Basic move checks", "[chess][move]") {
     if (TRUE_FALSE()) board.makeNullMove();
 
 TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
-    using namespace Chess;
-
     SECTION("Empty board has no moves") {
         Board board = Board::emptyBoard();
         MoveList list = generateAllMoves(board);
@@ -238,7 +236,7 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
             board.setPiece(1, 1, p);
 
             MoveList list = generateAllMoves(board);
-            list.forEachMoveFrom(0, 0, [&](const Move &move) {
+            list.forEachMoveFrom(0, 0, [&](const Move&) {
                 REQUIRE(false);
             });
         }
@@ -404,8 +402,6 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
 }
 
 TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
-    using namespace Chess;
-
     Board board = Board::emptyBoard();
     CHECK_BOTH_COLORS()
     Color toMove = board.colorToMove();
@@ -522,7 +518,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         board.setPiece(col, startRow + offset, moveBlocker);
 
         MoveList list = generateAllMoves(board);
-        list.forEachMoveFrom(col, startRow, [&](const Move &move) {
+        list.forEachMoveFrom(col, startRow, [&](const Move&) {
             REQUIRE(false);
         });
     }
@@ -602,22 +598,8 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
         uint8_t col = GENERATE(TEST_SOME(range(0u, 8u)));
         CAPTURE(col);
-        {
-            // setup en passant square via FEN (we do not want a method to set this)
-            board.setPiece(col, rowAfterDoublePushOther, Piece{Piece::Type::Pawn, other});
-            std::string baseFEN = board.toFEN();
-            REQUIRE(baseFEN.ends_with(" - 0 1"));
-            auto loc = baseFEN.rfind("- ");
-            REQUIRE(loc != baseFEN.size());
-            REQUIRE(loc != std::string::npos);
-            baseFEN.replace(loc, 1, Board::columnRowToSAN(col, enPassantRowOther));
-            REQUIRE_FALSE(baseFEN.ends_with(" - 0 1"));
-            auto eBoard = Board::fromFEN(baseFEN);
-            REQUIRE(eBoard);
-            board = eBoard.extract();
-            REQUIRE(board.colorToMove() == toMove);
-            REQUIRE(board.enPassantColRow() == std::make_pair(col, enPassantRowOther));
-        }
+
+        board = TestUtil::createEnPassantBoard(toMove, col);
         int8_t pawnOffset = GENERATE_COPY(filter([col](int8_t i) { return col + i >= 0 && col + i < 8; }, values({1, -1})));
         uint8_t myCol = col + pawnOffset;
         CAPTURE(myCol);
@@ -666,7 +648,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
-            list.forEachMoveFrom(myCol, enPassantRowOther, [&](const Move &move) {
+            list.forEachMoveFrom(myCol, enPassantRowOther, [&](const Move&) {
                 REQUIRE(false);
             });
             REQUIRE(calls == 0);
@@ -715,59 +697,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 #undef IS_BLOCKED
 }
 
-Chess::Board generateBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook) {
-    using namespace Chess;
-    const uint8_t homeRow = Board::homeRow(toMove);
-    const uint8_t queenSideRook = Board::queenSideRookCol;
-    const uint8_t kingSideRook = Board::kingSideRookCol;
-    const uint8_t kingCol = Board::kingCol;
-
-    Board board = Board::emptyBoard();
-    if (board.colorToMove() != toMove) {
-        board.makeNullMove();
-    }
-
-    // setup en passant square via FEN (we do not want a method to set this)
-    board.setPiece(kingCol, homeRow, Piece{Piece::Type::King, toMove});
-
-    std::string castles;
-
-    if (kingSide || withOppositeRook) {
-        board.setPiece(kingSideRook, homeRow, Piece{Piece::Type::Rook, toMove});
-        if (kingSide) {
-            castles += Piece{Piece::Type::King, toMove}.toFEN();
-        }
-    }
-
-    if (queenSide || withOppositeRook) {
-        board.setPiece(queenSideRook, homeRow, Piece{Piece::Type::Rook, toMove});
-        if (queenSide) {
-            castles += Piece{Piece::Type::Queen, toMove}.toFEN();
-        }
-    }
-
-    std::string baseFEN = board.toFEN();
-    auto loc = baseFEN.rfind("- - ");
-    REQUIRE(loc != std::string::npos);
-    baseFEN.replace(loc, 1, castles);
-    auto eBoard = Board::fromFEN(baseFEN);
-    if (!eBoard) {
-        INFO("Error - " << eBoard.error());
-        REQUIRE(eBoard);
-    }
-    board = eBoard.extract();
-    REQUIRE((board.castlingRights() & CastlingRight::AnyCastling) != CastlingRight::NoCastling);
-    if (toMove == Color::White) {
-        REQUIRE((board.castlingRights() & CastlingRight::WhiteCastling) != CastlingRight::NoCastling);
-    } else {
-        REQUIRE((board.castlingRights() & CastlingRight::BlackCastling) != CastlingRight::NoCastling);
-    }
-    return board;
-}
-
-
-Chess::Board getBoard(Chess::Color c, bool kingSide, bool queenSide, bool withOpposite) {
-    using namespace Chess;
+Board getBoard(Color c, bool kingSide, bool queenSide, bool withOpposite) {
     struct BoardCache {
         Color col;
         bool king;
@@ -790,13 +720,12 @@ Chess::Board getBoard(Chess::Color c, bool kingSide, bool queenSide, bool withOp
     }
 
     boards.push_back(BoardCache{c, kingSide, queenSide, withOpposite,
-                                generateBoard(c, kingSide, queenSide, withOpposite)});
+                                TestUtil::generateCastlingBoard(c, kingSide, queenSide, withOpposite)});
 
     return boards.back().board;
 }
 
 TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
-    using namespace Chess;
 
     Color toMove = TRUE_FALSE() ? Color::White : Color::Black;
     Color other = opposite(toMove);
@@ -950,9 +879,6 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
 }
 
 TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
-    using namespace Chess;
-
-
     Board board = Board::emptyBoard();
     CHECK_BOTH_COLORS()
     Color toMove = board.colorToMove();
@@ -1151,7 +1077,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
                 calls++;
             });
             unsigned otherCalls = 0;
-            list.forEachMoveFrom(7, 4, [&](const Move &move) {
+            list.forEachMoveFrom(7, 4, [&](const Move&) {
                 otherCalls++;
             });
             CHECK(calls == 2);
@@ -1200,10 +1126,10 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
                 calls++;
             });
             REQUIRE(calls == 2);
-            list.forEachMoveFrom(0, 1, [&](const Move &move) {
+            list.forEachMoveFrom(0, 1, [&](const Move&) {
                 REQUIRE(false);
             });
-            list.forEachMoveFrom(7, 4, [&](const Move &move) {
+            list.forEachMoveFrom(7, 4, [&](const Move&) {
                 REQUIRE(false);
             });
             REQUIRE(list.size() == 2);
@@ -1217,7 +1143,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
-            list.forEachMoveFrom(0, 1, [&](const Move &move) {
+            list.forEachMoveFrom(0, 1, [&](const Move&) {
                 REQUIRE(false);
             });
             REQUIRE(list.size() > 0);
@@ -1233,7 +1159,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
-            list.forEachMoveFrom(4, 0, [&](const Move &move) {
+            list.forEachMoveFrom(4, 0, [&](const Move&) {
                 REQUIRE(false);
             });
             REQUIRE(list.size() > 0);
@@ -1259,9 +1185,6 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
 }
 
 TEST_CASE("Stale/check mate", "[chess][rules][movegen]") {
-    using namespace Chess;
-
-
     Board board = Board::emptyBoard();
     CHECK_BOTH_COLORS()
     Color toMove = board.colorToMove();
@@ -1325,7 +1248,6 @@ TEST_CASE("Stale/check mate", "[chess][rules][movegen]") {
 }
 
 TEST_CASE("Specific examples", "[chess][movegen]") {
-    using namespace Chess;
     SECTION("Move count") {
 
 #define HAS_N_MOVES(fen, n)                      \

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <catch2/catch.hpp>
-#include <deque>
+#include <chess/Forward.h>
+#include <chess/Piece.h>
+#include <vector>
 #ifndef EXTENDED_TESTS
 #define TEST_SOME(x) sample(2, x)
 #else
@@ -66,3 +68,9 @@ namespace Catch::Generators {
     }
 
 }// namespace Catch::Generators
+
+namespace TestUtil {
+    Chess::Board generateCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook);
+
+    Chess::Board createEnPassantBoard(Chess::Color c, Chess::BoardIndex col);
+}
