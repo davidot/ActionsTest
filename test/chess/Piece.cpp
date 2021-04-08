@@ -1,12 +1,13 @@
 #include <catch2/catch.hpp>
 #include <chess/Piece.h>
+#include "TestUtil.h"
 
 TEST_CASE("Pieces", "[chess][base]") {
 
     using namespace Chess;
     using Pt = Piece::Type;
 
-#define ALL_TYPES Pt::Pawn, Pt::Rook, Pt::Knight, Pt::Bishop, Pt::Queen, Pt::King
+#define ALL_TYPES TEST_SOME(values({Pt::Pawn, Pt::Rook, Pt::Knight, Pt::Bishop, Pt::Queen, Pt::King}))
 #define ALL_COLORS Color::White, Color::Black
 
     SECTION("Can create all piece and read/write them from FEN") {
@@ -39,89 +40,14 @@ TEST_CASE("Pieces", "[chess][base]") {
         if (piece1 == piece2) {
             REQUIRE(piece1.toInt() == piece2.toInt());
             REQUIRE(piece1.toFEN() == piece2.toFEN());
+            REQUIRE(piece1.toUTF8Char() == piece2.toUTF8Char());
         } else {
             REQUIRE(piece1 != piece2);
             CAPTURE(piece1, piece2);
 
             REQUIRE(piece1.toInt() != piece2.toInt());
             REQUIRE(piece1.toFEN() != piece2.toFEN());
-        }
-    }
-
-    SECTION("Pieces have correct properties") {
-        auto col = GENERATE(ALL_COLORS);
-
-
-        SECTION("Pawn is not special at all") {
-            Piece piece(Pt::Pawn, col);
-            CAPTURE(piece);
-
-            REQUIRE_FALSE(piece.canKnightJump());
-            REQUIRE_FALSE(piece.canMoveDiagonally());
-            REQUIRE_FALSE(piece.canMoveAxisAligned());
-            REQUIRE_FALSE(piece.canMoveUnlimited());
-
-            REQUIRE(piece.isPawn());
-        }
-
-        SECTION("King can move all around but not unlimited") {
-            Piece piece(Pt::King, col);
-            CAPTURE(piece);
-
-            REQUIRE_FALSE(piece.canKnightJump());
-            REQUIRE_FALSE(piece.isPawn());
-            REQUIRE_FALSE(piece.canMoveUnlimited());
-
-            REQUIRE(piece.canMoveAxisAligned());
-            REQUIRE(piece.canMoveDiagonally());
-        }
-
-        SECTION("Knights can only move in jump") {
-            Piece piece(Pt::Knight, col);
-            CAPTURE(piece);
-
-            REQUIRE_FALSE(piece.isPawn());
-            REQUIRE_FALSE(piece.canMoveUnlimited());
-            REQUIRE_FALSE(piece.canMoveAxisAligned());
-            REQUIRE_FALSE(piece.canMoveDiagonally());
-
-            REQUIRE(piece.canKnightJump());
-        }
-
-        SECTION("Rooks can move axis aligned and unlimited") {
-            Piece piece(Pt::Rook, col);
-            CAPTURE(piece);
-
-            REQUIRE_FALSE(piece.canKnightJump());
-            REQUIRE_FALSE(piece.isPawn());
-            REQUIRE_FALSE(piece.canMoveDiagonally());
-
-            REQUIRE(piece.canMoveUnlimited());
-            REQUIRE(piece.canMoveAxisAligned());
-        }
-
-        SECTION("Bishop can move diagonally and unlimited") {
-            Piece piece(Pt::Bishop, col);
-            CAPTURE(piece);
-
-            REQUIRE_FALSE(piece.canKnightJump());
-            REQUIRE_FALSE(piece.isPawn());
-            REQUIRE_FALSE(piece.canMoveAxisAligned());
-
-            REQUIRE(piece.canMoveDiagonally());
-            REQUIRE(piece.canMoveUnlimited());
-        }
-
-        SECTION("Queen can move diagonally, axis aligned and unlimited") {
-            Piece piece(Pt::Queen, col);
-            CAPTURE(piece);
-
-            REQUIRE_FALSE(piece.canKnightJump());
-            REQUIRE_FALSE(piece.isPawn());
-
-            REQUIRE(piece.canMoveAxisAligned());
-            REQUIRE(piece.canMoveDiagonally());
-            REQUIRE(piece.canMoveUnlimited());
+            REQUIRE(piece1.toUTF8Char() != piece2.toUTF8Char());
         }
     }
 

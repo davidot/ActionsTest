@@ -25,12 +25,12 @@ namespace Chess {
 #undef INTTYPE
 
         enum class Type : IntType {
-            Pawn = 0b0000,
-            King = 0b0011,
-            Knight = 0b1000,
-            Bishop = 0b0101,
-            Rook = 0b0110,
-            Queen = 0b0111,
+            Pawn = 0b001,
+            King = 0b010,
+            Bishop = 0b011,
+            Rook = 0b100,
+            Queen = 0b101,
+            Knight = 0b110,
         };
 
 
@@ -40,11 +40,7 @@ namespace Chess {
 
         [[nodiscard]] char toFEN() const noexcept;
 
-        [[nodiscard]] bool isPawn() const;
-        [[nodiscard]] bool canKnightJump() const;
-        [[nodiscard]] bool canMoveDiagonally() const;
-        [[nodiscard]] bool canMoveAxisAligned() const;
-        [[nodiscard]] bool canMoveUnlimited() const;
+        [[nodiscard]] std::string toUTF8Char() const;
 
         static std::optional<Piece> fromFEN(char c);
 

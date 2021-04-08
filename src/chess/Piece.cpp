@@ -166,31 +166,6 @@ namespace Chess {
         return os;
     }
 
-    bool Piece::isPawn() const {
-        constexpr const auto pawnMask = ENUM_TO_INT(Piece::Type::Pawn);
-        return (m_val & typeMask) == pawnMask;
-    }
-
-    bool Piece::canKnightJump() const {
-        constexpr const auto knightMask = ENUM_TO_INT(Piece::Type::Knight);
-        return (m_val & typeMask) == knightMask;
-    }
-
-    bool Piece::canMoveDiagonally() const {
-        constexpr const IntType diagMask = ENUM_TO_INT(Piece::Type::Bishop) & ENUM_TO_INT(Piece::Type::Queen) & ENUM_TO_INT(Piece::Type::King);
-        return (m_val & typeMask & diagMask) != 0;
-    }
-
-    bool Piece::canMoveAxisAligned() const {
-        constexpr const IntType axisMask = ENUM_TO_INT(Piece::Type::Rook) & ENUM_TO_INT(Piece::Type::Queen) & ENUM_TO_INT(Piece::Type::King);
-        return (m_val & typeMask & axisMask) != 0;
-    }
-
-    bool Piece::canMoveUnlimited() const {
-        constexpr const IntType unlimMask = ENUM_TO_INT(Piece::Type::Bishop) & ENUM_TO_INT(Piece::Type::Rook) & ENUM_TO_INT(Piece::Type::Queen);
-        return (m_val & typeMask & unlimMask) != 0;
-    }
-
     bool Piece::isPiece(Piece::IntType val) {
         return ((val & whiteMask) ^ ((val & blackMask) >> 1)) != 0;
     }
@@ -208,6 +183,34 @@ namespace Chess {
                 return Color::Black;
         }
         ASSERT_NOT_REACHED();
+    }
+
+
+
+    std::string Piece::toUTF8Char() const {
+        static std::string mappings[] = {
+                "", // empty
+                "♟",
+                "♚",
+                "♞",
+                "♝",
+                "♜",
+                "♛",
+                "", // unused
+                "", // empty
+                "♙",
+                "♔",
+                "♘",
+                "♗",
+                "♖",
+                "♕",
+                "", // unused
+        };
+
+        int i = (color() == Color::Black ? 0 : 8) + ENUM_TO_INT(type());
+        ASSERT(i >= 0);
+        ASSERT(i < std::size(mappings));
+        return mappings[i];
     }
 
 }
