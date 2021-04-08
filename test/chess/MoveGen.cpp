@@ -413,9 +413,9 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 
     CAPTURE(toMove);
 
-    int8_t offset = toMove == Color::White ? 1 : -1;
-    int8_t startRow = toMove == Color::White ? 1 : 6;
-    int8_t endRow = toMove == Color::Black ? 1 : 6;// reverse of start
+    int8_t offset = Board::pawnDirection(toMove);
+    int8_t startRow = Board::pawnHomeRow(toMove);
+    int8_t endRow = Board::pawnHomeRow(opposite(toMove));// reverse of start
 
     SECTION("Pawns cannot capture anywhere (except direct diagonals)") {
         Piece capturable{GENERATE(CAPTURABLE_TYPES), other};
@@ -609,6 +609,7 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
             REQUIRE(baseFEN.ends_with(" - 0 1"));
             auto loc = baseFEN.rfind("- ");
             REQUIRE(loc != baseFEN.size());
+            REQUIRE(loc != std::string::npos);
             baseFEN.replace(loc, 1, Board::columnRowToSAN(col, enPassantRowOther));
             REQUIRE_FALSE(baseFEN.ends_with(" - 0 1"));
             auto eBoard = Board::fromFEN(baseFEN);
@@ -1373,6 +1374,22 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
 
         SECTION("Single move no check") {
             HAS_N_MOVES("k5r1/3p4/8/2pP4/2P1p3/4P3/r7/7K w - - 0 1", 1);
+        }
+
+        SECTION("More positions from chessprogramming (really for perft)") {
+            // from: https://www.chessprogramming.org/Perft_Results
+            HAS_N_MOVES("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1", 48);
+
+            HAS_N_MOVES("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1", 14);
+
+            HAS_N_MOVES("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 6);
+            //mirrored
+            HAS_N_MOVES("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", 6);
+
+            HAS_N_MOVES("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 44);
+
+            // says depth 0 is 1 move??
+            HAS_N_MOVES("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 46);
         }
     }
 
