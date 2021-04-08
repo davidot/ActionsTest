@@ -71,7 +71,7 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
                 {4, 4},
         };
 
-        int steps = GENERATE_COPY(range(2lu, moves.size()));
+        int steps = GENERATE_COPY(range(2, (int)moves.size()));
         CAPTURE(steps);
 
         uint8_t currCol = startCol;
