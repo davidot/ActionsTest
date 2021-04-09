@@ -68,4 +68,32 @@ TEST_CASE("Splitting strings", "[util]") {
         CHECK(parts[1] == "this is a test");
     }
 
+    SECTION("Empty string gives single part") {
+        std::string str = "";
+        std::string separator = " ";
+        auto parts = split(str, separator);
+        REQUIRE(parts.size() == 1);
+        CHECK(parts[0] == "");
+    }
+
+    SECTION("Empty string gives single part even with empty separator") {
+        std::string str = "";
+        std::string separator = "";
+        auto parts = split(str, separator);
+        REQUIRE(parts.size() == 1);
+        CHECK(parts[0] == "");
+    }
+
+    SECTION("Empty string gives single part even with empty separator") {
+        std::string str = "abcde";
+        std::string separator = "";
+        auto parts = split(str, separator);
+        REQUIRE(parts.size() == 5);
+        CHECK(parts[0] == "a");
+        CHECK(parts[1] == "b");
+        CHECK(parts[2] == "c");
+        CHECK(parts[3] == "d");
+        CHECK(parts[4] == "e");
+    }
+
 }
