@@ -3,13 +3,6 @@
 
 namespace Chess {
 
-    Color opposite(Color c) {
-        if (c == Color::White) {
-            return Color::Black;
-        }
-        return Color::White;
-    }
-
 #define ENUM_TO_INT(val) static_cast<Piece::IntType>(val)
     constexpr Piece::IntType typeMask = 0b1111;
     constexpr Piece::IntType whiteMask = ENUM_TO_INT(Color::White);

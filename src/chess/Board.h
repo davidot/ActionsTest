@@ -104,11 +104,21 @@ namespace Chess {
         std::pair<BoardIndex, BoardIndex> kingSquare(Color color) const;
 
         // technically board specific chess constants
-        static BoardIndex homeRow(Color);
+        constexpr static BoardIndex homeRow(Color color) {
+            return color == Color::White ? 0 : 7;
+        }
 
-        static BoardOffset pawnDirection(Color);
-        static BoardIndex pawnHomeRow(Color);
-        static BoardIndex pawnPromotionRow(Color);
+        constexpr static BoardOffset pawnDirection(Color color)  {
+            return color == Color::White ? 1 : -1;
+        }
+
+        constexpr static BoardIndex pawnHomeRow(Color color)  {
+            return homeRow(color) + pawnDirection(color);
+        }
+
+        constexpr static BoardIndex pawnPromotionRow(Color color) {
+            return pawnHomeRow(opposite(color)) + pawnDirection(color);
+        }
 
         constexpr static BoardIndex kingCol = 4;
         constexpr static BoardIndex queenSideRookCol = 0;

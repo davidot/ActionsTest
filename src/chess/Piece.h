@@ -15,7 +15,12 @@ namespace Chess {
 
     std::ostream& operator<<(std::ostream& os, const Color& piece);
 
-    Color opposite(Color c);
+    constexpr Color opposite(Color c) {
+        if (c == Color::White) {
+            return Color::Black;
+        }
+        return Color::White;
+    }
 
     class Piece {
     public:

@@ -514,22 +514,6 @@ namespace Chess {
             && m_pieces == rhs.m_pieces;
     }
 
-    BoardIndex Board::homeRow(Color color) {
-        return color == Color::White ? 0 : 7;
-    }
-
-    BoardOffset Board::pawnDirection(Color color) {
-        return color == Color::White ? 1 : -1;
-    }
-
-    BoardIndex Board::pawnHomeRow(Color color) {
-        return homeRow(color) + pawnDirection(color);
-    }
-
-    BoardIndex Board::pawnPromotionRow(Color color) {
-        return pawnHomeRow(opposite(color)) + pawnDirection(color);
-    }
-
     bool Board::makeMove(Move m) {
         ASSERT(pieceAt(m.fromPosition).has_value());
         ASSERT(pieceAt(m.fromPosition)->color() == m_nextTurnColor);
