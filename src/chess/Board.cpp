@@ -483,10 +483,16 @@ namespace Chess {
 
     void Board::makeNullMove() {
         m_nextTurnColor = opposite(m_nextTurnColor);
+        ++m_halfMovesSinceCaptureOrPawn;
+        ++m_halfMovesMade;
     }
 
     void Board::undoNullMove() {
         m_nextTurnColor = opposite(m_nextTurnColor);
+        ASSERT(m_halfMovesMade > 0);
+        ASSERT(m_halfMovesSinceCaptureOrPawn > 0);
+        --m_halfMovesSinceCaptureOrPawn;
+        --m_halfMovesMade;
     }
 
     CastlingRight Board::castlingRights() const {
@@ -527,32 +533,102 @@ namespace Chess {
     }
 
     bool Board::makeMove(Move m) {
-        ASSERT(pieceAt(m.fromPosition).has_value());
-        ASSERT(pieceAt(m.fromPosition)->color() == m_nextTurnColor);
+        ASSERT(m.fromPosition != m.toPosition);
+        ASSERT(pieceAt(m.fromPosition).has_value()
+               && pieceAt(m.fromPosition)->color() == m_nextTurnColor);
 
         Piece p = pieceAt(m.fromPosition).value();
-        MoveData data;
+        MoveData data{};
 
-        data.capturedPiece = pieceAt(m.toPosition);
         data.previousEnPassant = m_enPassant;
-
-        setPiece(m.toPosition, p);
-        setPiece(m.fromPosition, std::nullopt);
-        // what do we want to return here??
+        data.previousCastlingRights = m_castlingRights;
         data.performedMove = m;
+
+
+        auto [colFrom, rowFrom] = indexToColumnRow(m.fromPosition);
+        auto [colTo, rowTo] = indexToColumnRow(m.toPosition);
+
+
+        if (m.flag == Move::Flag::Castling) {
+            ASSERT(p.type() == Piece::Type::King);
+            ASSERT(rowFrom == rowTo);
+            ASSERT(pieceAt(m.toPosition) == Piece(Piece::Type::Rook, m_nextTurnColor));
+            // again we assume this is a legal move so just perform it
+            if (colFrom < colTo) {
+                // king side
+                ASSERT(colTo == Board::kingSideRookCol);
+                setPiece(colFrom, rowFrom, std::nullopt);
+                setPiece(colFrom + 2, rowFrom, Piece{Piece::Type::King, m_nextTurnColor});
+                setPiece(colTo, rowFrom, std::nullopt);
+                setPiece(colFrom + 1, rowFrom, Piece{Piece::Type::Rook, m_nextTurnColor});
+            } else {
+                ASSERT(colTo == Board::queenSideRookCol);
+                setPiece(colFrom, rowFrom, std::nullopt);
+                setPiece(colFrom - 2, rowFrom, Piece{Piece::Type::King, m_nextTurnColor});
+                setPiece(colTo, rowFrom, std::nullopt);
+                setPiece(colFrom - 1, rowFrom, Piece{Piece::Type::Rook, m_nextTurnColor});
+            }
+        } else {
+            data.capturedPiece = pieceAt(m.toPosition);
+            ASSERT(!data.capturedPiece.has_value()
+                   || data.capturedPiece->color() != m_nextTurnColor);
+
+            setPiece(m.toPosition, p);
+            setPiece(m.fromPosition, std::nullopt);
+        }
+
 
         if (m.isPromotion()) {
             setPiece(m.toPosition, Piece{m.promotedType(), m_nextTurnColor});
         }
 
-        if (m.flag == Move::Flag::DoublePushPawn) {
-            auto [colFrom, rowFrom] = indexToColumnRow(m.fromPosition);
-            m_enPassant = columnRowToIndex(colFrom, rowFrom + pawnDirection(m_nextTurnColor));
+        if (m.flag == Move::Flag::EnPassant) {
+            ASSERT(pieceAt(m.toPosition)->type() == Piece::Type::Pawn);
+
+            ASSERT(pieceAt(colTo, rowFrom).has_value()
+                   && pieceAt(colTo, rowFrom)->type() == Piece::Type::Pawn
+                   && pieceAt(colTo, rowFrom)->color() == opposite(m_nextTurnColor));
+
+            setPiece(columnRowToIndex(colTo, rowFrom), std::nullopt);
         }
 
-        m_nextTurnColor = opposite(m_nextTurnColor);
+        if (m.flag == Move::Flag::DoublePushPawn) {
+            m_enPassant = columnRowToIndex(colFrom, rowFrom + pawnDirection(m_nextTurnColor));
+        } else {
+            m_enPassant = std::nullopt;
+        }
 
+        auto removeCastlingRights = [&](BoardIndex col, BoardIndex row) {
+            CastlingRight base;
+            if (row == homeRow(Color::White)) {
+                base = CastlingRight::WhiteCastling;
+            } else if (row == homeRow(Color::Black)) {
+                base = CastlingRight::BlackCastling;
+            } else {
+                return;
+            }
+            switch (col) {
+                case kingCol:
+                    m_castlingRights &= ~base;
+                    break;
+                case kingSideRookCol:
+                    m_castlingRights &= ~(base & CastlingRight::KingSideCastling);
+                    break;
+                case queenSideRookCol:
+                    m_castlingRights &= ~(base & CastlingRight::QueenSideCastling);
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        removeCastlingRights(colFrom, rowFrom);
+        removeCastlingRights(colTo, rowTo);
+
+        m_nextTurnColor = opposite(m_nextTurnColor);
         m_history.push_back(data);
+        ++m_halfMovesMade;
+        ++m_halfMovesSinceCaptureOrPawn;
 
         return true;
     }
@@ -569,16 +645,54 @@ namespace Chess {
 
         Move& m = data.performedMove;
 
-        ASSERT(pieceAt(m.toPosition).has_value());
-        Piece p = pieceAt(m.toPosition).value();
-        setPiece(m.fromPosition, p);
-        setPiece(m.toPosition, data.capturedPiece);
+        if (m.flag == Move::Flag::Castling) {
+            auto [colFrom, rowFrom] = indexToColumnRow(m.fromPosition);
+            auto [colTo, rowTo] = indexToColumnRow(m.toPosition);
+            if (colFrom < colTo) {
+                // king side
+                ASSERT(colTo == Board::kingSideRookCol);
+                ASSERT(pieceAt(colFrom + 2, rowFrom) == Piece(Piece::Type::King, m_nextTurnColor));
+                ASSERT(pieceAt(colFrom + 1, rowFrom) == Piece(Piece::Type::Rook, m_nextTurnColor));
+
+                setPiece(colFrom, rowFrom, Piece{Piece::Type::King, m_nextTurnColor});
+                setPiece(colFrom + 2, rowFrom, std::nullopt);
+                setPiece(colTo, rowFrom, Piece{Piece::Type::Rook, m_nextTurnColor});
+                setPiece(colFrom + 1, rowFrom, std::nullopt);
+            } else {
+                ASSERT(colTo == Board::queenSideRookCol);
+                ASSERT(pieceAt(colFrom - 2, rowFrom) == Piece(Piece::Type::King, m_nextTurnColor));
+                ASSERT(pieceAt(colFrom - 1, rowFrom) == Piece(Piece::Type::Rook, m_nextTurnColor));
+
+                setPiece(colFrom, rowFrom, Piece{Piece::Type::King, m_nextTurnColor});
+                setPiece(colFrom - 2, rowFrom, std::nullopt);
+                setPiece(colTo, rowFrom, Piece{Piece::Type::Rook, m_nextTurnColor});
+                setPiece(colFrom - 1, rowFrom, std::nullopt);
+            }
+        } else {
+            ASSERT(pieceAt(m.toPosition).has_value());
+            Piece p = pieceAt(m.toPosition).value();
+            setPiece(m.fromPosition, p);
+            setPiece(m.toPosition, data.capturedPiece);
+        }
 
         if (m.isPromotion()) {
             setPiece(m.fromPosition, Piece{Piece::Type::Pawn, m_nextTurnColor});
         }
 
+        if (m.flag == Move::Flag::EnPassant) {
+            auto [colFrom, rowFrom] = indexToColumnRow(m.fromPosition);
+            auto [colTo, rowTo] = indexToColumnRow(m.toPosition);
+
+            ASSERT(!pieceAt(colTo, rowFrom).has_value());
+            setPiece(colTo, rowFrom, Piece{Piece::Type::Pawn, opposite(m_nextTurnColor)});
+        }
+
         m_enPassant = data.previousEnPassant;
+        m_castlingRights = data.previousCastlingRights;
+
+        --m_halfMovesMade;
+        // TODO: wrong!
+        --m_halfMovesSinceCaptureOrPawn;
 
         return true;
     }

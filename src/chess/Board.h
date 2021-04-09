@@ -151,26 +151,31 @@ namespace Chess {
 
         [[nodiscard]] static std::optional<BoardIndex> SANToIndex(std::string_view);
 
-
         std::array<Piece::IntType, size * size> m_pieces;
-        std::array<uint8_t, 2> m_numPieces = {0, 0};
+
         Color m_nextTurnColor = Color::White;
         CastlingRight m_castlingRights = CastlingRight::NoCastling;
         std::optional<BoardIndex> m_enPassant = std::nullopt;
+
         uint32_t m_halfMovesMade = 0;
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;
-#ifdef STORE_KING_POS
-        std::array<BoardIndex, 2> m_kingPos = {-1, -1};
-        static_assert(BoardIndex(-1) > size, "-1 is used as out of bounds");
-#endif
+
 
         struct MoveData {
             Move performedMove;
             std::optional<Piece> capturedPiece;
             std::optional<BoardIndex> previousEnPassant;
+            CastlingRight previousCastlingRights = CastlingRight::NoCastling;
         };
 
         std::deque<MoveData> m_history;
+
+        std::array<uint8_t, 2> m_numPieces = {0, 0};
+
+#ifdef STORE_KING_POS
+        std::array<BoardIndex, 2> m_kingPos = {-1, -1};
+        static_assert(BoardIndex(-1) > size, "-1 is used as out of bounds");
+#endif
 
         friend struct Move;
         friend class MoveList;
