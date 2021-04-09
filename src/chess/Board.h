@@ -43,6 +43,8 @@ namespace Chess {
         [[nodiscard]] bool isPromotion() const;
 
         [[nodiscard]] Piece::Type promotedType() const;
+
+        bool operator==(const Move& move) const = default;
     };
 
     enum class CastlingRight : uint8_t {
