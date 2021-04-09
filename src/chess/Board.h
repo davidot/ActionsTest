@@ -176,8 +176,9 @@ namespace Chess {
         friend class MoveList;
     };
 
-    CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);
+    CastlingRight operator|(const CastlingRight& lhs, const CastlingRight& rhs);
     CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs);
+    std::ostream& operator<<(std::ostream& strm, const CastlingRight& cr);
 
     struct ExpectedBoard {
     private:

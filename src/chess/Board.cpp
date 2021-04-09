@@ -13,6 +13,13 @@
 
 namespace Chess {
 
+    // should only be used here!
+
+    CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);
+    CastlingRight& operator&=(CastlingRight& lhs, const CastlingRight& rhs);
+    CastlingRight operator~(const CastlingRight& cr);
+
+
     Board Board::emptyBoard() {
         return Board();
     }
@@ -581,8 +588,17 @@ namespace Chess {
 #define INT(x) static_cast<uint8_t>(x)
 #define TOCASTLE(x) static_cast<CastlingRight>(x)
 
+    CastlingRight operator|(const CastlingRight& lhs, const CastlingRight& rhs) {
+        return TOCASTLE(INT(lhs) | INT(rhs));
+    }
+
     CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs) {
-        lhs = TOCASTLE(INT(lhs) | INT(rhs));
+        lhs = lhs | rhs;
+        return lhs;
+    }
+
+    CastlingRight& operator&=(CastlingRight& lhs, const CastlingRight& rhs) {
+        lhs = lhs & rhs;
         return lhs;
     }
 
@@ -590,6 +606,10 @@ namespace Chess {
         return TOCASTLE(INT(lhs) & INT(rhs));
     }
 
+    // may give invalid castling rights!!
+    CastlingRight operator~(const CastlingRight& cr) {
+        return TOCASTLE(~INT(cr));
+    }
 
 #undef INT
 #undef TOCASTLE
