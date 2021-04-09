@@ -351,6 +351,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("w - - 1f 1");
 
             fails("w - - 0 x");
+            fails("w - - 0 0");
             fails("w - - 0 -1");
             fails("w - - 0 0.3");
             fails("w - - 0 0a");
@@ -553,7 +554,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
 
         CAPTURE(enPassant);
         std::string basePosition = "rnbqkbnr/8/8/pppppppp/PPPPPPPP/8/8/RNBQKBNR " + turn + " - " + enPassant + " 0 1";
-        // FIXME: these boards are really not valid and it should fail!
         auto b = is_valid_board(basePosition);
         if (empty) {
             REQUIRE_FALSE(b.enPassantColRow().has_value());
@@ -563,21 +563,19 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     }
 
     SECTION("Halfmoves since capture or pawn move") {
-        uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u);
+        uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u, 75u, 149u);
         CAPTURE(moves);
         std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - " + std::to_string(moves) + " 1";
-        is_valid_board(basePosition);
-        // TODO verify somehow?
-        REQUIRE("TODO");
+        Board board = is_valid_board(basePosition);
+        REQUIRE(board.halfMovesSinceIrreversible() == moves);
     }
 
     SECTION("Full move number") {
-        uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u, 128u, 3000u, 8849u);
+        uint32_t moves = GENERATE(1u, 25u, 50u, 100u, 128u, 3000u, 8849u);
         CAPTURE(moves);
         std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 " + std::to_string(moves);
-        is_valid_board(basePosition);
-        // TODO verify somehow?
-        REQUIRE("TODO");
+        Board board = is_valid_board(basePosition);
+        REQUIRE(board.fullMoves() == moves);
     }
 
     SECTION("Example positions") {

@@ -269,10 +269,10 @@ namespace Chess {
         b.m_halfMovesSinceCaptureOrPawn = halfMovesSinceCapture.value();
 
         std::optional<uint32_t> totalFullMoves = strictParseUInt(parts[5]);
-        if (!totalFullMoves.has_value()) {
+        if (!totalFullMoves.has_value() || totalFullMoves == 0u) {
             return std::string("Invalid full moves made: ") + std::string(parts[5]);
         }
-        b.m_fullMoveNum = totalFullMoves.value();
+        b.m_halfMovesMade = (totalFullMoves.value() - 1) * 2 + (b.m_nextTurnColor == Color::Black);
 
         return b;
     }
@@ -471,7 +471,7 @@ namespace Chess {
             << ' ' << castlingOutput(m_castlingRights)
             << ' ' << (m_enPassant.has_value() ? indexToSAN(m_enPassant.value()) : "-")
             << ' ' << m_halfMovesSinceCaptureOrPawn
-            << ' ' << m_fullMoveNum;
+            << ' ' << fullMoves();
 
         return val.str();
     }
@@ -505,8 +505,15 @@ namespace Chess {
 #endif
     }
 
+    uint32_t Board::fullMoves() const {
+        return m_halfMovesMade / 2 + 1;
+    }
+    uint32_t Board::halfMovesSinceIrreversible() const {
+        return m_halfMovesSinceCaptureOrPawn;
+    }
+
     bool Board::operator==(const Board &rhs) const {
-        return m_fullMoveNum == rhs.m_fullMoveNum
+        return m_halfMovesMade == rhs.m_halfMovesMade
             && m_halfMovesSinceCaptureOrPawn == rhs.m_halfMovesSinceCaptureOrPawn
             && m_castlingRights == rhs.m_castlingRights
             && m_enPassant == rhs.m_enPassant
@@ -602,8 +609,9 @@ namespace Chess {
     Move::Move(BoardIndex fromCol, BoardIndex fromRow, BoardIndex toCol, BoardIndex toRow, Move::Flag flags) :
         toPosition(Board::columnRowToIndex(toCol, toRow)),
         fromPosition(Board::columnRowToIndex(fromCol, fromRow)),
-                                                                                                                                            flag(flags) {
+        flag(flags) {
     }
+
     Move::Move() : toPosition(0), fromPosition(0), flag(Flag::None) {
     }
 
@@ -634,7 +642,6 @@ namespace Chess {
     std::pair<BoardIndex, BoardIndex> Move::colRowToPosition() const {
         return Board::indexToColumnRow(toPosition);
     }
-
 
     const std::string &ExpectedBoard::error() const {
         ASSERT(m_value.index() == 1);

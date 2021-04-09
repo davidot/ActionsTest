@@ -101,7 +101,11 @@ namespace Chess {
 
         [[nodiscard]] CastlingRight castlingRights() const;
 
-        std::pair<BoardIndex, BoardIndex> kingSquare(Color color) const;
+        [[nodiscard]] std::pair<BoardIndex, BoardIndex> kingSquare(Color color) const;
+
+        [[nodiscard]] uint32_t fullMoves() const;
+
+        [[nodiscard]] uint32_t halfMovesSinceIrreversible() const;
 
         // technically board specific chess constants
         constexpr static BoardIndex homeRow(Color color) {
@@ -151,7 +155,7 @@ namespace Chess {
         Color m_nextTurnColor = Color::White;
         CastlingRight m_castlingRights = CastlingRight::NoCastling;
         std::optional<BoardIndex> m_enPassant = std::nullopt;
-        uint32_t m_fullMoveNum = 1;
+        uint32_t m_halfMovesMade = 0;
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;
 #ifdef STORE_KING_POS
         std::array<BoardIndex, 2> m_kingPos = {-1, -1};

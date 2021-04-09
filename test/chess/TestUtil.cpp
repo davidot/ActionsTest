@@ -98,12 +98,10 @@ namespace TestUtil {
         // setup en passant square via FEN (we do not want a method to set this)
         board.setPiece(col, rowAfterDoublePushOther, Piece{Piece::Type::Pawn, opposite(c)});
         std::string baseFEN = board.toFEN();
-        REQUIRE(baseFEN.ends_with(" - 0 1"));
         auto loc = baseFEN.rfind("- ");
         REQUIRE(loc != baseFEN.size());
         REQUIRE(loc != std::string::npos);
         baseFEN.replace(loc, 1, Board::columnRowToSAN(col, enPassantRowOther));
-        REQUIRE_FALSE(baseFEN.ends_with(" - 0 1"));
         auto eBoard = Board::fromFEN(baseFEN);
         REQUIRE(eBoard);
         board = eBoard.extract();
