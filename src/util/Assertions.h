@@ -3,7 +3,7 @@
 namespace util::Assert {
     void assertExpression(bool passed, const char *assertion, const char *file, int line);
 
-    [[noreturn]] void assertFailed();
+    [[noreturn]] void unreachable(const char* file, int line);
 }// namespace util::Assert
 
 #ifndef NDEBUG
@@ -14,7 +14,7 @@ namespace util::Assert {
 
 #define ASSERT_NOT_REACHED()          \
     do {                              \
-        util::Assert::assertFailed(); \
+        util::Assert::unreachable(__FILE__, __LINE__); \
     } while (0)
 #else
 #define ASSERT(expr)
