@@ -76,7 +76,7 @@ namespace Chess {
             }
 #endif
         } else {
-            m_pieces[index] = Piece::none();
+            m_pieces[index] = Piece::noneValue();
         }
     }
 
@@ -110,8 +110,7 @@ namespace Chess {
         board.setPiece(kingCol - 1, bHome, Piece{Piece::Type::Queen, Color::Black});
         board.setPiece(kingCol - 1, wHome, Piece{Piece::Type::Queen, Color::White});
 
-        board.m_castlingRights |= CastlingRight::WhiteCastling;
-        board.m_castlingRights |= CastlingRight::BlackCastling;
+        board.m_castlingRights = CastlingRight::WhiteCastling | CastlingRight::BlackCastling;
 
         return board;
     }
@@ -424,8 +423,7 @@ namespace Chess {
         return true;
     }
 
-    std::string castlingOutput(CastlingRight right) {
-        std::stringstream stream;
+    std::ostream& operator<<(std::ostream& stream, const CastlingRight& right) {
         bool any = false;
         for (auto& [fen, fenRight] : castleMapping) {
             if ((right & fenRight) != CastlingRight::NoCastling) {
@@ -434,9 +432,9 @@ namespace Chess {
             }
         }
         if (!any) {
-            return "-";
+            stream << '-';
         }
-        return stream.str();
+        return stream;
     }
 
     std::optional<std::pair<BoardIndex, BoardIndex>> Board::enPassantColRow() const {
@@ -475,7 +473,7 @@ namespace Chess {
         }
 
         val << ' ' << turnColor(m_nextTurnColor)
-            << ' ' << castlingOutput(m_castlingRights)
+            << ' ' << m_castlingRights
             << ' ' << (m_enPassant.has_value() ? indexToSAN(m_enPassant.value()) : "-")
             << ' ' << m_halfMovesSinceCaptureOrPawn
             << ' ' << fullMoves();
