@@ -161,6 +161,8 @@ namespace Chess {
                     case Piece::Type::Knight:
                         // covered above
                         break;
+                    default:
+                        ASSERT_NOT_REACHED();
                 }
                 break;
             }
