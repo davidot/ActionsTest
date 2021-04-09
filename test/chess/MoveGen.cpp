@@ -600,7 +600,9 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
         CAPTURE(col);
 
         board = TestUtil::createEnPassantBoard(toMove, col);
-        int8_t pawnOffset = GENERATE_COPY(filter([col](int8_t i) { return col + i >= 0 && col + i < 8; }, values({1, -1})));
+        int8_t pawnOffset = GENERATE_COPY(filter([col](int8_t i) {
+                return col + i >= 0 && col + i < 8;
+            }, values({1, -1})));
         uint8_t myCol = col + pawnOffset;
         CAPTURE(myCol);
 
@@ -697,34 +699,6 @@ TEST_CASE("Pawn move generation", "[chess][rules][movegen]") {
 #undef IS_BLOCKED
 }
 
-Board getBoard(Color c, bool kingSide, bool queenSide, bool withOpposite) {
-    struct BoardCache {
-        Color col;
-        bool king;
-        bool queen;
-        bool opposite;
-        Board board;
-    };
-    static std::vector<BoardCache> boards;
-    if (boards.empty()) {
-        boards.reserve(10);
-    }
-
-    for (const BoardCache& cache : boards) {
-        if (cache.col == c
-            && cache.king == kingSide
-            && cache.queen == queenSide
-            && cache.opposite == withOpposite) {
-            return cache.board;
-        }
-    }
-
-    boards.push_back(BoardCache{c, kingSide, queenSide, withOpposite,
-                                TestUtil::generateCastlingBoard(c, kingSide, queenSide, withOpposite)});
-
-    return boards.back().board;
-}
-
 TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
 
     Color toMove = TRUE_FALSE() ? Color::White : Color::Black;
@@ -746,7 +720,7 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
 #endif
 
     CAPTURE(toMove, kingSide, queenSide, withOppositeRook);
-    Board board = getBoard(toMove, kingSide, queenSide, withOppositeRook);
+    Board board = TestUtil::generateCastlingBoard(toMove, kingSide, queenSide, withOppositeRook);
 
     SECTION("Can castle") {
         MoveList list = generateAllMoves(board);
@@ -1313,6 +1287,7 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
             // says depth 0 is 1 move??
             HAS_N_MOVES("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 46);
         }
+        // More perft tests: https://github.com/elcabesa/vajolet/tree/develop/tests
     }
 
     SECTION("Checks") {

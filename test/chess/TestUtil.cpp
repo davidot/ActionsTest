@@ -2,7 +2,7 @@
 #include <chess/Board.h>
 
 namespace TestUtil {
-    Chess::Board generateCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook) {
+    Chess::Board makeCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook) {
         using namespace Chess;
         const uint8_t homeRow = Board::homeRow(toMove);
         const uint8_t queenSideRook = Board::queenSideRookCol;
@@ -51,6 +51,37 @@ namespace TestUtil {
         }
         return board;
     }
+
+    Chess::Board generateCastlingBoard(Chess::Color c, bool kingSide, bool queenSide, bool withOpposite) {
+        using namespace Chess;
+        struct BoardCache {
+            Color col;
+            bool king;
+            bool queen;
+            bool opposite;
+            Board board;
+        };
+        static std::vector<BoardCache> boards;
+        if (boards.empty()) {
+            boards.reserve(10);
+        }
+
+        for (const BoardCache& cache : boards) {
+            if (cache.col == c
+                && cache.king == kingSide
+                && cache.queen == queenSide
+                && cache.opposite == withOpposite) {
+                return cache.board;
+            }
+        }
+
+        boards.push_back(BoardCache{c, kingSide, queenSide, withOpposite,
+                                    makeCastlingBoard(c, kingSide, queenSide, withOpposite)});
+
+        return boards.back().board;
+    }
+
+
 
     Chess::Board createEnPassantBoard(Chess::Color c, Chess::BoardIndex col) {
         using namespace Chess;
