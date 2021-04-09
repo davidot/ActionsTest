@@ -60,7 +60,7 @@ TEST_CASE("Pieces", "[chess][base]") {
 
         // basic tests
         REQUIRE_FALSE(Piece::isPiece(0));
-        REQUIRE_FALSE(Piece::isPiece(Piece::none()));
+        REQUIRE_FALSE(Piece::isPiece(Piece::noneValue()));
         REQUIRE_FALSE(Piece::isPiece(~colorMask));
         REQUIRE_FALSE(Piece::isPiece(colorMask));
 

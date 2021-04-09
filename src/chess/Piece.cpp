@@ -150,7 +150,11 @@ namespace Chess {
     }
 
     std::ostream& operator<<(std::ostream& os, const Piece& piece) {
-        os << colorName(piece.color()) << ' ' << pieceName(piece.type());
+        if (piece.m_val == Piece::noneValue()) {
+            os << "No piece";
+        } else {
+            os << colorName(piece.color()) << ' ' << pieceName(piece.type());
+        }
         return os;
     }
 
@@ -163,7 +167,11 @@ namespace Chess {
         return ((val & whiteMask) ^ ((val & blackMask) >> 1)) != 0;
     }
 
-    Piece::IntType Piece::none() {
+    Piece Piece::none() {
+        return Piece(0);
+    }
+
+    Piece::IntType Piece::noneValue() {
         return 0;
     }
 

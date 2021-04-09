@@ -30,6 +30,7 @@ namespace Chess {
 #undef INTTYPE
 
         enum class Type : IntType {
+            None = 0b000,
             Pawn = 0b001,
             King = 0b010,
             Bishop = 0b011,
@@ -67,9 +68,14 @@ namespace Chess {
 
         [[nodiscard]] static Color colorFromInt(IntType val);
 
-        [[nodiscard]] static IntType none();
+        [[nodiscard]] static IntType noneValue();
+
+        [[nodiscard]] static Piece none();
 
     private:
+        Piece(IntType val) : m_val(val) {
+        }
+
         IntType m_val;
     };
 
