@@ -74,3 +74,7 @@ namespace TestUtil {
 
     Chess::Board createEnPassantBoard(Chess::Color c, Chess::BoardIndex col);
 }
+
+namespace std { // NOLINT(cert-dcl58-cpp) This just really helps for logging!
+    std::ostream &operator<<(std::ostream &os, const std::optional<Chess::Piece> &piece);
+}

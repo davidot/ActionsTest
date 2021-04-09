@@ -112,3 +112,15 @@ namespace TestUtil {
     }
 
 }
+
+
+namespace std { // NOLINT(cert-dcl58-cpp)
+    std::ostream &operator<<(std::ostream &os, const std::optional<Chess::Piece> &piece) {
+        if (piece.has_value()) {
+            os << piece.value();
+        } else {
+            os << "No piece";
+        }
+        return os;
+    }
+}
