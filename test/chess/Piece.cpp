@@ -18,7 +18,7 @@ TEST_CASE("Pieces", "[chess][base]") {
         REQUIRE(piece == piece);
         REQUIRE_FALSE(piece != piece);
 
-        uint16_t intVal = piece.toInt();
+        Piece::IntType intVal = piece.toInt();
         REQUIRE(intVal >= 0);
 
         char fenVal = piece.toFEN();
@@ -52,7 +52,7 @@ TEST_CASE("Pieces", "[chess][base]") {
     }
 
     // some hacky stuff to not have to hardcode the color mask here
-    Piece::IntType colorMask = 0
+    Piece::IntType colorMask = 0u
             | Piece(Pt::Pawn, Color::White).toInt() & Piece(Pt::Knight, Color::White).toInt()
             | Piece(Pt::Pawn, Color::Black).toInt() & Piece(Pt::Knight, Color::Black).toInt();
 
@@ -65,7 +65,7 @@ TEST_CASE("Pieces", "[chess][base]") {
         REQUIRE_FALSE(Piece::isPiece(colorMask));
 
         Piece::IntType type = GENERATE(range(0b0000, 0b1111));
-        Piece::IntType topBits = GENERATE(range(0b00, 0b11)) << 6u;
+        Piece::IntType topBits = GENERATE(range(0b00u, 0b11u)) << 6u;
 
         // note: not actually valid pieces but not things it should check
         SECTION("Generated valid values") {

@@ -1,5 +1,5 @@
-#include "TestUtil.h"
 #include <catch2/catch.hpp>
+#include "TestUtil.h"
 #include <chess/Board.h>
 #include <set>
 
@@ -34,9 +34,9 @@ TEST_CASE("Board", "[chess][base]") {
         Piece piece = GENERATE_PIECE();
         Board b = Board::emptyBoard();
 
-        uint8_t size = 8;
-        uint8_t col = GENERATE(TEST_SOME(range(0, 10)));
-        uint8_t row = GENERATE(TEST_SOME(range(0, 10)));
+        BoardIndex size = Board::size;
+        BoardIndex col = GENERATE(TEST_SOME(range(0u, 10u)));
+        BoardIndex row = GENERATE(TEST_SOME(range(0u, 10u)));
 
         CAPTURE(piece, col, row);
 
@@ -75,33 +75,33 @@ TEST_CASE("Board", "[chess][base]") {
         Piece piece = GENERATE_PIECE();
         Board b = Board::emptyBoard();
 
-        int32_t size = 8;
-        uint32_t column = GENERATE_COPY(0u, size - 1, take(1u, random(0u, uint32_t(std::max(1, size - 2)))));
-        uint32_t row = GENERATE_COPY(0u, size - 1, take(1u, random(0u, uint32_t(std::max(1, size - 2)))));
+        BoardIndex size = Board::size;
+        BoardIndex col = GENERATE_COPY(0u, size - 1, take(1u, random(0u, uint32_t(std::max(1, size - 2)))));
+        BoardIndex row = GENERATE_COPY(0u, size - 1, take(1u, random(0u, uint32_t(std::max(1, size - 2)))));
 
-        CAPTURE(piece, column, row);
+        CAPTURE(piece, col, row);
 
-        b.setPiece(column, row, piece);
+        b.setPiece(col, row, piece);
 
         CHECK(b.countPieces(piece.color()) == 1);
         CHECK(b.countPieces(opposite(piece.color())) == 0);
-        REQUIRE(b.pieceAt(column, row).has_value());
+        REQUIRE(b.pieceAt(col, row).has_value());
 
         // since we only add once piece it can never be a valid position!
         CHECK_FALSE(b.hasValidPosition());
 
-        for (uint8_t c = column - 3; c < uint8_t(column + 3); c++) {
+        for (uint8_t c = col - 3; c < uint8_t(col + 3); c++) {
             for (uint8_t r = row - 3; r < uint8_t(row + 3); r++) {
-                REQUIRE(b.pieceAt(c, r).has_value() == (r == row && c == column));
+                REQUIRE(b.pieceAt(c, r).has_value() == (r == row && c == col));
             }
         }
 
         SECTION("Remove piece") {
-            b.setPiece(column, row, std::nullopt);
+            b.setPiece(col, row, std::nullopt);
 
             CHECK(b.countPieces(piece.color()) == 0);
             CHECK(b.countPieces(opposite(piece.color())) == 0);
-            CHECK_FALSE(b.pieceAt(column, row).has_value());
+            CHECK_FALSE(b.pieceAt(col, row).has_value());
         }
     }
 
@@ -109,9 +109,9 @@ TEST_CASE("Board", "[chess][base]") {
         Piece piece = GENERATE_PIECE();
         Board b = Board::emptyBoard();
 
-        uint32_t size = 8;
-        uint8_t col = GENERATE(TEST_SOME(range(0, 10)));
-        uint8_t row = GENERATE(TEST_SOME(range(0, 10)));
+        BoardIndex size = Board::size;
+        BoardIndex col = GENERATE(TEST_SOME(range(0, 10)));
+        BoardIndex row = GENERATE(TEST_SOME(range(0, 10)));
 
         CAPTURE(size, piece, col, row);
 
@@ -133,9 +133,9 @@ TEST_CASE("Board", "[chess][base]") {
     SECTION("Remove non-existent piece") {
         Board b = Board::emptyBoard();
 
-        uint32_t size = 8;
-        uint8_t col = GENERATE(TEST_SOME(range(0, 10)));
-        uint8_t row = GENERATE(TEST_SOME(range(0, 10)));
+        BoardIndex size = Board::size;
+        BoardIndex col = GENERATE(TEST_SOME(range(0, 10)));
+        BoardIndex row = GENERATE(TEST_SOME(range(0, 10)));
 
         CAPTURE(size, col, row);
 
@@ -155,7 +155,7 @@ TEST_CASE("Board", "[chess][base]") {
 
     SECTION("Adding multiple pieces") {
         SECTION("Fill with same piece same color") {
-            uint32_t size = 8;
+            BoardIndex size = Board::size;
             Board b = Board::emptyBoard();
 
             Piece piece = GENERATE_PIECE();
@@ -179,7 +179,7 @@ TEST_CASE("Board", "[chess][base]") {
         }
 
         SECTION("Fill board with alternating colors") {
-            uint32_t size = 8;
+            BoardIndex size = Board::size;
             Board b = Board::emptyBoard();
 
             Piece piece = GENERATE_PIECES_WHITE_ONLY();
@@ -234,15 +234,15 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     SECTION("Wrong inputs") {
 
 #define failsBase(s)                                                        \
-    {                                                                       \
-        INFO("Input: " << s);                                               \
-        ExpectedBoard b = Board::fromFEN(s);                                \
+    do {                                                                       \
+        INFO("Input: " << (s));                                               \
+        ExpectedBoard b = Board::fromFEN((s));                                \
         if (b) {                                                            \
             CHECK_FALSE(b);                                                 \
         } else {                                                            \
             REQUIRE_FALSE(b.error().empty());                               \
         }                                                                   \
-    }
+    } while (false)
 
         SECTION("Completely invalid formats") {
             failsBase("");
@@ -377,7 +377,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a7 0 1");
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - c2 0 1");
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a4 0 1");
-            // FIXME: these moves are really not valid and it should fail!
+
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a3 0 1");              //Not valid due to no pawn
             failsBase("rnbqkbnr/1ppppppp/8/p7/p7/8/PPPPPPPP/RNBQKBNR w - a3 0 1");            //Not valid due to no pawn
             failsBase("rnbqkbnr/pppppppp/8/8/PPPPPPPP/PPPPPPPP/PPPPPPPP/RNBQKBNR w - a3 0 1");//Not valid due to non empty square
@@ -386,7 +386,6 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         }
 
         SECTION("Provably invalid castling state") {
-            // FIXME: these moves are really not valid and it should fail!
             failsBase("rnbq1bnr/pppppppp/k7/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");// black king has moved
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR w KQkq - 0 1"); // white king has moved (swapped with queen)
             failsBase("rnbqKbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQkBNR w KQkq - 0 1"); // both kings have moved (swapped)
@@ -432,8 +431,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         bool isWhite = pieceFEN == "P";
         Board board = is_valid_board(pieceFEN + "7/8/8/8/8/8/8/8 w - - 0 1");
 
-        CHECK(board.countPieces(Color::White) == (isWhite ? 1 : 0));
-        CHECK(board.countPieces(Color::Black) == (isWhite ? 0 : 1));
+        CHECK(board.countPieces(Color::White) == (isWhite ? 1u : 0u));
+        CHECK(board.countPieces(Color::Black) == (isWhite ? 0u : 1u));
 
         auto p = board.pieceAt(0, 7);
         REQUIRE(p);
@@ -467,7 +466,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         std::string pieceFEN = GENERATE("pppppppp", "nnnnnnnn", "kkkkkkkk", "qqqqqqqq", "rrrrrrrr", "bbbbbbbb");
         bool upper = GENERATE(true, false);
         if (upper) {
-            std::transform(pieceFEN.begin(), pieceFEN.end(), pieceFEN.begin(), [](unsigned char c) { return toupper(c); });
+            std::transform(pieceFEN.begin(), pieceFEN.end(), pieceFEN.begin(), std::toupper);
         }
         CAPTURE(pieceFEN);
 
@@ -479,8 +478,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
                                      "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN + "/" + pieceFEN +
                                      " w - - 0 1");
 
-        CHECK(board.countPieces(Color::White) == (upper ? 64 : 0));
-        CHECK(board.countPieces(Color::Black) == (upper ? 0 : 64));
+        CHECK(board.countPieces(Color::White) == (upper ? 64u : 0u));
+        CHECK(board.countPieces(Color::Black) == (upper ? 0u : 64u));
 
         for (uint8_t i = 0; i < 8; i++) {
             for (uint8_t j = 0; j < 8; j++) {
@@ -591,8 +590,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             // ehh not sure we want this
             REQUIRE(board.countPieces(Color::White) == standard.countPieces(Color::Black));
 
-            for (uint32_t i = 0; i < 8; i++) {
-                for (uint32_t j = 0; j < 8; j++) {
+            for (BoardIndex i = 0; i < 8; i++) {
+                for (BoardIndex j = 0; j < 8; j++) {
                     REQUIRE(board.pieceAt(j, i) == standard.pieceAt(j, i));
                 }
             }
@@ -610,8 +609,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             REQUIRE(board.countPieces(Color::White) == empty.countPieces(Color::White));
             REQUIRE(board.countPieces(Color::Black) == empty.countPieces(Color::Black));
 
-            for (uint32_t i = 0; i < 8; i++) {
-                for (uint32_t j = 0; j < 8; j++) {
+            for (BoardIndex i = 0; i < 8; i++) {
+                for (BoardIndex j = 0; j < 8; j++) {
                     REQUIRE(board.pieceAt(j, i) == empty.pieceAt(j, i));
                 }
             }

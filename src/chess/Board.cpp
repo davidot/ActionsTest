@@ -14,11 +14,34 @@
 
 namespace Chess {
 
-    // should only be used here!
+#define INT(x) static_cast<uint8_t>(x)
+#define TO_CASTLE(x) static_cast<CastlingRight>(x)
 
-    CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs);
-    CastlingRight& operator&=(CastlingRight& lhs, const CastlingRight& rhs);
-    CastlingRight operator~(const CastlingRight& cr);
+    CastlingRight operator|(const CastlingRight& lhs, const CastlingRight& rhs) {
+        return TO_CASTLE(INT(lhs) | INT(rhs));
+    }
+
+    CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs) {
+        lhs = lhs | rhs;
+        return lhs;
+    }
+
+    CastlingRight& operator&=(CastlingRight& lhs, const CastlingRight& rhs) {
+        lhs = lhs & rhs;
+        return lhs;
+    }
+
+    CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs) {
+        return TO_CASTLE(INT(lhs) & INT(rhs));
+    }
+
+    // may give invalid castling rights!! so is not defined in .h
+    CastlingRight operator~(const CastlingRight& cr) {
+        return TO_CASTLE(~INT(cr));
+    }
+
+#undef INT
+#undef TO_CASTLE
 
 
     Board Board::emptyBoard() {
@@ -224,7 +247,7 @@ namespace Chess {
 
         //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 
-        auto parts = util::split(str, " ");
+        std::vector<std::string_view> parts = util::split(str, " ");
         if (parts.size() != 6) {
             return "Not enough pieces in FEN";
         }
@@ -250,14 +273,14 @@ namespace Chess {
                 return std::string("Invalid en passant value: ") + std::string(parts[3]);
             }
             auto [col, row] = Board::indexToColumnRow(*enPassantPawn);
-            auto lastMoveColor = opposite(b.m_nextTurnColor);
+            Color lastMoveColor = opposite(b.m_nextTurnColor);
             if ((lastMoveColor == Color::White && row != 2) || (lastMoveColor == Color::Black && row != size - 1 - 2)) {
                 return std::string("Cannot have en passant on non 3th or 5th row: " + std::string(parts[3]));
             }
             if (b.pieceAt(col, row) != std::nullopt) {
                 return "En passant square cannot have a piece at square";
             }
-            auto pawnRow = row + (lastMoveColor == Color::White ? 1 : -1);
+            BoardIndex pawnRow = row + (lastMoveColor == Color::White ? 1 : -1);
             if (b.pieceAt(col, pawnRow) != Piece{Piece::Type::Pawn, lastMoveColor}) {
                 return "En passant square must be just behind previously moved pawn";
             }
@@ -693,35 +716,6 @@ namespace Chess {
         return true;
     }
 
-#define INT(x) static_cast<uint8_t>(x)
-#define TOCASTLE(x) static_cast<CastlingRight>(x)
-
-    CastlingRight operator|(const CastlingRight& lhs, const CastlingRight& rhs) {
-        return TOCASTLE(INT(lhs) | INT(rhs));
-    }
-
-    CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs) {
-        lhs = lhs | rhs;
-        return lhs;
-    }
-
-    CastlingRight& operator&=(CastlingRight& lhs, const CastlingRight& rhs) {
-        lhs = lhs & rhs;
-        return lhs;
-    }
-
-    CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs) {
-        return TOCASTLE(INT(lhs) & INT(rhs));
-    }
-
-    // may give invalid castling rights!!
-    CastlingRight operator~(const CastlingRight& cr) {
-        return TOCASTLE(~INT(cr));
-    }
-
-#undef INT
-#undef TOCASTLE
-
     Move::Move(BoardIndex fromIndex, BoardIndex toIndex, Flag flags)
         :  toPosition(toIndex),
            fromPosition(fromIndex),
@@ -744,7 +738,7 @@ namespace Chess {
     }
 
     bool Move::isPromotion() const {
-        return (static_cast<uint8_t>(flag) & 0x4) != 0;
+        return (static_cast<uint8_t>(flag) & 0x4u) != 0;
     }
 
     Piece::Type Move::promotedType() const {
