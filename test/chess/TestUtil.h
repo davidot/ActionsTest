@@ -4,10 +4,18 @@
 #include <chess/Forward.h>
 #include <chess/Piece.h>
 #include <vector>
+
 #ifndef EXTENDED_TESTS
 #define TEST_SOME(x) sample(2, x)
 #else
 #define TEST_SOME(x) x
+#endif
+
+#ifdef EXTENDED_TESTS
+#define TRUE_FALSE() GENERATE(true, false)
+#else
+// compile time random to still check both colors (hopefully)
+#define TRUE_FALSE() bool(((__TIME__[7] - '0') + __LINE__ + __COUNTER__) % 2)
 #endif
 
 
@@ -70,7 +78,7 @@ namespace Catch::Generators {
 }// namespace Catch::Generators
 
 namespace TestUtil {
-    Chess::Board generateCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook);
+    Chess::Board generateCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook, bool withOpponent = false);
 
     Chess::Board createEnPassantBoard(Chess::Color c, Chess::BoardIndex col);
 }

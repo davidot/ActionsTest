@@ -2,7 +2,7 @@
 #include <chess/Board.h>
 
 namespace TestUtil {
-    Chess::Board makeCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook) {
+    Chess::Board makeCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook, bool opponent) {
         using namespace Chess;
         const uint8_t homeRow = Board::homeRow(toMove);
         const uint8_t queenSideRook = Board::queenSideRookCol;
@@ -33,6 +33,20 @@ namespace TestUtil {
             }
         }
 
+        if (opponent) {
+            Color opp = opposite(toMove);
+            BoardIndex myHome = Board::homeRow(opp);
+            board.setPiece(kingCol, myHome, Piece{Piece::Type::King, opp});
+            board.setPiece(kingSideRook, myHome, Piece{Piece::Type::Rook, opp});
+            board.setPiece(queenSideRook, myHome, Piece{Piece::Type::Rook, opp});
+
+            if (opp == Color::White) {
+                castles = "KQ" + castles;
+            } else {
+                castles = castles + "kq";
+            }
+        }
+
         std::string baseFEN = board.toFEN();
         auto loc = baseFEN.rfind("- - ");
         REQUIRE(loc != std::string::npos);
@@ -52,13 +66,14 @@ namespace TestUtil {
         return board;
     }
 
-    Chess::Board generateCastlingBoard(Chess::Color c, bool kingSide, bool queenSide, bool withOpposite) {
+    Chess::Board generateCastlingBoard(Chess::Color c, bool kingSide, bool queenSide, bool withOpposite, bool withOpponent) {
         using namespace Chess;
         struct BoardCache {
             Color col;
             bool king;
             bool queen;
             bool opposite;
+            bool opponent;
             Board board;
         };
         static std::vector<BoardCache> boards;
@@ -75,8 +90,8 @@ namespace TestUtil {
             }
         }
 
-        boards.push_back(BoardCache{c, kingSide, queenSide, withOpposite,
-                                    makeCastlingBoard(c, kingSide, queenSide, withOpposite)});
+        boards.push_back(BoardCache{c, kingSide, queenSide, withOpposite, withOpponent,
+                                    makeCastlingBoard(c, kingSide, queenSide, withOpposite, withOpponent)});
 
         return boards.back().board;
     }
