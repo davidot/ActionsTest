@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <algorithm>
 
 #ifdef OUTPUT_FEN
 #include <iostream>
