@@ -41,13 +41,6 @@ TEST_CASE("Basic move checks", "[chess][move]") {
         REQUIRE(false);                 \
     })
 
-#ifdef EXTENDED_TESTS
-#define TRUE_FALSE() GENERATE(true, false)
-#else
-// compile time random to still check both colors (hopefully)
-#define TRUE_FALSE() bool(((__TIME__[7] - '0') + __LINE__ + __COUNTER__) % 2)
-#endif
-
 #define MOVES_NOT_CHECK_OR_STALEMATE() \
     REQUIRE_FALSE(list.isStaleMate()); \
     REQUIRE_FALSE(list.isCheckMate())
@@ -718,9 +711,10 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
 #else
     false;
 #endif
+    bool withOppositeCastling = GENERATE(true, false);
 
-    CAPTURE(toMove, kingSide, queenSide, withOppositeRook);
-    Board board = TestUtil::generateCastlingBoard(toMove, kingSide, queenSide, withOppositeRook);
+    CAPTURE(toMove, kingSide, queenSide, withOppositeRook, withOppositeCastling);
+    Board board = TestUtil::generateCastlingBoard(toMove, kingSide, queenSide, withOppositeRook, withOppositeCastling);
 
     SECTION("Can castle") {
         MoveList list = generateAllMoves(board);
@@ -758,8 +752,9 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
             // just "our" color so no checks can occur
             Piece p{GENERATE(ANY_TYPE), toMove};
 
+            // do not step on the toes of our opponent
             uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
-            uint8_t row = GENERATE_COPY(filter([=](uint8_t i) { return i != homeRow; }, TEST_SOME(range(0, 8))));
+            uint8_t row = GENERATE(TEST_SOME(range(1, 7)));
             REQUIRE(board.pieceAt(col, row) == std::nullopt);
             board.setPiece(col, row, p);
         }
@@ -1475,6 +1470,22 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
         REQUIRE(flags.count(Move::Flag::PromotionToBishop) == 2);
         REQUIRE(flags.count(Move::Flag::PromotionToRook) == 2);
         REQUIRE(flags.count(Move::Flag::PromotionToKnight) == 2);
+    }
+
+    SECTION("Castling") {
+        SECTION("Cannot castle just because the other side can") {
+            Board board = Board::fromFEN("r3k2r/pbppqpb1/1n2p1p1/3PN3/1p2n3/2N2Q1p/PPPBBPPP/R3K2R w Kkq - 2 3").extract();
+            MoveList list = generateAllMoves(board);
+            unsigned count = 0;
+            list.forEachMoveFrom(Board::kingCol, Board::homeRow(Color::White), [&](const Move& move) {
+              if (move.flag == Move::Flag::Castling) {
+                  count++;
+                  auto [colTo, rowTo] = move.colRowToPosition();
+                  CHECK(colTo == Board::kingSideRookCol);
+              }
+            });
+            REQUIRE(count == 1);
+        }
     }
 
 }

@@ -42,7 +42,7 @@
 
 #define NO_PIECE(col, row)                                \
     do {                                                  \
-        INFO("col: " << col << " row: " << row);          \
+        INFO("col: " << (col) << " row: " << (row));          \
         REQUIRE(board.pieceAt(col, row) == std::nullopt); \
     } while (false)
 
@@ -374,30 +374,30 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
         }
     }
 
+    const auto colRights = c == Color::White ? CastlingRight::WhiteCastling : CastlingRight::BlackCastling;
+
     SECTION("King or rook move invalidates castling rights") {
-        board = TestUtil::generateCastlingBoard(c, true, true, false);
+        bool withOpponent = GENERATE(true, false);
+        board = TestUtil::generateCastlingBoard(c, true, true, false, withOpponent);
         const auto rights = board.castlingRights();
-        if (c == Color::White) {
-            REQUIRE(rights == CastlingRight::WhiteCastling);
-        } else {
-            REQUIRE(c == Color::Black);
-            REQUIRE(rights == CastlingRight::BlackCastling);
-        }
+        const auto oppColRights = c == Color::Black ? CastlingRight::WhiteCastling : CastlingRight::BlackCastling;
 
         BoardIndex home = Board::homeRow(c);
 
         SECTION("If rook moves invalidates only that right") {
             BoardIndex colFrom = GENERATE(Board::queenSideRookCol, Board::kingSideRookCol);
-            BoardIndex rowTo = GENERATE_COPY(filter([=](BoardIndex i){
-                                    return i != home;
-                                }, TEST_SOME(range(0, 8))));
+            BoardIndex rowTo = GENERATE(TEST_SOME(range(1, 7)));
+            // also dont take opposing rook...
 
             Move move = {colFrom, home, colFrom, rowTo};
 
             MAKE_VALID_MOVE(move);
 
             auto newRights = board.castlingRights();
-            REQUIRE(newRights != rights);
+            CHECK(newRights != rights);
+            CHECK((newRights & oppColRights) == (rights & oppColRights));
+            // limit to just us
+            newRights = newRights & colRights;
 
             if (colFrom == Board::queenSideRookCol) {
                 REQUIRE((newRights & CastlingRight::QueenSideCastling) == CastlingRight::NoCastling);
@@ -426,6 +426,10 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
             MAKE_VALID_MOVE(move);
 
             auto newRights = board.castlingRights();
+            CHECK(newRights != rights);
+            CHECK((newRights & oppColRights) == (rights & oppColRights));
+
+            newRights = newRights & colRights;
             REQUIRE(newRights == CastlingRight::NoCastling);
 
             SECTION("Undo sets the castling rights back") {
@@ -434,20 +438,46 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
             }
         }
 
-        SECTION("Color does not affect castling right of opponent") {
-            Color other = opposite(c);
+        if (!withOpponent) {
+            SECTION("Color does not affect castling right of opponent") {
+                Color other = opposite(c);
 
-            BoardIndex colFrom = GENERATE(Board::queenSideRookCol, Board::kingSideRookCol);
-            board.setPiece(colFrom, Board::homeRow(other), Piece{Piece::Type::Rook, other});
-            board.makeNullMove();
+                BoardIndex colFrom = GENERATE(Board::queenSideRookCol, Board::kingSideRookCol);
+                board.setPiece(colFrom, 4, Piece{Piece::Type::Rook, other});
+                board.makeNullMove();
 
-            MAKE_VALID_MOVE(Move{colFrom, Board::homeRow(other), colFrom, 4});
+                MAKE_VALID_MOVE(Move{colFrom, 4, colFrom, 5});
 
-            REQUIRE(board.castlingRights() == rights);
-
-            SECTION("Undo keeps the castling rights") {
-                REQUIRE(board.undoMove());
                 REQUIRE(board.castlingRights() == rights);
+
+                SECTION("Undo keeps the castling rights") {
+                    REQUIRE(board.undoMove());
+                    REQUIRE(board.castlingRights() == rights);
+                }
+            }
+        } else {
+            SECTION("Taking rook with rook invalidates both rights") {
+                Color other = opposite(c);
+
+                BoardIndex colFrom = GENERATE(Board::queenSideRookCol, Board::kingSideRookCol);
+                board.makeNullMove();
+
+                MAKE_VALID_MOVE(Move{colFrom, Board::homeRow(other), colFrom, home});
+
+                auto newRights = board.castlingRights();
+                REQUIRE(newRights != rights);
+
+                if (colFrom == Board::queenSideRookCol) {
+                    REQUIRE(newRights == CastlingRight::KingSideCastling);
+                } else {
+                    REQUIRE(colFrom == Board::kingSideRookCol);
+                    REQUIRE(newRights == CastlingRight::QueenSideCastling);
+                }
+
+                SECTION("Undo reverts the castling rights") {
+                    REQUIRE(board.undoMove());
+                    REQUIRE(board.castlingRights() == rights);
+                }
             }
         }
 
@@ -456,13 +486,19 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
 
             BoardIndex colFrom = GENERATE(Board::queenSideRookCol, Board::kingSideRookCol);
 
-            board.setPiece(colFrom, Board::homeRow(other), Piece{Piece::Type::Rook, other});
+            BoardIndex rowFrom = Board::homeRow(other) + Board::pawnDirection(other) * 2;
+
+            board.setPiece(colFrom, rowFrom, Piece{Piece::Type::Rook, other});
             board.makeNullMove();
 
-            MAKE_VALID_MOVE(Move{colFrom, Board::homeRow(other), colFrom, home});
+            MAKE_VALID_MOVE(Move{colFrom, rowFrom, colFrom, home});
 
             auto newRights = board.castlingRights();
-            REQUIRE(newRights != rights);
+            CHECK(newRights != rights);
+            CHECK((newRights & oppColRights) == (rights & oppColRights));
+            // limit to just us
+            newRights = newRights & colRights;
+
             if (colFrom == Board::queenSideRookCol) {
                 REQUIRE((newRights & CastlingRight::QueenSideCastling) == CastlingRight::NoCastling);
             } else {
@@ -483,17 +519,12 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
         bool queenSide = GENERATE_COPY(filter([=](bool b) { return b || kingSide; }, values({1, 0})));
         bool castlingKingSide = GENERATE_COPY(filter([=](bool b) { return (b && kingSide) || (!b && queenSide); }, values({1, 0})));
 
-        CAPTURE(kingSide, queenSide, castlingKingSide);
+        bool withOpponent = GENERATE(true, false);
 
-        board = TestUtil::generateCastlingBoard(c, kingSide, queenSide, false);
-        // TODO: tests with both sides able to castle to check it does not influence each other
+        CAPTURE(kingSide, queenSide, castlingKingSide, withOpponent);
+
+        board = TestUtil::generateCastlingBoard(c, kingSide, queenSide, false, withOpponent);
         const auto rights = board.castlingRights();
-        if (c == Color::White) {
-            REQUIRE((rights & CastlingRight::BlackCastling) == CastlingRight::NoCastling);
-        } else {
-            REQUIRE(c == Color::Black);
-            REQUIRE((rights & CastlingRight::WhiteCastling) == CastlingRight::NoCastling);
-        }
 
         BoardIndex home = Board::homeRow(c);
 
@@ -529,7 +560,7 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
         }
 
         // also resets castling rights on that side
-        REQUIRE(board.castlingRights() == CastlingRight::NoCastling);
+        REQUIRE((board.castlingRights() & colRights) == CastlingRight::NoCastling);
 
         SECTION("Places back pieces after undo") {
             REQUIRE(board.undoMove());
@@ -542,6 +573,8 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
     }
 
     SECTION("Half moves since irreversible is updated correctly") {
+
+        
 
     }
 
