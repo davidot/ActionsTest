@@ -45,6 +45,8 @@ namespace Chess {
         [[nodiscard]] Piece::Type promotedType() const;
 
         bool operator==(const Move& move) const = default;
+
+        std::string toSANSquares() const;
     };
 
     enum class CastlingRight : uint8_t {

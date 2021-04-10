@@ -61,11 +61,6 @@ namespace Chess {
         }
         if (auto p = pieceAt(index); p) {
             m_numPieces[colorIndex(p->color())]--;
-#ifdef STORE_KING_POS
-            if (p->type() == Piece::Type::King) {
-                m_kingPos[colorIndex(p->color())] = -1;
-            }
-#endif
         }
         if (piece.has_value()) {
             m_numPieces[colorIndex(piece->color())]++;
@@ -249,11 +244,11 @@ namespace Chess {
         }
 
         if (parts[3] != "-") {
-            std::optional<BoardIndex> enPassantPawn = b.SANToIndex(parts[3]);
+            std::optional<BoardIndex> enPassantPawn = Board::SANToIndex(parts[3]);
             if (!enPassantPawn.has_value()) {
                 return std::string("Invalid en passant value: ") + std::string(parts[3]);
             }
-            auto [col, row] = b.indexToColumnRow(*enPassantPawn);
+            auto [col, row] = Board::indexToColumnRow(*enPassantPawn);
             auto lastMoveColor = opposite(b.m_nextTurnColor);
             if ((lastMoveColor == Color::White && row != 2) || (lastMoveColor == Color::Black && row != size - 1 - 2)) {
                 return std::string("Cannot have en passant on non 3th or 5th row: " + std::string(parts[3]));
@@ -413,14 +408,14 @@ namespace Chess {
             }
         }
 
-        for (const auto& check : castleChecks) {
-            if ((m_castlingRights & check.right) != CastlingRight::NoCastling) {
-                if (pieceAt(check.col, homeRow(check.piece.color())) != check.piece) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        return std::all_of(castleChecks.cbegin(), castleChecks.cend(), [&](const auto& check) {
+          if ((m_castlingRights & check.right) != CastlingRight::NoCastling) {
+              if (pieceAt(check.col, homeRow(check.piece.color())) != check.piece) {
+                  return false;
+              }
+          }
+          return true;
+        });
     }
 
     std::ostream& operator<<(std::ostream& stream, const CastlingRight& right) {
@@ -654,19 +649,19 @@ namespace Chess {
                 ASSERT(pieceAt(colFrom + 2, rowFrom) == Piece(Piece::Type::King, m_nextTurnColor));
                 ASSERT(pieceAt(colFrom + 1, rowFrom) == Piece(Piece::Type::Rook, m_nextTurnColor));
 
-                setPiece(colFrom, rowFrom, Piece{Piece::Type::King, m_nextTurnColor});
                 setPiece(colFrom + 2, rowFrom, std::nullopt);
-                setPiece(colTo, rowFrom, Piece{Piece::Type::Rook, m_nextTurnColor});
                 setPiece(colFrom + 1, rowFrom, std::nullopt);
+                setPiece(colFrom, rowFrom, Piece{Piece::Type::King, m_nextTurnColor});
+                setPiece(colTo, rowFrom, Piece{Piece::Type::Rook, m_nextTurnColor});
             } else {
                 ASSERT(colTo == Board::queenSideRookCol);
                 ASSERT(pieceAt(colFrom - 2, rowFrom) == Piece(Piece::Type::King, m_nextTurnColor));
                 ASSERT(pieceAt(colFrom - 1, rowFrom) == Piece(Piece::Type::Rook, m_nextTurnColor));
 
-                setPiece(colFrom, rowFrom, Piece{Piece::Type::King, m_nextTurnColor});
                 setPiece(colFrom - 2, rowFrom, std::nullopt);
-                setPiece(colTo, rowFrom, Piece{Piece::Type::Rook, m_nextTurnColor});
                 setPiece(colFrom - 1, rowFrom, std::nullopt);
+                setPiece(colFrom, rowFrom, Piece{Piece::Type::King, m_nextTurnColor});
+                setPiece(colTo, rowFrom, Piece{Piece::Type::Rook, m_nextTurnColor});
             }
         } else {
             ASSERT(pieceAt(m.toPosition).has_value());
@@ -773,6 +768,10 @@ namespace Chess {
 
     std::pair<BoardIndex, BoardIndex> Move::colRowToPosition() const {
         return Board::indexToColumnRow(toPosition);
+    }
+
+    std::string Move::toSANSquares() const {
+        return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition);
     }
 
     const std::string &ExpectedBoard::error() const {
