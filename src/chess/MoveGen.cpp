@@ -89,10 +89,16 @@ namespace Chess {
     }
 
     bool attacked(BoardIndex col, BoardIndex row, const Board &board, std::initializer_list<std::tuple<BoardIndex, BoardIndex, bool>> specialSquares = {}) {
+        if (col >= Board::size || row >= Board::size) {
+            return false;
+        }
         // we assume it is a legal move
         Color us = board.colorToMove();
         Color other = opposite(us);
         auto hasKnight = [&](BoardIndex c, BoardIndex r) {
+            if (std::find(specialSquares.begin(), specialSquares.end(), std::make_tuple(c, r, false)) != specialSquares.end()) {
+                return false;
+            }
             return board.pieceAt(c, r) == Piece{Piece::Type::Knight, other};
         };
 
@@ -407,6 +413,8 @@ namespace Chess {
                     case Piece::Type::Queen:
                         addAllSlidingMoves<ALL_DIRECTIONS>(list, board, col, row);
                         break;
+                    default:
+                        ASSERT_NOT_REACHED();
                 }
             }
         }

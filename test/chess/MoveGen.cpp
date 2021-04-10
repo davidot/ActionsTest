@@ -904,7 +904,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             board.setPiece(0, 7, Piece{Piece::Type::Rook, other});
             board.setPiece(1, 7, Piece{Piece::Type::Rook, toMove});
 
-            board.setPiece(7, 7, Piece{Piece::Type::Pawn, toMove});// this cannot move!
+            board.setPiece(7, 6, Piece{Piece::Type::Pawn, toMove});// this cannot move!
             CAPTURE(board.toFEN());
             MoveList list = generateAllMoves(board);
             unsigned calls = 0;
@@ -922,7 +922,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
             MOVES_NOT_CHECK_OR_STALEMATE();
         }
 
-        SECTION("Attacked by knight") {
+        SECTION("Attacked by knight king can run away") {
             board.setPiece(0, 0, king);
             bool knightPos = GENERATE(true, false);
             if (knightPos) {
@@ -931,7 +931,7 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
                 board.setPiece(2, 1, Piece{Piece::Type::Knight, other});
             }
 
-            board.setPiece(0, 7, Piece{Piece::Type::Pawn, toMove});// this cannot move!
+            board.setPiece(0, 6, Piece{Piece::Type::Pawn, toMove});// this cannot move!
             CAPTURE(board.toFEN());
 
             MoveList list = generateAllMoves(board);
@@ -942,6 +942,33 @@ TEST_CASE("In check/check move generation", "[chess][rules][movegen]") {
                 calls++;
             });
             CHECK(calls == 3);
+            REQUIRE(list.size() == 3);
+            MOVES_NOT_CHECK_OR_STALEMATE();
+        }
+
+        SECTION("Attacked by knight then knight can be taken") {
+            Piece defender{GENERATE(Piece::Type::Queen, Piece::Type::Pawn, Piece::Type::Bishop), toMove};
+
+            board.setPiece(0, Board::homeRow(toMove), king);
+            board.setPiece(1, Board::pawnHomeRow(toMove) + Board::pawnDirection(toMove), Piece{Piece::Type::Knight, other});
+
+            board.setPiece(0, Board::pawnHomeRow(toMove), defender);
+            CAPTURE(defender);
+
+            board.setPiece(7, 4, Piece{Piece::Type::Pawn, toMove});// this cannot move!
+
+            MoveList list = generateAllMoves(board);
+            unsigned calls = 0;
+            list.forEachMoveFrom(0, Board::pawnHomeRow(toMove), [&](const Move &move) {
+              REQUIRE(move.fromPosition != move.toPosition);
+              REQUIRE(move.flag == Move::Flag::None);
+              auto [colTo, rowTo] = move.colRowToPosition();
+              auto piece = board.pieceAt(colTo, rowTo);
+              REQUIRE(piece.has_value());
+              CHECK(piece->type() == Piece::Type::Knight);
+              calls++;
+            });
+            CHECK(calls == 1);
             REQUIRE(list.size() == 3);
             MOVES_NOT_CHECK_OR_STALEMATE();
         }
@@ -1312,6 +1339,25 @@ TEST_CASE("Specific examples", "[chess][movegen]") {
                 calls++;
             });
             REQUIRE(calls == 1);
+        }
+
+        SECTION("Can take knight when being checked by it") {
+            Board board = Board::fromFEN("rnbqkb1r/pppppppp/8/8/4n3/5P2/PPPPPKPP/RNBQ1BNR w kq - 3 3").extract();
+            MoveList list = generateAllMoves(board);
+            CHECK(list.size() == 3);
+            unsigned calls = 0;
+            list.forEachMoveFrom(5, 2, [&](const Move &move) {
+              REQUIRE(move.fromPosition != move.toPosition);
+              REQUIRE(move.flag == Move::Flag::None);
+              calls++;
+              auto [colTo, rowTo] = move.colRowToPosition();
+              CHECK(colTo == 4);
+              CHECK(rowTo == 3);
+              auto piece = board.pieceAt(colTo, rowTo);
+              REQUIRE(piece.has_value());
+              CHECK(piece->type() == Piece::Type::Knight);
+            });
+            CHECK(calls == 1);
         }
     }
 
