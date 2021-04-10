@@ -770,6 +770,17 @@ namespace Chess {
     }
 
     std::string Move::toSANSquares() const {
+        if (flag == Flag::Castling) [[unlikely]] {
+            std::string to = Board::indexToSAN(toPosition);
+            if (to[0] == 'h') {
+                to[0] = 'g';
+            } else if (to[0] == 'a') {
+                to[0] = 'c';
+            } else {
+                ASSERT_NOT_REACHED();
+            }
+            return Board::indexToSAN(fromPosition) + to;
+        }
         return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition);
     }
 
