@@ -139,7 +139,7 @@ namespace Chess {
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 
-        bool setAvailableCastles(std::string_view vw);
+        std::optional<std::string> setAvailableCastles(std::string_view vw);
 
         [[nodiscard]] std::optional<Piece> pieceAt(BoardIndex index) const;
 

@@ -263,8 +263,9 @@ namespace Chess {
         }
         b.m_nextTurnColor = nextTurn.value();
 
-        if (!b.setAvailableCastles(parts[2])) {
-            return std::string("Invalid possible castling moves value: ") + std::string(parts[2]);
+        auto castling = b.setAvailableCastles(parts[2]);
+        if (castling.has_value()) {
+            return std::string("Invalid possible castling moves value: ") + castling.value() + "(" + std::string(parts[2]) + ")";
         }
 
         if (parts[3] != "-") {
@@ -409,12 +410,12 @@ namespace Chess {
             CstlChk{CastlingRight::BlackKingSide, Board::kingSideRookCol, Piece{Piece::Type::Rook, Color::Black}},
     };
 
-    bool Board::setAvailableCastles(std::string_view vw) {
+    std::optional<std::string> Board::setAvailableCastles(std::string_view vw) {
         if (vw.empty() || vw.size() > 4) {
-            return false;
+            return "Too many or few characters";
         }
         if (vw == "-") {
-            return true;
+            return {};
         }
         //reset before hand
         m_castlingRights = CastlingRight::NoCastling;
@@ -425,21 +426,24 @@ namespace Chess {
             if (auto pos = std::find_if(front, castleMapping.end(), [&](auto pair) {
                     return pair.first == c;
                 }); pos == castleMapping.end()) {
-                return false;
+                return std::string("Unknown character: ") + c;
             } else {
                 m_castlingRights |= pos->second;
                 front = std::next(pos);
             }
         }
 
-        return std::all_of(castleChecks.cbegin(), castleChecks.cend(), [&](const auto& check) {
+        if (std::any_of(castleChecks.cbegin(), castleChecks.cend(), [&](const auto& check) {
           if ((m_castlingRights & check.right) != CastlingRight::NoCastling) {
               if (pieceAt(check.col, homeRow(check.piece.color())) != check.piece) {
-                  return false;
+                  return true;
               }
           }
-          return true;
-        });
+          return false;
+        })) {
+            return std::string("Castling but pieces not present: ") + std::string(vw);
+        }
+        return {};
     }
 
     std::ostream& operator<<(std::ostream& stream, const CastlingRight& right) {
