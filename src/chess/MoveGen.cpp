@@ -360,8 +360,8 @@ namespace Chess {
 
     void addCastles(MoveList &list, const Board &board, BoardIndex col, BoardIndex row, Color color) {
         auto rights = board.castlingRights();
-        if ((color == Color::White && (rights & CastlingRight::WhiteCastling) == CastlingRight::NoCastling)
-            || (color == Color::Black && (rights & CastlingRight::BlackCastling) == CastlingRight::NoCastling)) {
+        rights = rights & (color == Color::White ? CastlingRight::WhiteCastling : CastlingRight::BlackCastling);
+        if (rights == CastlingRight::NoCastling) {
             return;
         }
         auto home = Board::homeRow(color);
