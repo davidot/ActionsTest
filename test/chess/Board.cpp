@@ -466,7 +466,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         std::string pieceFEN = GENERATE("pppppppp", "nnnnnnnn", "kkkkkkkk", "qqqqqqqq", "rrrrrrrr", "bbbbbbbb");
         bool upper = GENERATE(true, false);
         if (upper) {
-            std::transform(pieceFEN.begin(), pieceFEN.end(), pieceFEN.begin(), std::toupper);
+            std::transform(pieceFEN.begin(), pieceFEN.end(), pieceFEN.begin(), toupper);
         }
         CAPTURE(pieceFEN);
 
