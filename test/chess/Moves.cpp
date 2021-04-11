@@ -574,11 +574,64 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
 
     SECTION("Half moves since irreversible is updated correctly") {
 
-        
+        uint32_t makeHalfMoves = GENERATE(TEST_SOME(values({0, 1, 2, 5, 13, 99, 98})));
 
+        auto setHalfMoves = [&] {
+          if (board.colorToMove() != c) {
+              board.makeNullMove();
+          }
+          std::string fen = board.toFEN();
+          auto pos = fen.rfind('-');
+          REQUIRE(pos != std::string::npos);
+          REQUIRE(fen[pos + 1] == ' ');
+          REQUIRE(fen[pos + 3] == ' ');
+          fen.replace(pos + 2, 1, std::to_string(makeHalfMoves));
+
+          auto eb = Board::fromFEN(fen);
+          if (!eb) {
+              WARN(eb.error());
+              REQUIRE(eb);
+          }
+          board = eb.extract();
+          REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves);
+        };
+
+        SECTION("Pawn move resets halfmove counter to 0") {
+            board = Board::standardBoard();
+            REQUIRE(board.halfMovesSinceIrreversible() < 10);
+
+            setHalfMoves();
+
+            Move mv(0, Board::pawnHomeRow(c), 0, Board::pawnHomeRow(c) + Board::pawnDirection(c));
+            MAKE_VALID_MOVE(mv);
+
+            REQUIRE(board.halfMovesSinceIrreversible() == 0);
+
+            SECTION("Undo sets it back") {
+                REQUIRE(board.undoMove());
+                REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves);
+            }
+
+        }
+
+        SECTION("Capture resets half move counter") {
+            board.setPiece(0, 0, Piece{Piece::Type::Queen, c});
+            board.setPiece(1, 1, Piece{Piece::Type::Queen, opposite(c)});
+
+            setHalfMoves();
+
+            Move mv{0, 0, 1, 1};
+            MAKE_VALID_MOVE(mv);
+
+            REQUIRE(board.halfMovesSinceIrreversible() == 0);
+
+            SECTION("Undo sets it back") {
+                REQUIRE(board.undoMove());
+                REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves);
+                REQUIRE(board.pieceAt(1, 1) == Piece{Piece::Type::Queen, opposite(c)});
+            }
+        }
     }
-
-
 }
 
 TEST_CASE("Generates correct SAN notation for moves") {

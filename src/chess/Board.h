@@ -168,6 +168,11 @@ namespace Chess {
             std::optional<Piece> capturedPiece;
             std::optional<BoardIndex> previousEnPassant;
             CastlingRight previousCastlingRights = CastlingRight::NoCastling;
+            uint32_t previousSinceCapture;
+
+            MoveData(const Board& board, Move move);
+
+            void takeValues(Board& board);
         };
 
         std::deque<MoveData> m_history;

@@ -555,18 +555,29 @@ namespace Chess {
             && m_pieces == rhs.m_pieces;
     }
 
+    Board::MoveData::MoveData(const Board& board, Move move) :
+        performedMove(move),
+        previousEnPassant(board.m_enPassant),
+        previousCastlingRights(board.m_castlingRights),
+        previousSinceCapture(board.m_halfMovesSinceCaptureOrPawn) {
+    }
+
+    void Board::MoveData::takeValues(Board& board) {
+        board.m_enPassant = previousEnPassant;
+        board.m_castlingRights = previousCastlingRights;
+        board.m_halfMovesSinceCaptureOrPawn = previousSinceCapture;
+    }
+
     bool Board::makeMove(Move m) {
         ASSERT(m.fromPosition != m.toPosition);
         ASSERT(pieceAt(m.fromPosition).has_value()
                && pieceAt(m.fromPosition)->color() == m_nextTurnColor);
 
         Piece p = pieceAt(m.fromPosition).value();
-        MoveData data{};
+        MoveData data{*this, m};
 
-        data.previousEnPassant = m_enPassant;
-        data.previousCastlingRights = m_castlingRights;
-        data.performedMove = m;
-
+        ++m_halfMovesMade;
+        ++m_halfMovesSinceCaptureOrPawn;
 
         auto [colFrom, rowFrom] = indexToColumnRow(m.fromPosition);
         auto [colTo, rowTo] = indexToColumnRow(m.toPosition);
@@ -600,6 +611,12 @@ namespace Chess {
             setPiece(m.fromPosition, std::nullopt);
         }
 
+        if (p.type() == Piece::Type::Pawn || data.capturedPiece.has_value()) {
+            ASSERT(data.capturedPiece->color() != m_nextTurnColor);
+            m_halfMovesSinceCaptureOrPawn = 0;
+        }
+
+        m_history.push_back(data);
 
         if (m.isPromotion()) {
             setPiece(m.toPosition, Piece{m.promotedType(), m_nextTurnColor});
@@ -649,9 +666,6 @@ namespace Chess {
         removeCastlingRights(colTo, rowTo);
 
         m_nextTurnColor = opposite(m_nextTurnColor);
-        m_history.push_back(data);
-        ++m_halfMovesMade;
-        ++m_halfMovesSinceCaptureOrPawn;
 
         return true;
     }
@@ -710,12 +724,10 @@ namespace Chess {
             setPiece(colTo, rowFrom, Piece{Piece::Type::Pawn, opposite(m_nextTurnColor)});
         }
 
-        m_enPassant = data.previousEnPassant;
-        m_castlingRights = data.previousCastlingRights;
+        data.takeValues(*this);
 
+        ASSERT(m_halfMovesMade > 0);
         --m_halfMovesMade;
-        // TODO: wrong!
-        --m_halfMovesSinceCaptureOrPawn;
 
         return true;
     }
