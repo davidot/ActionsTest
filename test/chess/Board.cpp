@@ -349,6 +349,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("w - - 0.3 1");
             fails("w - - 0f 1");
             fails("w - - 1f 1");
+            fails("w - - 2222222221 1");
+            fails("w - - 150 1");
 
             fails("w - - 0 x");
             fails("w - - 0 0");
@@ -356,6 +358,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("w - - 0 0.3");
             fails("w - - 0 0a");
             fails("w - - 0 1a");
+            fails("w - - 0 2222222221");
+
 #undef fails
 
         }
@@ -370,6 +374,8 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         }
 
         SECTION("Invalid en passant moves") {
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - aa 0 1");
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -a 0 1");
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a1 0 1");
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - h1 0 1");
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - h8 0 1");
@@ -378,11 +384,11 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - c2 0 1");
             failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a4 0 1");
 
-            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - a3 0 1");              //Not valid due to no pawn
-            failsBase("rnbqkbnr/1ppppppp/8/p7/p7/8/PPPPPPPP/RNBQKBNR w - a3 0 1");            //Not valid due to no pawn
-            failsBase("rnbqkbnr/pppppppp/8/8/PPPPPPPP/PPPPPPPP/PPPPPPPP/RNBQKBNR w - a3 0 1");//Not valid due to non empty square
+            failsBase("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b - a3 0 1");              //Not valid due to no pawn
+            failsBase("rnbqkbnr/1ppppppp/8/p7/p7/8/PPPPPPPP/RNBQKBNR b - a3 0 1");            //Not valid due to no pawn
+            failsBase("rnbqkbnr/pppppppp/8/8/PPPPPPPP/PPPPPPPP/PPPPPPPP/RNBQKBNR b - a3 0 1");//Not valid due to non empty square
             failsBase("rnbqkbnr/pppppppp/8/8/P7/8/8/1PPPPPPP/RNBQKBNR w - a3 0 1");           //Not valid due it being whites turn
-            failsBase("rnbqkbnr/pppppppp/8/8/8/p7/8/1PPPPPPP/RNBQKBNR w - a3 0 1");           //Not valid due it being the wrong color
+            failsBase("rnbqkbnr/pppppppp/8/8/8/p7/8/1PPPPPPP/RNBQKBNR b - a3 0 1");           //Not valid due it being the wrong color
         }
 
         SECTION("Provably invalid castling state") {

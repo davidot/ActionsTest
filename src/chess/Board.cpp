@@ -289,7 +289,8 @@ namespace Chess {
         }
 
         std::optional<uint32_t> halfMovesSinceCapture = strictParseUInt(parts[4]);
-        if (!halfMovesSinceCapture.has_value()) {
+        if (!halfMovesSinceCapture.has_value() || halfMovesSinceCapture.value() > 149) {
+            // must draw after 75 full moves on not capturing
             return std::string("Invalid half moves since capture: ") + std::string(parts[4]);
         }
         b.m_halfMovesSinceCaptureOrPawn = halfMovesSinceCapture.value();
@@ -297,6 +298,9 @@ namespace Chess {
         std::optional<uint32_t> totalFullMoves = strictParseUInt(parts[5]);
         if (!totalFullMoves.has_value() || totalFullMoves == 0u) {
             return std::string("Invalid full moves made: ") + std::string(parts[5]);
+        }
+        if (totalFullMoves >= (std::numeric_limits<uint32_t>::max() / 2u - 3u)) {
+            return std::string("Too many full moves") + std::string(parts[5]);
         }
         b.m_halfMovesMade = (totalFullMoves.value() - 1) * 2 + (b.m_nextTurnColor == Color::Black);
 
