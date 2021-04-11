@@ -42,7 +42,7 @@ namespace Chess {
         friend MoveList generateAllMoves(const Board& board);
 
         std::vector<Move> m_moves;
-        bool m_inCheck;
+        bool m_inCheck = false;
     };
 
     MoveList generateAllMoves(const Board& board);

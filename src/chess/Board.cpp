@@ -780,6 +780,10 @@ namespace Chess {
                 ASSERT_NOT_REACHED();
             }
             return Board::indexToSAN(fromPosition) + to;
+        } else if (isPromotion()) [[unlikely]] {
+            return Board::indexToSAN(fromPosition)
+                   + Board::indexToSAN(toPosition)
+                   + Piece{promotedType(), Color::White}.toFEN();
         }
         return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition);
     }

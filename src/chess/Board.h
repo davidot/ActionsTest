@@ -46,7 +46,7 @@ namespace Chess {
 
         bool operator==(const Move& move) const = default;
 
-        std::string toSANSquares() const;
+        [[nodiscard]] std::string toSANSquares() const;
     };
 
     enum class CastlingRight : uint8_t {
