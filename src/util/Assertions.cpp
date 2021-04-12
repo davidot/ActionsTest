@@ -4,10 +4,10 @@
 namespace util::Assert {
 
     [[noreturn]] void assertFailed() {
-#if defined __has_builtin
-        #if __has_builtin(__builtin_trap)
-            __builtin_trap();
-#endif
+#ifdef _MSC_VER
+        __debugbreak();
+#else
+        __builtin_trap();
 #endif
         std::exit(-3);
     }
