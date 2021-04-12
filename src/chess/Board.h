@@ -178,7 +178,7 @@ namespace Chess {
         std::deque<MoveData> m_history;
 
         std::array<uint8_t, 2> m_numPieces = {0, 0};
-#define STORE_KING_POS
+
 #ifdef STORE_KING_POS
         constexpr static BoardIndex invalidVal = -1;
         std::array<BoardIndex, 2> m_kingPos = {invalidVal, invalidVal};
