@@ -130,6 +130,6 @@ jobs:
         timeout-minutes: 15
         run: >
           ${{ env.build_folder_location }}/ActionsTest --benchmark-no-analysis
-          --benchmark-samples 1000
+          --benchmark-samples 10
           [benchmark]
 
