@@ -616,7 +616,6 @@ namespace Chess {
         }
 
         if (p.type() == Piece::Type::Pawn || data.capturedPiece.has_value()) {
-            ASSERT(data.capturedPiece->color() != m_nextTurnColor);
             m_halfMovesSinceCaptureOrPawn = 0;
         }
 
