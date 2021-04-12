@@ -59,8 +59,9 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
     }
 
     SECTION("Queen can move from anywhere to anywhere else") {
-        uint8_t fromCol = GENERATE(TEST_SOME(range(0, 8)));
-        uint8_t fromRow = GENERATE(TEST_SOME(range(0, 8)));
+        BoardIndex index = GENERATE(take(3, random(0u, 63u)));
+        uint8_t fromCol = index % 8u;
+        uint8_t fromRow = index / 8u;
 
         uint8_t toCol = GENERATE(TEST_SOME(range(0, 8)));
         CAPTURE(fromCol, fromRow, toCol);
@@ -162,6 +163,7 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
 
         uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
         uint8_t fromRow = GENERATE(TEST_SOME(range(2, 6)));
+        CAPTURE(col, fromRow);
 
         uint8_t toRow = fromRow + Board::pawnDirection(c);
 

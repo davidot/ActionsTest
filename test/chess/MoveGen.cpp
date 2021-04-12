@@ -753,8 +753,11 @@ TEST_CASE("Castling move generation", "[chess][rules][movegen]") {
             Piece p{GENERATE(ANY_TYPE), toMove};
 
             // do not step on the toes of our opponent
-            uint8_t col = GENERATE(TEST_SOME(range(0, 8)));
-            uint8_t row = GENERATE(TEST_SOME(range(1, 7)));
+            BoardIndex index = GENERATE(take(2,random(8u, 55u)));
+            uint8_t col = index % 8u;
+            uint8_t row = index / 8u;
+            CHECK(row != 0);
+            CHECK(row != 7);
             REQUIRE(board.pieceAt(col, row) == std::nullopt);
             board.setPiece(col, row, p);
         }
