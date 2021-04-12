@@ -113,6 +113,7 @@ jobs:
           -DCMAKE_CXX_FLAGS="${{ matrix.config.extra-flags }}"
 
       - name: Build
+        timeout-minutes: 30
         run: cmake --build ${{ env.build_folder_location }}
 
       - name: Post-build ccache
@@ -120,11 +121,13 @@ jobs:
         run: ccache -s
 
       - name: Run tests
+        timeout-minutes: 15
         run: |
           cd ${{ env.build_folder_location }}
           ctest --output-on-failure
 
       - name: Run benchmarks
+        timeout-minutes: 15
         run: >
           ${{ env.build_folder_location }}/ActionsTest --benchmark-no-analysis
           --benchmark-samples 1000
