@@ -14,11 +14,16 @@
 
 namespace Chess {
 
-#define INT(x) static_cast<uint8_t>(x)
-#define TO_CASTLE(x) static_cast<CastlingRight>(x)
-
     CastlingRight operator|(const CastlingRight& lhs, const CastlingRight& rhs) {
-        return TO_CASTLE(INT(lhs) | INT(rhs));
+        return static_cast<CastlingRight>(
+            static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs)
+        );
+    }
+
+    CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs) {
+        return static_cast<CastlingRight>(
+            static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs)
+        );
     }
 
     CastlingRight& operator|=(CastlingRight& lhs, const CastlingRight& rhs) {
@@ -31,17 +36,10 @@ namespace Chess {
         return lhs;
     }
 
-    CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs) {
-        return TO_CASTLE(INT(lhs) & INT(rhs));
-    }
-
     // may give invalid castling rights!! so is not defined in .h
     CastlingRight operator~(const CastlingRight& cr) {
-        return TO_CASTLE(~INT(cr));
+        return static_cast<CastlingRight>(~static_cast<uint8_t>(cr));
     }
-
-#undef INT
-#undef TO_CASTLE
 
 
     Board Board::emptyBoard() {
