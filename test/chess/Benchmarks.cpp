@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 #include <chess/MoveGen.h>
+#include <iostream>
 
 #define BENCHMARK_TAGS "[.][chess][benchmark]"
 
@@ -73,3 +74,111 @@ TEST_CASE("MoveGen benchmarks", "[movegen]" BENCHMARK_TAGS) {
     TEST_FEN("RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w - - 0 1", "Inverted start pos");
 }
 #undef TEST_FEN
+
+template<bool output = false>
+uint64_t countMoves(Board& board, int depth) {
+    if (depth <= 0) {
+        return 1;
+    }
+    MoveList moves = generateAllMoves(board);
+    if (depth == 1) {
+        if constexpr (output) {
+            moves.forEachMove([&](const Move& move) {
+              std::cout << move.toSANSquares() << ": 1\n";
+            });
+        }
+        return moves.size();
+    }
+    uint64_t count = 0;
+    moves.forEachMove([&](const Move& move) {
+        board.makeMove(move);
+        uint64_t subCount = countMoves<false>(board, depth - 1);
+        if constexpr (output) {
+            std::cout << move.toSANSquares() << ": " << subCount << '\n';
+        }
+        count += subCount;
+        board.undoMove();
+    });
+
+    return count;
+}
+
+TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
+
+    // For correct counts see: https://www.chessprogramming.org/Perft_Results
+
+    {
+        Board board = Board::standardBoard();
+
+        BENCHMARK("Perft(2) from start position") {
+            auto count = countMoves(board, 2);
+            REQUIRE(count == 400);
+        };
+
+        BENCHMARK("Perft(3) from start position") {
+            auto count = countMoves(board, 3);
+            REQUIRE(count == 8902);
+        };
+
+        BENCHMARK("Perft(4) from start position") {
+            auto count = countMoves(board, 4);
+            REQUIRE(count == 197281);
+        };
+#ifdef LONG_BENCHMAKRS
+        BENCHMARK("Perft(5) from start position") {
+            auto count = countMoves(board, 5);
+            REQUIRE(count == 4865609);
+        };
+
+        BENCHMARK("Perft(6) from start position") {
+            auto count = countMoves(board, 6);
+            REQUIRE(count == 119060324llu);
+        };
+#endif
+    }
+
+    {
+        Board board = Board::fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1").extract();
+        BENCHMARK("Perft(3) from Kiwipete position") {
+            auto count = countMoves(board, 3);
+            REQUIRE(count == 97862);
+        };
+#ifdef LONG_BENCHMAKRS
+        BENCHMARK("Perft(4) from Kiwipete position") {
+            auto count = countMoves(board, 4);
+            REQUIRE(count == 4085603);
+        };
+
+        BENCHMARK("Perft(5) from Kiwipete position") {
+            auto count = countMoves(board, 5, true);
+            REQUIRE(count == 193690690);
+        };
+#endif
+
+    }
+
+    {
+        Board board = Board::fromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1").extract();
+        BENCHMARK("Perft(4) from position 3") {
+            auto count = countMoves(board, 4);
+            REQUIRE(count == 43238);
+        };
+#ifdef LONG_BENCHMAKRS
+        BENCHMARK("Perft(5) from position 3") {
+            auto count = countMoves(board, 5);
+            REQUIRE(count == 674624);
+        };
+
+        BENCHMARK("Perft(6) from position 3") {
+            auto count = countMoves(board, 6);
+            REQUIRE(count == 11030083);
+        };
+
+        BENCHMARK("Perft(7) from position 3") {
+            auto count = countMoves(board, 7);
+            REQUIRE(count == 178633661);
+        };
+#endif
+    }
+
+}
