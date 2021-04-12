@@ -180,8 +180,9 @@ namespace Chess {
         std::array<uint8_t, 2> m_numPieces = {0, 0};
 
 #ifdef STORE_KING_POS
-        std::array<BoardIndex, 2> m_kingPos = {-1, -1};
-        static_assert(BoardIndex(-1) > size, "-1 is used as out of bounds");
+        constexpr static BoardIndex invalidVal = -1;
+        std::array<BoardIndex, 2> m_kingPos = {invalidVal, invalidVal};
+        static_assert(invalidVal > size, "-1 is used as out of bounds");
 #endif
 
         friend struct Move;
