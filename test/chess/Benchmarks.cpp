@@ -150,7 +150,7 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
         };
 
         BENCHMARK("Perft(5) from Kiwipete position") {
-            auto count = countMoves(board, 5, true);
+            auto count = countMoves(board, 5);
             REQUIRE(count == 193690690);
         };
 #endif
@@ -177,6 +177,44 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
         BENCHMARK("Perft(7) from position 3") {
             auto count = countMoves(board, 7);
             REQUIRE(count == 178633661);
+        };
+#endif
+    }
+
+    {
+        Board board = Board::fromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1").extract();
+        BENCHMARK("Perft(3) from position 4 W") {
+            auto count = countMoves(board, 3);
+            REQUIRE(count == 9467);
+        };
+#ifdef LONG_BENCHMAKRS
+        BENCHMARK("Perft(4) from position 4 W") {
+            auto count = countMoves(board, 4);
+            REQUIRE(count == 422333);
+        };
+
+        BENCHMARK("Perft(5) from position 4 W") {
+            auto count = countMoves(board, 5);
+            REQUIRE(count == 15833292);
+        };
+#endif
+    }
+
+    {
+        Board board = Board::fromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1").extract();
+        BENCHMARK("Perft(3) from position 4 B") {
+            auto count = countMoves(board, 3);
+            REQUIRE(count == 9467);
+        };
+#ifdef LONG_BENCHMAKRS
+        BENCHMARK("Perft(4) from position 4 B") {
+            auto count = countMoves(board, 4);
+            REQUIRE(count == 422333);
+        };
+
+        BENCHMARK("Perft(5) from position 4 B") {
+            auto count = countMoves(board, 5);
+            REQUIRE(count == 15833292);
         };
 #endif
     }
