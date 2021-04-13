@@ -28,6 +28,27 @@ TEST_CASE("Board FEN parsing", "[fen]" BENCHMARK_TAGS) {
     TEST_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "Start pos");
 
     TEST_FEN("4Q2Q/4r3/6n1/1bbK1krn/RR1RRnRR/2qn1R1n/4n1nN/Q3Q3 w - - 1 2", "Some FEN");
+
+    //random / selected for many or few pieces from: http://mathieupage.com/?p=65
+
+    TEST_FEN("1k1r4/pp3p2/4p3/PP1p1np1/2rP3p/2P2P1P/R3NKP1/R7 w - - 5 27", "1");
+    TEST_FEN("1k1r4/pp3p2/4ppn1/3r4/Q2P2P1/1PP2P1p/3RN2q/1K1R4 w - - 0 28", "2");
+    TEST_FEN("1k1r4/pp3pp1/1q1r1n1n/3p1P1p/3P1B2/P2B2PP/2Q2P2/2R2RK1 w - - 3 25", "3");
+    TEST_FEN("RrRr4/1P2kp2/4p2p/4bp2/8/5BP1/5P1P/6K1 b - - 10 34", "4");
+    TEST_FEN("rr6/q1p1kpp1/p2bpn1p/8/Q1NP4/2PP4/P5PP/1RB2RK1 w - - 4 19", "5");
+    TEST_FEN("rnbq1rk1/1p2bppp/p3pn2/8/2BN1B2/2P2N2/PP3PPP/R2Q1RK1 b - - 1 11", "6");
+    TEST_FEN("1b1r3r/pk2nb1p/1ppq1p2/3p1Pp1/Q2P4/N2BPN1P/PP4P1/2R2RK1 w - g6 0 21", "7");
+    TEST_FEN("1B4k1/5p2/bp3q1p/3p4/6pP/1P1nP1P1/P2Q2B1/6K1 b - h3 0 36", "8");
+    TEST_FEN("1B1b1k2/2p2pp1/4b2p/4N3/3P4/2P2P2/6PP/6K1 b - - 0 32", "9");
+    TEST_FEN("1B1b1k2/2n2p1p/p1B1p3/2Pp2p1/3P4/4P3/1P3PPP/5K2 w - - 3 29", "10");
+    TEST_FEN("1B1b1r1k/2p2ppp/R2pq3/1p2p2b/4PnP1/2PP1N1P/1P3P1K/3Q2R1 b - - 2 22", "11");
+    TEST_FEN("1b1n1rk1/1q2R1p1/2b3rp/1p3p2/1Ppp1P2/3P1N2/2PB2PP/R3Q1NK b - - 1 33", "12");
+    TEST_FEN("1b1qr1k1/rp1n2p1/2p1p1bp/p2p1p2/P1PP1P2/1Q2P2P/1P1N2P1/2RRBBK1 w - - 0 19", "13");
+    TEST_FEN("1b3R2/k3r3/8/pK1B4/P1P5/8/8/8 w - - 13 99", "14");
+    TEST_FEN("1k6/1r6/2K1B3/8/8/R7/8/8 w - - 105 150", "15");
+    TEST_FEN("1b6/8/1nk5/K7/8/8/8/8 b - - 47 150", "16");
+
+
 }
 #undef TEST_FEN
 
