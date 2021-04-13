@@ -310,11 +310,20 @@ namespace Chess {
     }
 
     BoardIndex Board::columnRowToIndex(BoardIndex column, BoardIndex row) {
+#ifdef SWAP_ROW_ORDER
+        return column + size * row;
+#else
         return column + uint16_t(size) * (uint16_t(size) - 1 - row);
+#endif
+
     }
 
     std::pair<BoardIndex, BoardIndex> Board::indexToColumnRow(BoardIndex index) {
+#ifdef SWAP_ROW_ORDER
+        return std::make_pair(index % size, index / size);
+#else
         return std::make_pair(index % size, (size - 1) - index / size);
+#endif
     }
 
     std::optional<Piece> Board::pieceAt(BoardIndex column, BoardIndex row) const {
