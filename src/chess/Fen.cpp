@@ -19,13 +19,13 @@ namespace Chess {
         char c;
         CastlingRight right;
 
-        CastleMap(Piece::Type tp, Color c, CastlingRight cr) noexcept :
-            c(Piece(tp, c).toFEN()),
+        CastleMap(Piece::Type tp, Color col, CastlingRight cr) noexcept :
+            c(Piece(tp, col).toFEN()),
             right(cr) {
         }
     };
 
-    const std::array<CastleMap, 4> castleMapping = {
+    const static std::array<CastleMap, 4> castleMapping = {
             CastleMap{Piece::Type::King, Color::White, CastlingRight::WhiteKingSide},
             CastleMap{Piece::Type::Queen, Color::White, CastlingRight::WhiteQueenSide},
             CastleMap{Piece::Type::King, Color::Black, CastlingRight::BlackKingSide},
@@ -38,7 +38,7 @@ namespace Chess {
         Piece piece;
     };
 
-    const std::array<CastleCheck, 6> castleChecks = {
+    const static std::array<CastleCheck, 6> castleChecks = {
             CastleCheck{CastlingRight::WhiteCastling, Board::kingCol, Piece{Piece::Type::King, Color::White}},
             CastleCheck{CastlingRight::WhiteQueenSide, Board::queenSideRookCol, Piece{Piece::Type::Rook, Color::White}},
             CastleCheck{CastlingRight::WhiteKingSide, Board::kingSideRookCol, Piece{Piece::Type::Rook, Color::White}},
