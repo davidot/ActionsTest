@@ -8,6 +8,7 @@
 #include <optional>
 #include <string_view>
 #include <variant>
+#include <tuple>
 
 namespace Chess {
 
@@ -24,6 +25,10 @@ namespace Chess {
         QueenSideCastling = WhiteQueenSide | BlackQueenSide,
         AnyCastling = WhiteCastling | BlackCastling
     };
+
+    CastlingRight operator|(const CastlingRight& lhs, const CastlingRight& rhs);
+    CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs);
+    std::ostream& operator<<(std::ostream& strm, const CastlingRight& cr);
 
     class Board {
     public:
@@ -150,10 +155,6 @@ namespace Chess {
         friend struct Move;
         friend class MoveList;
     };
-
-    CastlingRight operator|(const CastlingRight& lhs, const CastlingRight& rhs);
-    CastlingRight operator&(const CastlingRight& lhs, const CastlingRight& rhs);
-    std::ostream& operator<<(std::ostream& strm, const CastlingRight& cr);
 
     struct ExpectedBoard {
     private:
