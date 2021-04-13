@@ -386,9 +386,8 @@ namespace Chess {
 
         MoveList list{};
         Color color = board.colorToMove();
-
-        for (BI col = 0; col < Board::size; col++) {
-            for (BI row = 0; row < Board::size; row++) {
+        for (BI row = 0; row < Board::size; row++) {
+            for (BI col = 0; col < Board::size; col++) {
                 auto opt_piece = board.pieceAt(col, row);
                 if (!opt_piece || opt_piece->color() != color) {
                     continue;

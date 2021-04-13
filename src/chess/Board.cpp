@@ -135,25 +135,27 @@ namespace Chess {
     std::optional<std::string> Board::parseFENBoard(std::string_view view) {
         auto next = view.begin();
 
-        uint32_t index = 0;
-        uint32_t row = 1;
+        uint32_t row = 7;
+        uint32_t col = 0;
         bool lastWasNum = false;
-        uint16_t totalSize = size * size;
 
-        while (next != view.end() && index <= totalSize) {
-            if (index == size * row) {
-                if (index == totalSize) {
+        while (next != view.end() && row <= 7) {
+            ASSERT(col <= 8);
+            ASSERT(row <= 7);
+            if (col == 8) {
+                if (row == 0) {
                     if (*next == '/') {
                         return "Must not have trailing '/'";
                     }
-                    return "Board is too long already data for _" + std::to_string(index) + "_ squares";
+                    return "Board is too long already data for _64_ squares";
                 }
                 if (*next != '/') {
                     return "Must have '/' as row separators";
                 }
 
                 ++next;
-                ++row;
+                --row;
+                col = 0;
                 lastWasNum = false;
                 // just in case it was the final char
                 continue;
@@ -163,8 +165,8 @@ namespace Chess {
                 if (!piece) {
                     return "Unknown piece type'" + std::string(1, *next) + "'";
                 }
-                setPiece(index, *piece);
-                ++index;
+                setPiece(col, row, *piece);
+                ++col;
                 lastWasNum = false;
             } else {
                 if (!std::isdigit(*next)) {
@@ -177,10 +179,10 @@ namespace Chess {
                 if (val == 0) {
                     return "Skipping 0 is not allowed";
                 }
-                if (val > size || val > (size - index % size)) {
+                if (val > size || val > (size - col)) {
                     return "Skipping more than a full row or the current row _" + std::to_string(val) + "_";
                 }
-                index += val;
+                col += val;
 
                 lastWasNum = true;
             }
@@ -189,13 +191,12 @@ namespace Chess {
         }
 
 
-        if (index < totalSize) {
-            return "Not enough data to fill board only reached " + std::to_string(index);
+        if (row > 0 || col != 8) {
+            return "Not enough data to fill board only reached row: "
+                + std::to_string(row) + " col: " + std::to_string(col);
         }
 
-
-
-        // weirdly nullopt means no error here...
+        // remember nullopt means no error here...
         return std::nullopt;
     }
 
@@ -308,22 +309,12 @@ namespace Chess {
     Color Board::colorToMove() const {
         return m_nextTurnColor;
     }
-
     BoardIndex Board::columnRowToIndex(BoardIndex column, BoardIndex row) {
-#ifdef SWAP_ROW_ORDER
         return column + size * row;
-#else
-        return column + uint16_t(size) * (uint16_t(size) - 1 - row);
-#endif
-
     }
 
     std::pair<BoardIndex, BoardIndex> Board::indexToColumnRow(BoardIndex index) {
-#ifdef SWAP_ROW_ORDER
         return std::make_pair(index % size, index / size);
-#else
-        return std::make_pair(index % size, (size - 1) - index / size);
-#endif
     }
 
     std::optional<Piece> Board::pieceAt(BoardIndex column, BoardIndex row) const {
