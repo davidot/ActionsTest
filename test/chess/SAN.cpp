@@ -72,7 +72,7 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
 }
 
 
-TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
+TEST_CASE("SAN move parsing", "[.][chess][parsing][san][move]") {
 
     //  file of departure if different
     //  rank of departure if the files are the same but the ranks differ
