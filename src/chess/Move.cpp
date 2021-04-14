@@ -25,6 +25,17 @@ namespace Chess {
     Move::Move() : toPosition(0), fromPosition(0), flag(Flag::None) {
     }
 
+    Move::Move(std::string_view from, std::string_view to, Move::Flag flags) :
+        flag(flags) {
+        auto fromSquare = Board::SANToIndex(from);
+        auto toSquare = Board::SANToIndex(to);
+        ASSERT(fromSquare);
+        ASSERT(toSquare);
+
+        fromPosition = fromSquare.value();
+        toPosition = toSquare.value();
+    }
+
     bool Move::isPromotion() const {
         return (static_cast<uint8_t>(flag) & 0x4u) != 0;
     }
@@ -66,6 +77,8 @@ namespace Chess {
             return Board::indexToSAN(fromPosition) + to;
         } else if (isPromotion()) [[unlikely]] {
             return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition) + Piece{promotedType(), Color::White}.toFEN();
+        } else if (fromPosition == toPosition) [[unlikely]] {
+            return "-";
         }
         return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition);
     }

@@ -30,6 +30,8 @@ namespace Chess {
         Move(BoardIndex fromCol, BoardIndex fromRow,
              BoardIndex toCol, BoardIndex toRow, Flag flags = Flag::None);
 
+        Move(std::string_view from, std::string_view to, Flag flags = Flag::None);
+
         [[nodiscard]] std::pair<BoardIndex, BoardIndex> colRowFromPosition() const;
         [[nodiscard]] std::pair<BoardIndex, BoardIndex> colRowToPosition() const;
 
