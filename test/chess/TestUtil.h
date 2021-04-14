@@ -3,6 +3,7 @@
 #include <catch2/catch.hpp>
 #include <chess/Forward.h>
 #include <chess/Piece.h>
+#include <chess/Move.h>
 #include <vector>
 
 #ifndef EXTENDED_TESTS
@@ -85,4 +86,6 @@ namespace TestUtil {
 
 namespace std { // NOLINT(cert-dcl58-cpp) This just really helps for logging!
     std::ostream &operator<<(std::ostream &os, const std::optional<Chess::Piece> &piece);
+
+    std::ostream &operator<<(std::ostream &os, const std::optional<Chess::Move> &piece);
 }

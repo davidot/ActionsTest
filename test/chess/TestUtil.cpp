@@ -138,4 +138,13 @@ namespace std { // NOLINT(cert-dcl58-cpp)
         }
         return os;
     }
+
+    std::ostream &operator<<(std::ostream &os, const std::optional<Chess::Move> &mv) {
+        if (mv.has_value()) {
+            os << mv->toSANSquares();
+        } else {
+            os << "No move";
+        }
+        return os;
+    }
 }
