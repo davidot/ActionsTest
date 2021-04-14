@@ -20,7 +20,7 @@ include(FetchContent)
 
 add_library(Actions
         src/chess/Board.cpp
-        src/chess/Fen.cpp
+        src/chess/FEN.cpp
         src/chess/Move.cpp
         src/chess/MoveGen.cpp
         src/chess/Piece.cpp
@@ -67,6 +67,7 @@ if (WITH_BENCHMARKS)
     message(STATUS "Building with benchmarks")
 endif()
 
+add_subdirectory(test/standalone)
 
 enable_testing()
 

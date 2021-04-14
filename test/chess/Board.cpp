@@ -349,8 +349,10 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
             fails("w - - 0.3 1");
             fails("w - - 0f 1");
             fails("w - - 1f 1");
-            fails("w - - 2222222221 1");
-            fails("w - - 150 1");
+
+            // valid is debatable but it is valid FEN
+            //fails("w - - 2222222221 1");
+            //fails("w - - 150 1");
 
             fails("w - - 0 x");
             fails("w - - 0 0");
@@ -568,7 +570,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     }
 
     SECTION("Halfmoves since capture or pawn move") {
-        uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u, 75u, 149u);
+        uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u, 75u, 149u, 150u, 151u, 500u, 750u);
         CAPTURE(moves);
         std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - " + std::to_string(moves) + " 1";
         Board board = is_valid_board(basePosition);

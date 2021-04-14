@@ -256,8 +256,8 @@ namespace Chess {
         }
 
         std::optional<uint32_t> halfMovesSinceCapture = strictParseUInt(parts[4]);
-        if (!halfMovesSinceCapture.has_value() || halfMovesSinceCapture.value() > 149) {
-            // must draw after 75 full moves on not capturing
+        if (!halfMovesSinceCapture.has_value()) {
+            // must draw after 75 full moves on not capturing but it is valid FEN....
             return std::string("Invalid half moves since capture: ") + std::string(parts[4]);
         }
         b.m_halfMovesSinceCaptureOrPawn = halfMovesSinceCapture.value();
