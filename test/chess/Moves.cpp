@@ -8,10 +8,8 @@
     {                                                                   \
         auto goingToMake = move;                                        \
         auto allMoves = generateAllMoves(board);                        \
-        bool found = false;                                             \
-        REQUIRE(allMoves.contains(goingToMake));                        \
         CAPTURE(allMoves.size());                                       \
-        REQUIRE(found);                                                 \
+        REQUIRE(allMoves.contains(goingToMake));                        \
     }
 #else
 #define VALIDATE_MOVE(x, y)
