@@ -103,6 +103,12 @@ namespace Chess {
 
         bool operator==(const Board &rhs) const;
 
+        std::string moveToSAN(Move, const MoveList&) const;
+
+        std::string moveToSAN(Move mv) const;
+
+        std::optional<Move> parseSANMove(std::string_view) const;
+
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 
