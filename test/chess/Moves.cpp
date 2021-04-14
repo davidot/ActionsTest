@@ -630,11 +630,3 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
         }
     }
 }
-
-TEST_CASE("Generates correct SAN notation for moves") {
-
-}
-
-// TODO test PGN generation
-// example of pinned piece forcing PGN non ambiguous
-// 2k5/3p4/4Q3/8/4q1p1/8/4Q3/4K3 w - - 0 1

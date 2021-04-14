@@ -70,3 +70,48 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
         is_not_a_position("1h");
     }
 }
+
+
+TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
+
+    //  file of departure if different
+    //  rank of departure if the files are the same but the ranks differ
+    //  the complete origin square coordinate otherwise
+
+    // en passant hits on destination square
+    // only ambiguity on valid moves!
+    // example of pinned piece forcing PGN non ambiguous (Q in row 1)
+    // 2k5/3p4/4Q3/8/4q1p1/8/4Q3/4K3 w - - 0 1
+
+
+    SECTION("Can parse simple pawn move") {
+        Board board = Board::standardBoard();
+
+        std::string col = GENERATE(TEST_SOME(values({"a", "b", "c", "d", "e", "f", "g", "h"})));
+
+        auto simplePawnPush = col +"3";
+        Move expectedMove{col + "2", col + "3"};
+
+        auto move = board.parseSANMove(simplePawnPush);
+        auto san = board.moveToSAN(expectedMove);
+        CHECK(san == simplePawnPush);
+        CHECK(move == expectedMove);
+        REQUIRE(move.has_value());
+    }
+
+    SECTION("Can parse double push pawn move") {
+        Board board = Board::standardBoard();
+
+        std::string col = GENERATE(TEST_SOME(values({"a", "b", "c", "d", "e", "f", "g", "h"})));
+
+        auto doublePawnPush = col +"4";
+        Move expectedMove{col + "2", col + "4", Move::Flag::DoublePushPawn};
+
+        auto move = board.parseSANMove(doublePawnPush);
+        auto san = board.moveToSAN(expectedMove);
+        CHECK(san == doublePawnPush);
+        CHECK(move == expectedMove);
+        REQUIRE(move.has_value());
+    }
+
+}
