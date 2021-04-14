@@ -15,6 +15,11 @@ namespace Chess {
             std::for_each(m_moves.begin(), m_moves.end(), f);
         }
 
+        template<typename Predicate>
+        bool hasMove(Predicate p) const {
+            return std::any_of(m_moves.begin(), m_moves.end(), p);
+        }
+
         template<typename Filter, typename Func>
         void forEachFilteredMove(Filter filter, Func func) const {
             forEachMove([&](const auto& mv){
@@ -30,6 +35,8 @@ namespace Chess {
                 return move.fromPosition == index;
             }, func);
         }
+
+        bool contains(Move mv) const;
 
         [[nodiscard]] bool isStaleMate() const;
 

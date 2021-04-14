@@ -9,12 +9,7 @@
         auto goingToMake = move;                                        \
         auto allMoves = generateAllMoves(board);                        \
         bool found = false;                                             \
-        allMoves.forEachMove([&goingToMake, &found](const Move &mm) { \
-            if (mm == goingToMake) {                                  \
-                REQUIRE_FALSE(found);                                   \
-                found = true;                                           \
-            }                                                           \
-        });                                                             \
+        REQUIRE(allMoves.contains(goingToMake));                        \
         CAPTURE(allMoves.size());                                       \
         REQUIRE(found);                                                 \
     }

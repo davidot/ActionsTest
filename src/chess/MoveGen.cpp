@@ -428,4 +428,10 @@ namespace Chess {
 
         return list;
     }
+
+    bool MoveList::contains(Move move) const {
+        return hasMove([&move](const Move& mv) {
+          return mv == move;
+        });
+    }
 }// namespace Chess
