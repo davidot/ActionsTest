@@ -145,7 +145,7 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
             auto count = countMoves(board, 4);
             REQUIRE(count == 197281);
         };
-#ifdef LONG_BENCHMAKRS
+#ifdef LONG_BENCHMARKS
         BENCHMARK("Perft(5) from start position") {
             auto count = countMoves(board, 5);
             REQUIRE(count == 4865609);
@@ -164,7 +164,7 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
             auto count = countMoves(board, 3);
             REQUIRE(count == 97862);
         };
-#ifdef LONG_BENCHMAKRS
+#ifdef LONG_BENCHMARKS
         BENCHMARK("Perft(4) from Kiwipete position") {
             auto count = countMoves(board, 4);
             REQUIRE(count == 4085603);
@@ -184,7 +184,7 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
             auto count = countMoves(board, 4);
             REQUIRE(count == 43238);
         };
-#ifdef LONG_BENCHMAKRS
+#ifdef LONG_BENCHMARKS
         BENCHMARK("Perft(5) from position 3") {
             auto count = countMoves(board, 5);
             REQUIRE(count == 674624);
@@ -208,7 +208,7 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
             auto count = countMoves(board, 3);
             REQUIRE(count == 9467);
         };
-#ifdef LONG_BENCHMAKRS
+#ifdef LONG_BENCHMARKS
         BENCHMARK("Perft(4) from position 4 W") {
             auto count = countMoves(board, 4);
             REQUIRE(count == 422333);
@@ -227,7 +227,7 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
             auto count = countMoves(board, 3);
             REQUIRE(count == 9467);
         };
-#ifdef LONG_BENCHMAKRS
+#ifdef LONG_BENCHMARKS
         BENCHMARK("Perft(4) from position 4 B") {
             auto count = countMoves(board, 4);
             REQUIRE(count == 422333);
