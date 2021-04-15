@@ -4,6 +4,8 @@
 
 using namespace Chess;
 
+#define STRING_COLS TEST_SOME(values({"a", "b", "c", "d", "e", "f", "g", "h"}))
+
 TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
 
     Piece filledPiece = Piece::fromFEN('p').value();                  // black pawn
@@ -37,6 +39,13 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
         is_position(3, 3, "d4");
         is_position(7, 7, "h8");
         is_position(7, 0, "h1");
+
+        is_position(4, 2, "e3");
+        is_position(6, 4, "g5");
+        is_position(5, 5, "f6");
+        is_position(6, 6, "g7");
+        is_position(6, 1, "g2");
+        is_position(5, 2, "f3");
     }
 
     SECTION("Failing squares") {
@@ -68,6 +77,13 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
 
         is_not_a_position("1a");
         is_not_a_position("1h");
+    }
+
+    SECTION("All squares are valid") {
+        Board board = Board::emptyBoard();
+        std::string col = GENERATE(TEST_SOME(values({"a", "b", "c", "d", "e", "f", "g", "h"})));
+        BoardIndex row = GENERATE(TEST_SOME(range(0, 8)));
+        REQUIRE(board.SANToColRow(col + std::to_string(row)).has_value());
     }
 }
 
