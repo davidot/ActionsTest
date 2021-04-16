@@ -83,7 +83,7 @@ TEST_CASE("Basic SAN parsing", "[chess][parsing][san]") {
         Board board = Board::emptyBoard();
         std::string col = GENERATE(TEST_SOME(values({"a", "b", "c", "d", "e", "f", "g", "h"})));
         BoardIndex row = GENERATE(TEST_SOME(range(0, 8)));
-        REQUIRE(board.SANToColRow(col + std::to_string(row)).has_value());
+        REQUIRE(board.SANToColRow(col + std::to_string(row + 1)).has_value());
     }
 }
 

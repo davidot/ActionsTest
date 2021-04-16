@@ -12,6 +12,19 @@ namespace Chess {
         return columnRowToIndex(colRow->first, colRow->second);
     }
 
+    constexpr static char firstCol = 'a';
+    constexpr static char finalCol = 'h';
+
+    BoardIndex letterToCol(char c) {
+        ASSERT(c >= firstCol && c <= finalCol);
+        return c - firstCol;
+    }
+
+    char colToLetter(BoardIndex col) {
+        ASSERT(col < Board::size);
+        return static_cast<char>(firstCol + col);
+    }
+
     std::optional<std::pair<BoardIndex, BoardIndex>> Board::SANToColRow(std::string_view vw) {
         if (vw.size() != 2) {
             return std::nullopt;
@@ -25,14 +38,14 @@ namespace Chess {
             return std::nullopt;
         }
 
-        auto col = vw[0] - 'a';
+        auto col = letterToCol(vw[0]);
         auto row = vw[1] - '1';
         return std::make_pair(col, row);
     }
 
     std::string Board::columnRowToSAN(BoardIndex col, BoardIndex row) {
         std::string str;
-        str.push_back('a' + col);
+        str.push_back(colToLetter(col));
         str.push_back('1' + row);
         return str;
     }
