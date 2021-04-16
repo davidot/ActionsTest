@@ -286,11 +286,11 @@ TEST_CASE("Move generation basic", "[chess][rules][movegen]") {
 
         SECTION("King can capture on all spots around") {
             Piece p{GENERATE(CAPTURABLE_TYPES), other};
-            uint8_t col = GENERATE(range(3, 5));
-            uint8_t row = GENERATE_COPY(filter([=](uint8_t r) { return r != 4 || col != 4; }, range(3, 5)));
+            BoardIndex col = GENERATE(TEST_SOME(range(3, 5)));
+            BoardIndex row = GENERATE_COPY(TEST_SOME(filter([=](uint8_t r) { return r != 4 || col != 4; }, range(3, 5))));
             board.setPiece(col, row, p);
 
-            board.setPiece(4, 4, Piece{Piece::Type::Queen, toMove});
+            board.setPiece(4, 4, Piece{Piece::Type::King, toMove});
 
             CAPTURE(board.toFEN());
             MoveList list = generateAllMoves(board);
