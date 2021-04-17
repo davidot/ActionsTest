@@ -124,7 +124,6 @@ uint64_t countMoves(Board& board, int depth) {
     return count;
 }
 
-#define LONG_BENCHMARKS
 TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
 
     // For correct counts see: https://www.chessprogramming.org/Perft_Results
