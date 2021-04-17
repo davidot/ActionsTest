@@ -225,4 +225,42 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
 #endif
     }
 
+    {
+        Board board = Board::fromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8").extract();
+        BENCHMARK("Perft(3) from position 5") {
+            auto count = countMoves(board, 3);
+            REQUIRE(count == 62379);
+        };
+
+        BENCHMARK("Perft(4) from position 5") {
+            auto count = countMoves(board, 4);
+            REQUIRE(count == 2103487);
+        };
+#ifdef LONG_BENCHMARKS
+        BENCHMARK("Perft(5) from position 5") {
+            auto count = countMoves(board, 5);
+            REQUIRE(count == 89941194);
+        };
+#endif
+    }
+
+    {
+        Board board = Board::fromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10").extract();
+        BENCHMARK("Perft(3) from position 6") {
+            auto count = countMoves(board, 3);
+            REQUIRE(count == 89890);
+        };
+
+        BENCHMARK("Perft(4) from position 6") {
+            auto count = countMoves(board, 4);
+            REQUIRE(count == 3894594);
+        };
+#ifdef LONG_BENCHMARKS
+        BENCHMARK("Perft(5) from position 5") {
+            auto count = countMoves(board, 5);
+            REQUIRE(count == 164075551);
+        };
+#endif
+    }
+
 }
