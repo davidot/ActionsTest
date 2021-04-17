@@ -189,13 +189,12 @@ namespace Chess {
         BoardIndex destination = columnRowToIndex(toCol, toRow);
         sv.remove_suffix(2);
 
-        bool capturing = sv.back() == 'x';
+        bool capturing = !sv.empty() && sv.back() == 'x';
         if (capturing) {
             sv.remove_suffix(1);
         }
 
-        Piece::Type tp = parseTypeChar(sv.front());
-        ASSERT(tp != Piece::Type::Pawn || (sv.front() >= 'a' && sv.front() <= 'h'));
+        Piece::Type tp = sv.empty() ? Piece::Type::Pawn : parseTypeChar(sv.front());
         if (tp != Piece::Type::Pawn) {
             sv.remove_prefix(1);
             ASSERT(flag == Move::Flag::None);
