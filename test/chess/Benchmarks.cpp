@@ -263,4 +263,38 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
 #endif
     }
 
+
+    // taken/adapted from tests: https://github.com/jdart1/arasan-chess/blob/master/src/unit.cpp#L1298
+    {
+        Board board = Board::fromFEN("8/5k2/8/5N2/5Q2/2K5/8/8 w - - 0 1").extract();
+        BENCHMARK("Perft(4) on double check position") {
+            auto count = countMoves(board, 4);
+            REQUIRE(count == 23527);
+        };
+    }
+
+    {
+        Board board = Board::fromFEN("K1k5/8/P7/8/8/8/8/8 w - - 0 1").extract();
+        BENCHMARK("Perft(6) on self stale mate pos") {
+            auto count = countMoves(board, 6);
+            REQUIRE(count == 2217);
+        };
+    }
+
+    {
+        Board board = Board::fromFEN("8/8/8/8/1k6/8/K1p5/8 b - - 0 1").extract();
+        BENCHMARK("Perft(7) on stale/check mate pos") {
+            auto count = countMoves(board, 7);
+            REQUIRE(count == 567584);
+        };
+    }
+
+    {
+        Board board = Board::fromFEN("3k4/3p4/8/K1P4r/8/8/8/8 b - - 0 1").extract();
+        BENCHMARK("Perft(6) on illegal e.p. pos") {
+            auto count = countMoves(board, 6);
+            REQUIRE(count == 1134888);
+        };
+    }
+
 }
