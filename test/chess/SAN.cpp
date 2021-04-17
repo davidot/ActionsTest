@@ -135,14 +135,10 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
             board.makeNullMove();
         }
 
-        bool capture = GENERATE(true, false);
-
 #define BASIC_MOVE_CHECK(fromCol, fromRow, toCol, toRow, pieceStr) \
-    if (capture) { \
-        board.setPiece(toCol, toRow, Piece{Piece::Type::Bishop, opposite(color)}); \
-    }                                                               \
-    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + ((capture ? "x" : "") + Board::columnRowToSAN(toCol, toRow)))
-
+    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + Board::columnRowToSAN(toCol, toRow)); \
+    board.setPiece(toCol, toRow, Piece{Piece::Type::Bishop, opposite(color)}); \
+    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + ("x" + Board::columnRowToSAN(toCol, toRow)))
 
         SECTION("King move") {
             BoardIndex col = GENERATE(TEST_SOME(range(3, 5)));
