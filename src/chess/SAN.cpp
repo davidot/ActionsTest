@@ -240,12 +240,123 @@ namespace Chess {
                 }
                 break;
             case Piece::Type::Bishop:
+                {
+                    // TODO if disam figure out way to limit search
+                    const Piece bishop{Piece::Type::Bishop, colorToMove()};
+                    for (BoardIndex dCol : {1, -1}) {
+                        for (BoardIndex dRow : {1, -1}) {
+                            BoardIndex cCol = toCol + dCol;
+                            BoardIndex cRow = toRow + dRow;
+                            while (cCol < size && cRow < size) {
+                                if (pieceAt(cCol, cRow) == bishop) {
+                                    return Move{cCol, cRow, toCol, toRow};
+                                }
+                                cCol += dCol;
+                                cRow += dRow;
+                            }
+                        }
+                    }
+                    ASSERT_NOT_REACHED();
+                }
                 break;
             case Piece::Type::Rook:
+                {
+                    const Piece rook{Piece::Type::Rook, colorToMove()};
+
+                    for (BoardIndex dCol : {-1, 1}) {
+                        BoardIndex cCol = toCol + dCol;
+                        while (cCol < size) {
+                            if (pieceAt(cCol, toRow) == rook) {
+                                return Move{cCol, toRow, toCol, toRow};
+                            }
+                            cCol += dCol;
+                        }
+                    }
+
+                    for (BoardIndex dRow : {-1, 1}) {
+                        BoardIndex cRow = toRow + dRow;
+                        while (cRow < size) {
+                            if (pieceAt(toCol, cRow) == rook) {
+                                return Move{toCol, cRow, toCol, toRow};
+                            }
+                            cRow += dRow;
+                        }
+                    }
+                    ASSERT_NOT_REACHED();
+                }
                 break;
             case Piece::Type::Queen:
+                {
+                    // Diagonal
+                    const Piece queen{Piece::Type::Queen, colorToMove()};
+                    for (BoardIndex dCol : {1, -1}) {
+                        for (BoardIndex dRow : {1, -1}) {
+                            BoardIndex cCol = toCol + dCol;
+                            BoardIndex cRow = toRow + dRow;
+                            while (cCol < size && cRow < size) {
+                                if (pieceAt(cCol, cRow) == queen) {
+                                    return Move{cCol, cRow, toCol, toRow};
+                                }
+                                cCol += dCol;
+                                cRow += dRow;
+                            }
+                        }
+                    }
+
+                    for (BoardIndex dCol : {-1, 1}) {
+                        BoardIndex cCol = toCol + dCol;
+                        while (cCol < size) {
+                            if (pieceAt(cCol, toRow) == queen) {
+                                return Move{cCol, toRow, toCol, toRow};
+                            }
+                            cCol += dCol;
+                        }
+                    }
+
+                    for (BoardIndex dRow : {-1, 1}) {
+                        BoardIndex cRow = toRow + dRow;
+                        while (cRow < size) {
+                            if (pieceAt(toCol, cRow) == queen) {
+                                return Move{toCol, cRow, toCol, toRow};
+                            }
+                            cRow += dRow;
+                        }
+                    }
+
+                    ASSERT_NOT_REACHED();
+                }
                 break;
             case Piece::Type::Knight:
+                {
+                    struct KO {
+                        BoardOffset colOff;
+                        BoardOffset rowOff;
+                    };
+                    // TODO: unify all knight offsets somewhere
+                    constexpr std::array<KO, 8> knightOffsets = {{
+                            {-2, -1},
+                            {-1, -2},
+                            {1, -2},
+                            {2, -1},
+                            {-2, 1},
+                            {-1, 2},
+                            {1, 2},
+                            {2, 1}
+                    }};
+                    Piece knight{Piece::Type::Knight, colorToMove()};
+                    for (KO ko : knightOffsets) {
+                        BoardIndex fromCol = toCol - ko.colOff;
+                        BoardIndex fromRow = toRow - ko.rowOff;
+                        if (fromCol >= size || fromRow >= size) {
+                            continue;
+                        }
+                        // TODO disam
+                        if (pieceAt(fromCol, fromRow) == knight) {
+                            return Move{fromCol, fromRow, toCol, toRow};
+                        }
+                    }
+                    ASSERT_NOT_REACHED();
+                }
                 break;
             case Piece::Type::None:
                 ASSERT_NOT_REACHED();
