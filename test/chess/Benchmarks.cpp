@@ -231,12 +231,12 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
             auto count = countMoves(board, 3);
             REQUIRE(count == 62379);
         };
-
+#ifdef LONG_BENCHMARKS
         BENCHMARK("Perft(4) from position 5") {
             auto count = countMoves(board, 4);
             REQUIRE(count == 2103487);
         };
-#ifdef LONG_BENCHMARKS
+
         BENCHMARK("Perft(5) from position 5") {
             auto count = countMoves(board, 5);
             REQUIRE(count == 89941194);
@@ -250,12 +250,12 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
             auto count = countMoves(board, 3);
             REQUIRE(count == 89890);
         };
-
+#ifdef LONG_BENCHMARKS
         BENCHMARK("Perft(4) from position 6") {
             auto count = countMoves(board, 4);
             REQUIRE(count == 3894594);
         };
-#ifdef LONG_BENCHMARKS
+
         BENCHMARK("Perft(5) from position 5") {
             auto count = countMoves(board, 5);
             REQUIRE(count == 164075551);
@@ -283,18 +283,32 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
 
     {
         Board board = Board::fromFEN("8/8/8/8/1k6/8/K1p5/8 b - - 0 1").extract();
+
+        BENCHMARK("Perft(6) on stale/check mate pos") {
+            auto count = countMoves(board, 6);
+            REQUIRE(count == 43261);
+        };
+#ifdef LONG_BENCHMARKS
         BENCHMARK("Perft(7) on stale/check mate pos") {
             auto count = countMoves(board, 7);
             REQUIRE(count == 567584);
         };
+#endif
     }
 
     {
         Board board = Board::fromFEN("3k4/3p4/8/K1P4r/8/8/8/8 b - - 0 1").extract();
+
+        BENCHMARK("Perft(5) on illegal e.p. pos") {
+            auto count = countMoves(board, 5);
+            REQUIRE(count == 185429);
+        };
+#ifdef LONG_BENCHMARKS
         BENCHMARK("Perft(6) on illegal e.p. pos") {
             auto count = countMoves(board, 6);
             REQUIRE(count == 1134888);
         };
+#endif
     }
 
 }
