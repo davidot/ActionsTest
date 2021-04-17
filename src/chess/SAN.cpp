@@ -59,17 +59,200 @@ namespace Chess {
         return moveToSAN(mv, generateAllMoves(*this));
     }
 
+    std::array<char, 8> sanPieceChar = {
+            '~',
+            ' ', // pawn has no type char
+            'K',
+            'B',
+            'R',
+            'Q',
+            'N',
+            '-'
+    };
+
+    Piece::Type parseTypeChar(char c) {
+        switch (c) {
+            case 'K':
+                return Piece::Type::King;
+            case 'B':
+                return Piece::Type::Bishop;
+            case 'R':
+                return Piece::Type::Rook;
+            case 'Q':
+                return Piece::Type::Queen;
+            case 'N':
+                return Piece::Type::Knight;
+            default:
+                break;
+        }
+        return Piece::Type::Pawn;
+    }
+
+    char typeChar(Piece::Type tp) {
+        return sanPieceChar[static_cast<uint8_t>(tp)];
+    }
+
     std::string Board::moveToSAN(Move mv, const MoveList& list) const {
         ASSERT(list.contains(mv));
-        return indexToSAN(mv.toPosition);
+        ASSERT(pieceAt(mv.fromPosition).has_value());
+
+        if (mv.flag == Move::Flag::Castling) {
+            auto [toCol, toRow] = mv.colRowToPosition();
+            ASSERT(toRow == homeRow(colorToMove()));
+            if (toCol > kingCol) {
+                ASSERT(toCol == kingSideRookCol);
+                return "O-O";
+            }
+            ASSERT(toCol == queenSideRookCol);
+            return "O-O-O";
+        }
+
+
+        Piece tp = *pieceAt(mv.fromPosition);
+        std::string destination = indexToSAN(mv.toPosition);
+
+        bool capturing = pieceAt(mv.toPosition).has_value();
+        ASSERT(!capturing || pieceAt(mv.toPosition)->color() != colorToMove());
+        if (capturing) {
+            destination.insert(0, "x");
+        }
+
+        if (tp.type() == Piece::Type::Pawn) {
+            if (mv.isPromotion()) {
+                destination.push_back('=');
+                destination.push_back(Piece{mv.promotedType(), Color::White}.toFEN());
+            }
+
+            if (capturing) {
+                auto [fromCol, fromRow] = mv.colRowFromPosition();
+
+                return colToLetter(fromCol) + destination;
+            }
+            return destination;
+        }
+
+        std::string disambiguation = "";
+
+
+        return typeChar(tp.type()) + disambiguation + destination;
     }
 
     std::optional<Move> Board::parseSANMove(std::string_view sv) const {
-        auto pos = SANToColRow(sv);
-        if (!pos) {
+        ASSERT(sv.size() >= 2);
+        // do not want the check or checkmate data
+        ASSERT(sv.back() != '+' && sv.back() != '#');
+        Move::Flag flag = Move::Flag::None;
+
+        if (sv[0] == 'O') {
+            // must be castling
+            ASSERT(sv[1] == '-' && sv[2] == 'O');
+            BoardIndex home = Board::homeRow(colorToMove());
+            if (sv.size() == 3) {
+                return Move{kingCol, home, kingSideRookCol, home, Move::Flag::Castling};
+            } else {
+                ASSERT(sv.size() == 5);
+                ASSERT(sv[3] == '-' && sv[4] == 'O');
+                return Move{kingCol, home, queenSideRookCol, home, Move::Flag::Castling};
+            }
+        }
+
+        if (sv[sv.size() - 2] == '=') {
+            ASSERT(sv.size() >= 4);
+            // it is a promotion
+            Piece::Type tp = parseTypeChar(sv[sv.size() - 1]);
+            switch (tp) {
+                case Piece::Type::Queen:
+                    flag = Move::Flag::PromotionToQueen;
+                    break;
+                case Piece::Type::Knight:
+                    flag = Move::Flag::PromotionToKnight;
+                    break;
+                case Piece::Type::Bishop:
+                    flag = Move::Flag::PromotionToBishop;
+                    break;
+                case Piece::Type::Rook:
+                    flag = Move::Flag::PromotionToRook;
+                    break;
+                default:
+                    ASSERT_NOT_REACHED();
+            }
+            sv.remove_suffix(2);
+        }
+
+        // TODO: should these be ifs? or have some "fast" path which may return some move on invalid input
+        auto optDest = SANToColRow(sv.substr(sv.size() - 2, 2));
+        if (!optDest.has_value()) {
             return std::nullopt;
         }
-        return Move(pos->first, pos->second - 1u, pos->first, pos->second);
+        auto [toCol, toRow] = optDest.value();
+        BoardIndex destination = columnRowToIndex(toCol, toRow);
+        sv.remove_suffix(2);
+
+        bool capturing = sv.back() == 'x';
+        if (capturing) {
+            sv.remove_suffix(1);
+        }
+
+        Piece::Type tp = parseTypeChar(sv.front());
+        ASSERT(tp != Piece::Type::Pawn || (sv.front() >= 'a' && sv.front() <= 'h'));
+        if (tp != Piece::Type::Pawn) {
+            sv.remove_prefix(1);
+            ASSERT(flag == Move::Flag::None);
+        }
+
+        if (sv.size() == 2) {
+            // fully disambiguated
+            ASSERT(tp != Piece::Type::Pawn);
+            auto from = SANToIndex(sv);
+            ASSERT(from.has_value());
+            return Move{from.value(), destination};
+        }
+
+        switch (tp) {
+            case Piece::Type::Pawn:
+                if (capturing) {
+                    ASSERT(sv.size() == 1);
+                    BoardIndex col = letterToCol(sv.front());
+                    BoardIndex row = toRow - pawnDirection(colorToMove());
+
+                    return Move{columnRowToIndex(col, row), destination, flag};
+                } else {
+                    ASSERT(sv.empty());
+                    Color us = colorToMove();
+                    BoardOffset pawnDir = pawnDirection(us);
+                    if (pieceAt(toCol, toRow - pawnDir) == Piece{Piece::Type::Pawn, us}) {
+                        return Move(toCol, toRow - pawnDir, toCol, toRow, flag);
+                    }
+                    // must be double push
+                    ASSERT(flag == Move::Flag::None);
+                    if (pieceAt(toCol, toRow - pawnDir - pawnDir) == Piece{Piece::Type::Pawn, us}) {
+                        return Move(toCol, toRow - pawnDir - pawnDir, toCol, toRow, Move::Flag::DoublePushPawn);
+                    }
+                }
+                ASSERT_NOT_REACHED();
+                break;
+            case Piece::Type::King:
+                {
+                    ASSERT(sv.empty());
+                    // Should only be one king
+                    auto [kingC, kingR] = kingSquare(colorToMove());
+                    return Move{kingC, kingR, toCol, toRow};
+                }
+                break;
+            case Piece::Type::Bishop:
+                break;
+            case Piece::Type::Rook:
+                break;
+            case Piece::Type::Queen:
+                break;
+            case Piece::Type::Knight:
+                break;
+            case Piece::Type::None:
+                ASSERT_NOT_REACHED();
+                break;
+        }
+
+        return std::nullopt;
     }
 
 }
