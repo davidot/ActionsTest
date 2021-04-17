@@ -45,15 +45,17 @@ namespace Chess {
             {1, -1},
     };
 
-    constexpr static Offsets knightOffsets[] = {
-            {-2, -1},
-            {-1, -2},
-            {1, -2},
-            {2, -1},
-            {-2, 1},
-            {-1, 2},
-            {1, 2},
-            {2, 1}};
+    // TODO: unify all knight offsets somewhere
+    constexpr static std::array<Offsets, 8> knightOffsets = {{
+        {-2, -1},
+        {-1, -2},
+        {1, -2},
+        {2, -1},
+        {-2, 1},
+        {-1, 2},
+        {1, 2},
+        {2, 1}
+    }};
 
     enum Direction {
         LeftUp = 0,
