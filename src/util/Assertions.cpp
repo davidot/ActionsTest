@@ -4,10 +4,12 @@
 namespace util::Assert {
 
     [[noreturn]] void assertFailed() {
+#ifndef ABORT_IMMEDIATE_ON_ASSERT
 #ifdef _MSC_VER
         __debugbreak();
 #else
         __builtin_trap();
+#endif
 #endif
         std::exit(-3);
     }

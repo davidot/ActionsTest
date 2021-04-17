@@ -31,6 +31,9 @@ add_library(Actions
         )
 
 target_include_directories(Actions INTERFACE src/)
+if (HEADLESS)
+    target_compile_definitions(Actions PUBLIC ABORT_IMMEDIATE_ON_ASSERT=1)
+endif()
 
 add_executable(ActionsMain src/main.cpp)
 target_link_libraries(ActionsMain PRIVATE Actions)
