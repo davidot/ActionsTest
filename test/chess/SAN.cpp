@@ -316,7 +316,28 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
             CHECK_MOVE_WITH_NAME(mv, fromCol + "x" + destSquare + "=" + Piece(mv.promotedType(), Color::White).toFEN());
         }
 
-        SECTION("Take enpassant") {
+        SECTION("Take en passant") {
+            BoardIndex col = GENERATE(TEST_SOME(range(0, 8)));
+            Color color = GENERATE(Color::White, Color::Black);
+
+            Board board = TestUtil::createEnPassantBoard(color, col);
+
+            BoardIndex myCol = col +
+                               GENERATE_COPY(filter([col](int8_t i) {
+                                 return col + i >= 0 && col + i < 8;
+                               }, values({1, -1})));
+
+            std::string myColLetter = Board::columnRowToSAN(myCol, 0).substr(0, 1);
+            CAPTURE(col, myCol);
+
+            BoardIndex behindPawn = Board::pawnHomeRow(opposite(color)) + Board::pawnDirection(opposite(color));
+            BoardIndex enPassantRow =  behindPawn + Board::pawnDirection(opposite(color));
+
+            Piece pawn = Piece{Piece::Type::Pawn, color};
+            board.setPiece(myCol, enPassantRow, pawn);
+
+            Move move = {myCol, enPassantRow, col, behindPawn, Move::Flag::EnPassant};
+            CHECK_MOVE_WITH_NAME(move, myColLetter + "x" + Board::columnRowToSAN(col, behindPawn));
         }
 
         SECTION("Multiple pawns on the same column") {

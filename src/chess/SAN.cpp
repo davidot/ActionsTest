@@ -117,9 +117,6 @@ namespace Chess {
 
         bool capturing = pieceAt(mv.toPosition).has_value();
         ASSERT(!capturing || pieceAt(mv.toPosition)->color() != colorToMove());
-        if (capturing) {
-            destination.insert(0, "x");
-        }
 
         if (tp.type() == Piece::Type::Pawn) {
             if (mv.isPromotion()) {
@@ -127,13 +124,19 @@ namespace Chess {
                 destination.push_back(Piece{mv.promotedType(), Color::White}.toFEN());
             }
 
-            if (capturing) {
+            if (capturing || mv.flag == Move::Flag::EnPassant) {
+                ASSERT(capturing || mv.toPosition == m_enPassant);
                 auto [fromCol, fromRow] = mv.colRowFromPosition();
 
-                return colToLetter(fromCol) + destination;
+                return colToLetter(fromCol) + ('x' + destination);
             }
             return destination;
         }
+
+        if (capturing) {
+            destination.insert(0, "x");
+        }
+
 
         std::string disambiguation = "";
 
@@ -225,9 +228,15 @@ namespace Chess {
 
         switch (tp) {
             case Piece::Type::Pawn:
-                if (capturing) {
+                if (capturing || destination == m_enPassant) {
                     ASSERT(fromCol < size);
                     BoardIndex row = toRow - pawnDirection(colorToMove());
+
+                    if (destination == m_enPassant) {
+                        ASSERT(!pieceAt(destination).has_value());
+                        ASSERT(flag == Move::Flag::None);
+                        flag = Move::Flag::EnPassant;
+                    }
 
                     return Move{columnRowToIndex(fromCol, row), destination, flag};
                 } else {
