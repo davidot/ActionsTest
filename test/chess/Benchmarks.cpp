@@ -124,6 +124,7 @@ uint64_t countMoves(Board& board, int depth) {
     return count;
 }
 
+#define LONG_BENCHMARKS
 TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
 
     // For correct counts see: https://www.chessprogramming.org/Perft_Results
@@ -150,11 +151,6 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
             auto count = countMoves(board, 5);
             REQUIRE(count == 4865609);
         };
-
-        BENCHMARK("Perft(6) from start position") {
-            auto count = countMoves(board, 6);
-            REQUIRE(count == 119060324llu);
-        };
 #endif
     }
 
@@ -168,11 +164,6 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
         BENCHMARK("Perft(4) from Kiwipete position") {
             auto count = countMoves(board, 4);
             REQUIRE(count == 4085603);
-        };
-
-        BENCHMARK("Perft(5) from Kiwipete position") {
-            auto count = countMoves(board, 5);
-            REQUIRE(count == 193690690);
         };
 #endif
 
@@ -193,11 +184,6 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
         BENCHMARK("Perft(6) from position 3") {
             auto count = countMoves(board, 6);
             REQUIRE(count == 11030083);
-        };
-
-        BENCHMARK("Perft(7) from position 3") {
-            auto count = countMoves(board, 7);
-            REQUIRE(count == 178633661);
         };
 #endif
     }
