@@ -16,6 +16,9 @@ namespace Chess {
     constexpr static char firstCol = 'a';
     constexpr static char finalCol = 'h';
 
+    constexpr static char firstRow = '1';
+
+
     BoardIndex letterToCol(char c) {
         ASSERT(c >= firstCol && c <= finalCol);
         return c - firstCol;
@@ -40,14 +43,14 @@ namespace Chess {
         }
 
         auto col = letterToCol(vw[0]);
-        auto row = vw[1] - '1';
+        auto row = vw[1] - firstRow;
         return std::make_pair(col, row);
     }
 
     std::string Board::columnRowToSAN(BoardIndex col, BoardIndex row) {
         std::string str;
         str.push_back(colToLetter(col));
-        str.push_back('1' + row);
+        str.push_back(static_cast<char>(firstRow + row));
         return str;
     }
 
@@ -208,14 +211,25 @@ namespace Chess {
             return Move{from.value(), destination};
         }
 
+        BoardIndex fromCol = -1;
+        BoardIndex fromRow = -1;
+        if (!sv.empty()) {
+            char c = sv.front();
+            if (std::isdigit(c)) {
+                fromRow = c - firstRow;
+            } else {
+                ASSERT(std::islower(c));
+                fromCol = letterToCol(c);
+            }
+        }
+
         switch (tp) {
             case Piece::Type::Pawn:
                 if (capturing) {
-                    ASSERT(sv.size() == 1);
-                    BoardIndex col = letterToCol(sv.front());
+                    ASSERT(fromCol < size);
                     BoardIndex row = toRow - pawnDirection(colorToMove());
 
-                    return Move{columnRowToIndex(col, row), destination, flag};
+                    return Move{columnRowToIndex(fromCol, row), destination, flag};
                 } else {
                     ASSERT(sv.empty());
                     Color us = colorToMove();
@@ -363,6 +377,7 @@ namespace Chess {
                 break;
         }
 
+        ASSERT_NOT_REACHED();
         return std::nullopt;
     }
 
