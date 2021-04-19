@@ -199,12 +199,222 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
         }
 
 #undef BASIC_MOVE_CHECK
+
+        SECTION("Capture a piece") {
+            board.setPiece(4, 4, Piece{Piece::Type::Knight, color});
+
+            BoardIndex toCol = 5;
+            BoardIndex toRow = 2;
+
+            board.setPiece(toCol, toRow, Piece{Piece::Type::Knight, opposite(color)});
+
+            CHECK_MOVE_WITH_NAME(Move(4, 4, toCol, toRow), "Nxf3");
+        }
+
     }
 
     SECTION("Ambiguity") {
+
+        Board board = Board::emptyBoard();
+        Color color = GENERATE(Color::White, Color::Black);
+        if (board.colorToMove() != color) {
+            board.makeNullMove();
+        }
+
+#define AMBIG_MOVE_CHECK(fromCol, fromRow, toCol, toRow, pieceStr) \
+    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + Board::columnRowToSAN(toCol, toRow)); \
+    board.setPiece(toCol, toRow, Piece{Piece::Type::Rook, opposite(color)}); \
+    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + ("x" + Board::columnRowToSAN(toCol, toRow))); \
+    board.setPiece(toCol, toRow, std::nullopt)
+
+        SECTION("Bishop") {
+            Piece bishop{Piece::Type::Bishop, color};
+            SECTION("2 Bishops can move to square identify with col") {
+                board.setPiece(0, 0, bishop);
+                BoardIndex secondCoord = GENERATE(TEST_SOME(range(2, 8)));
+                board.setPiece(secondCoord, secondCoord, bishop);
+
+                std::string secondColLetter = Board::columnRowToSAN(secondCoord, 0).substr(0, 1);
+
+
+                AMBIG_MOVE_CHECK(0, 0, 1, 1, "Ba");
+                AMBIG_MOVE_CHECK(secondCoord, secondCoord, 1, 1, "B" + secondColLetter);
+            }
+
+            SECTION("No ambiguity if bishop behind other") {
+                board.setPiece(0, 0, bishop);
+                board.setPiece(1, 1, bishop);
+
+                AMBIG_MOVE_CHECK(1, 1, 2, 2, "B");
+            }
+
+            SECTION("2 Bishops on the same column are identified by row") {
+                board.setPiece(4, 0, bishop);
+                board.setPiece(4, 6, bishop);
+
+                AMBIG_MOVE_CHECK(4, 0, 1, 3, "B1");
+                AMBIG_MOVE_CHECK(4, 6, 1, 3, "B7");
+
+                AMBIG_MOVE_CHECK(4, 0, 7, 3, "B1");
+                AMBIG_MOVE_CHECK(4, 6, 7, 3, "B7");
+            }
+
+            SECTION("3 bishops which can move to the same square means one must be fully quilified") {
+                board.setPiece(1, 2, bishop); // shares row
+                board.setPiece(5, 2, bishop); // shares row and column
+                board.setPiece(5, 6, bishop); // shares column
+
+                AMBIG_MOVE_CHECK(1, 2, 3, 4, "Bb");
+                AMBIG_MOVE_CHECK(5, 2, 3, 4, "Bf3");
+                AMBIG_MOVE_CHECK(5, 6, 3, 4, "B7");
+            }
+
+            SECTION("4 bishops which can move to the same square means all must be fully quilified") {
+                board.setPiece(1, 6, bishop);
+                board.setPiece(1, 2, bishop);
+                board.setPiece(5, 2, bishop);
+                board.setPiece(5, 6, bishop);
+
+                AMBIG_MOVE_CHECK(1, 6, 3, 4, "Bb7");
+                AMBIG_MOVE_CHECK(1, 2, 3, 4, "Bb3");
+                AMBIG_MOVE_CHECK(5, 2, 3, 4, "Bf3");
+                AMBIG_MOVE_CHECK(5, 6, 3, 4, "Bf7");
+            }
+
+            SECTION("4 bishops to squares where a single bishop can move are not disambiguated") {
+                board.setPiece(1, 6, bishop);
+                board.setPiece(1, 2, bishop);
+                board.setPiece(5, 2, bishop);
+                board.setPiece(5, 6, bishop);
+
+                AMBIG_MOVE_CHECK(1, 6, 2, 7, "B");
+                AMBIG_MOVE_CHECK(1, 2, 2, 1, "B");
+                AMBIG_MOVE_CHECK(5, 2, 4, 1, "B");
+                AMBIG_MOVE_CHECK(5, 6, 6, 5, "B");
+            }
+
+            SECTION("4 bishops when moving to square just 2 can reach only disambiguates on column") {
+                board.setPiece(1, 6, bishop);
+                board.setPiece(1, 2, bishop);
+                board.setPiece(5, 2, bishop);
+                board.setPiece(5, 6, bishop);
+
+                AMBIG_MOVE_CHECK(1, 6, 2, 5, "Bb");
+                AMBIG_MOVE_CHECK(5, 2, 2, 5, "Bf");
+            }
+
+        }
+
+        SECTION("Rook") {
+            Piece rook{Piece::Type::Rook, color};
+            SECTION("2 Rooks can move to the same square in col identify with row") {
+                board.setPiece(0, 0, rook);
+                BoardIndex secondCoord = GENERATE(TEST_SOME(range(2, 8)));
+                board.setPiece(0, secondCoord, rook);
+
+                std::string rowLetter = Board::columnRowToSAN(0, secondCoord).substr(1, 1);
+
+                AMBIG_MOVE_CHECK(0, 0, 0, 1, "R1");
+                AMBIG_MOVE_CHECK(0, secondCoord, 0, 1, "R" + rowLetter);
+            }
+
+            SECTION("2 Rooks which can move the same square from different rows") {
+                board.setPiece(0, 0, rook);
+                board.setPiece(4, 4, rook);
+
+                AMBIG_MOVE_CHECK(0, 0, 4, 0, "Ra");
+                AMBIG_MOVE_CHECK(4, 4, 4, 0, "Re");
+            }
+
+            SECTION("2 Rooks which cannot move to the square are not disambiguated") {
+                board.setPiece(0, 0, rook);
+                board.setPiece(4, 4, rook);
+
+                AMBIG_MOVE_CHECK(0, 0, 3, 0, "R");
+                AMBIG_MOVE_CHECK(4, 4, 4, 1, "R");
+            }
+
+            SECTION("3 rooks around square") {
+                board.setPiece(0, 4, rook);
+                board.setPiece(4, 0, rook);
+                board.setPiece(4, 7, rook);
+
+                AMBIG_MOVE_CHECK(0, 4, 4, 4, "Ra");
+                AMBIG_MOVE_CHECK(4, 0, 4, 4, "R1");
+                AMBIG_MOVE_CHECK(4, 7, 4, 4, "R8");
+            }
+
+            SECTION("4 rooks around square") {
+                board.setPiece(0, 4, rook);
+                board.setPiece(4, 0, rook);
+                board.setPiece(4, 7, rook);
+                board.setPiece(7, 4, rook);
+
+                AMBIG_MOVE_CHECK(0, 4, 4, 4, "Ra");
+                AMBIG_MOVE_CHECK(4, 0, 4, 4, "R1");
+                AMBIG_MOVE_CHECK(4, 7, 4, 4, "R8");
+                AMBIG_MOVE_CHECK(7, 4, 4, 4, "Rh");
+            }
+        }
+
+        SECTION("Knight") {
+            Piece knight{Piece::Type::Knight, color};
+
+            SECTION("Two knights on different columns as disambiguated") {
+                board.setPiece(1, 2, knight);
+                board.setPiece(2, 1, knight);
+
+                AMBIG_MOVE_CHECK(1, 2, 3, 3, "Nb");
+                AMBIG_MOVE_CHECK(2, 1, 3, 3, "Nc");
+            }
+
+            SECTION("Two knights on same columns as disambiguated by row") {
+                board.setPiece(1, 2, knight);
+                board.setPiece(1, 4, knight);
+
+                AMBIG_MOVE_CHECK(1, 2, 3, 3, "N3");
+                AMBIG_MOVE_CHECK(1, 4, 3, 3, "N5");
+            }
+
+            SECTION("Can have 4 knights at different cols hitting same square") {
+                board.setPiece(1, 2, knight);
+                board.setPiece(2, 1, knight);
+                board.setPiece(4, 5, knight);
+                board.setPiece(5, 4, knight);
+
+                AMBIG_MOVE_CHECK(1, 2, 3, 3, "Nb");
+                AMBIG_MOVE_CHECK(2, 1, 3, 3, "Nc");
+                AMBIG_MOVE_CHECK(4, 5, 3, 3, "Ne");
+                AMBIG_MOVE_CHECK(5, 4, 3, 3, "Nf");
+            }
+
+            SECTION("Can have 4 knights at different rows hitting same square") {
+                board.setPiece(1, 2, knight);
+                board.setPiece(2, 1, knight);
+                board.setPiece(1, 4, knight);
+                board.setPiece(2, 5, knight);
+
+                AMBIG_MOVE_CHECK(1, 2, 3, 3, "N3");
+                AMBIG_MOVE_CHECK(2, 1, 3, 3, "N2");
+                AMBIG_MOVE_CHECK(1, 4, 3, 3, "N5");
+                AMBIG_MOVE_CHECK(2, 5, 3, 3, "N6");
+            }
+        }
+
+        SECTION("Queens") {
+            Piece queen{Piece::Type::Queen, color};
+
+        }
+
+        SECTION("Legality") {
+
+        }
+
         // 4 bishops can take rook
         // one needs full disam one just col one just row
         // B4k2/5B2/8/3r4/8/1B3B2/8/4K3 w - - 0 1
+
+#undef AMBIG_MOVE_CHECK
     }
 
     SECTION("Pawns") {

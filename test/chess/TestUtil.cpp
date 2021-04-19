@@ -141,7 +141,10 @@ namespace std { // NOLINT(cert-dcl58-cpp)
 
     std::ostream &operator<<(std::ostream &os, const std::optional<Chess::Move> &mv) {
         if (mv.has_value()) {
-            os << mv->toSANSquares() << " [" << static_cast<unsigned>(mv->flag) << ']';
+            os << mv->toSANSquares();
+            if (mv->flag != Chess::Move::Flag::None) {
+                os << " [" << static_cast<unsigned>(mv->flag) << ']';
+            }
         } else {
             os << "No move";
         }

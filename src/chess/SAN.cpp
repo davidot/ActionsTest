@@ -29,6 +29,11 @@ namespace Chess {
         return static_cast<char>(firstCol + col);
     }
 
+    char rowToNumber(BoardIndex row) {
+        ASSERT(row < Board::size);
+        return static_cast<char>(firstRow + row);
+    }
+
     std::optional<std::pair<BoardIndex, BoardIndex>> Board::SANToColRow(std::string_view vw) {
         if (vw.size() != 2) {
             return std::nullopt;
@@ -137,8 +142,46 @@ namespace Chess {
             destination.insert(0, "x");
         }
 
+        // determine location(s) of pieces of same type which could move there as well
+
+        bool multiple = false;
+        bool colAmbiguous = false;
+        bool rowAmbiguous = false;
+
+        auto [fromCol, fromRow] = mv.colRowFromPosition();
+
+        list.forEachFilteredMove(
+                [toPos = mv.toPosition, fromPos = mv.fromPosition](const Move& move) {
+                    return move.toPosition == toPos && move.fromPosition != fromPos;
+                },
+                 [&, fromCol = fromCol, fromRow = fromRow](const Move& move) {
+                         ASSERT(pieceAt(move.fromPosition).has_value() && pieceAt(move.fromPosition)->color() == colorToMove());
+                         if (pieceAt(move.fromPosition) == tp) {
+                             // ambiguity possible
+                             multiple = true;
+                             ASSERT(move.fromPosition != mv.fromPosition);
+                             auto [fromC, fromR] = move.colRowFromPosition();
+
+                             if (fromC == fromCol) {
+                                 colAmbiguous = true;
+                             }
+                             if (fromR == fromRow) {
+                                 rowAmbiguous = true;
+                             }
+                         }
+                     });
 
         std::string disambiguation = "";
+
+        if (multiple) {
+            if (colAmbiguous && rowAmbiguous) {
+                disambiguation = indexToSAN(mv.fromPosition);
+            } else if (colAmbiguous && !rowAmbiguous) {
+                disambiguation = rowToNumber(fromRow);
+            } else {
+                disambiguation = colToLetter(fromCol);
+            }
+        }
 
 
         return typeChar(tp.type()) + disambiguation + destination;
@@ -258,6 +301,7 @@ namespace Chess {
                 {
                     ASSERT(sv.empty());
                     // Should only be one king
+                    // TODO: we assume this is efficient should maybe switch to local search
                     auto [kingC, kingR] = kingSquare(colorToMove());
                     return Move{kingC, kingR, toCol, toRow};
                 }
@@ -268,14 +312,17 @@ namespace Chess {
                     const Piece bishop{Piece::Type::Bishop, colorToMove()};
                     for (BoardIndex dCol : {1, -1}) {
                         for (BoardIndex dRow : {1, -1}) {
-                            BoardIndex cCol = toCol + dCol;
-                            BoardIndex cRow = toRow + dRow;
-                            while (cCol < size && cRow < size) {
+                            for (BoardIndex cCol = toCol + dCol, cRow = toRow + dRow;
+                                    cCol < size && cRow < size;
+                                    cCol += dCol, cRow += dRow) {
+                                if (fromCol < size && cCol != fromCol ||
+                                    fromRow < size && cRow != fromRow) {
+                                    continue;
+                                }
+
                                 if (pieceAt(cCol, cRow) == bishop) {
                                     return Move{cCol, cRow, toCol, toRow};
                                 }
-                                cCol += dCol;
-                                cRow += dRow;
                             }
                         }
                     }
@@ -286,23 +333,37 @@ namespace Chess {
                 {
                     const Piece rook{Piece::Type::Rook, colorToMove()};
 
-                    for (BoardIndex dCol : {-1, 1}) {
-                        BoardIndex cCol = toCol + dCol;
-                        while (cCol < size) {
-                            if (pieceAt(cCol, toRow) == rook) {
-                                return Move{cCol, toRow, toCol, toRow};
+                    if (fromCol < size) {
+                        if (fromCol != toCol) {
+                            ASSERT(pieceAt(fromCol, toRow) == rook);
+                            return Move{fromCol, toRow, toCol, toRow};
+                        }
+                    } else if (fromRow >= size || fromRow == toRow){
+                        for (BoardIndex dCol : {-1, 1}) {
+                            BoardIndex cCol = toCol + dCol;
+                            while (cCol < size) {
+                                if (pieceAt(cCol, toRow) == rook) {
+                                    return Move{cCol, toRow, toCol, toRow};
+                                }
+                                cCol += dCol;
                             }
-                            cCol += dCol;
                         }
                     }
 
-                    for (BoardIndex dRow : {-1, 1}) {
-                        BoardIndex cRow = toRow + dRow;
-                        while (cRow < size) {
-                            if (pieceAt(toCol, cRow) == rook) {
-                                return Move{toCol, cRow, toCol, toRow};
+                    if (fromRow < size) {
+                        if (fromRow != toRow) {
+                            ASSERT(pieceAt(toCol, fromRow) == rook);
+                            return Move{toCol, fromRow, toCol, toRow};
+                        }
+                    } else {
+                        for (BoardIndex dRow : {-1, 1}) {
+                            BoardIndex cRow = toRow + dRow;
+                            while (cRow < size) {
+                                if (pieceAt(toCol, cRow) == rook) {
+                                    return Move{toCol, cRow, toCol, toRow};
+                                }
+                                cRow += dRow;
                             }
-                            cRow += dRow;
                         }
                     }
                     ASSERT_NOT_REACHED();
@@ -368,14 +429,16 @@ namespace Chess {
                     }};
                     Piece knight{Piece::Type::Knight, colorToMove()};
                     for (KO ko : knightOffsets) {
-                        BoardIndex fromCol = toCol - ko.colOff;
-                        BoardIndex fromRow = toRow - ko.rowOff;
-                        if (fromCol >= size || fromRow >= size) {
+                        BoardIndex cCol = toCol - ko.colOff;
+                        BoardIndex cRow = toRow - ko.rowOff;
+                        if (cCol >= size || cRow >= size
+                            || (fromCol < size && cCol != fromCol)
+                            || (fromRow < size && cRow != fromRow)) {
                             continue;
                         }
                         // TODO disam
-                        if (pieceAt(fromCol, fromRow) == knight) {
-                            return Move{fromCol, fromRow, toCol, toRow};
+                        if (pieceAt(cCol, cRow) == knight) {
+                            return Move{cCol, cRow, toCol, toRow};
                         }
                     }
                     ASSERT_NOT_REACHED();
