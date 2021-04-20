@@ -221,6 +221,13 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
             board.makeNullMove();
         }
 
+        Piece bishop{Piece::Type::Bishop, color};
+        Piece rook{Piece::Type::Rook, color};
+        Piece queen{Piece::Type::Queen, color};
+        Piece knight{Piece::Type::Knight, color};
+        Piece king{Piece::Type::Knight, color};
+
+
 #define AMBIG_MOVE_CHECK(fromCol, fromRow, toCol, toRow, pieceStr) \
     CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + Board::columnRowToSAN(toCol, toRow)); \
     board.setPiece(toCol, toRow, Piece{Piece::Type::Rook, opposite(color)}); \
@@ -228,7 +235,6 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
     board.setPiece(toCol, toRow, std::nullopt)
 
         SECTION("Bishop") {
-            Piece bishop{Piece::Type::Bishop, color};
             SECTION("2 Bishops can move to square identify with col") {
                 board.setPiece(0, 0, bishop);
                 BoardIndex secondCoord = GENERATE(TEST_SOME(range(2, 8)));
@@ -239,13 +245,6 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
 
                 AMBIG_MOVE_CHECK(0, 0, 1, 1, "Ba");
                 AMBIG_MOVE_CHECK(secondCoord, secondCoord, 1, 1, "B" + secondColLetter);
-            }
-
-            SECTION("No ambiguity if bishop behind other") {
-                board.setPiece(0, 0, bishop);
-                board.setPiece(1, 1, bishop);
-
-                AMBIG_MOVE_CHECK(1, 1, 2, 2, "B");
             }
 
             SECTION("2 Bishops on the same column are identified by row") {
@@ -281,18 +280,6 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
                 AMBIG_MOVE_CHECK(5, 6, 3, 4, "Bf7");
             }
 
-            SECTION("4 bishops to squares where a single bishop can move are not disambiguated") {
-                board.setPiece(1, 6, bishop);
-                board.setPiece(1, 2, bishop);
-                board.setPiece(5, 2, bishop);
-                board.setPiece(5, 6, bishop);
-
-                AMBIG_MOVE_CHECK(1, 6, 2, 7, "B");
-                AMBIG_MOVE_CHECK(1, 2, 2, 1, "B");
-                AMBIG_MOVE_CHECK(5, 2, 4, 1, "B");
-                AMBIG_MOVE_CHECK(5, 6, 6, 5, "B");
-            }
-
             SECTION("4 bishops when moving to square just 2 can reach only disambiguates on column") {
                 board.setPiece(1, 6, bishop);
                 board.setPiece(1, 2, bishop);
@@ -306,7 +293,6 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
         }
 
         SECTION("Rook") {
-            Piece rook{Piece::Type::Rook, color};
             SECTION("2 Rooks can move to the same square in col identify with row") {
                 board.setPiece(0, 0, rook);
                 BoardIndex secondCoord = GENERATE(TEST_SOME(range(2, 8)));
@@ -324,14 +310,6 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
 
                 AMBIG_MOVE_CHECK(0, 0, 4, 0, "Ra");
                 AMBIG_MOVE_CHECK(4, 4, 4, 0, "Re");
-            }
-
-            SECTION("2 Rooks which cannot move to the square are not disambiguated") {
-                board.setPiece(0, 0, rook);
-                board.setPiece(4, 4, rook);
-
-                AMBIG_MOVE_CHECK(0, 0, 3, 0, "R");
-                AMBIG_MOVE_CHECK(4, 4, 4, 1, "R");
             }
 
             SECTION("3 rooks around square") {
@@ -358,8 +336,6 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
         }
 
         SECTION("Knight") {
-            Piece knight{Piece::Type::Knight, color};
-
             SECTION("Two knights on different columns as disambiguated") {
                 board.setPiece(1, 2, knight);
                 board.setPiece(2, 1, knight);
@@ -402,11 +378,165 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
         }
 
         SECTION("Queens") {
-            Piece queen{Piece::Type::Queen, color};
+
+            SECTION("2 queens on different columns are disambiguated by column") {
+                board.setPiece(1, 1, queen);
+                board.setPiece(3, 1, queen);
+
+                AMBIG_MOVE_CHECK(1, 1, 3, 3, "Qb");
+                AMBIG_MOVE_CHECK(3, 1, 3, 3, "Qd");
+            }
+
+            SECTION("3 queens on different columns are disambiguated by column") {
+                board.setPiece(1, 1, queen);
+                board.setPiece(3, 1, queen);
+                board.setPiece(5, 1, queen);
+
+                AMBIG_MOVE_CHECK(1, 1, 3, 3, "Qb");
+                AMBIG_MOVE_CHECK(3, 1, 3, 3, "Qd");
+                AMBIG_MOVE_CHECK(5, 1, 3, 3, "Qf");
+            }
+
+            SECTION("2 queens on same column are disambiguated by row") {
+                board.setPiece(1, 1, queen);
+                board.setPiece(1, 3, queen);
+
+                AMBIG_MOVE_CHECK(1, 1, 3, 3, "Q2");
+                AMBIG_MOVE_CHECK(1, 3, 3, 3, "Q4");
+            }
+
+            SECTION("3 queens on same column are disambiguated by row") {
+                board.setPiece(1, 1, queen);
+                board.setPiece(1, 3, queen);
+                board.setPiece(1, 5, queen);
+
+                AMBIG_MOVE_CHECK(1, 1, 3, 3, "Q2");
+                AMBIG_MOVE_CHECK(1, 3, 3, 3, "Q4");
+                AMBIG_MOVE_CHECK(1, 5, 3, 3, "Q6");
+            }
+
+            SECTION("3 queens in straight angle are disambiguated by row,full,col") {
+                board.setPiece(1, 1, queen);
+                board.setPiece(1, 3, queen);
+                board.setPiece(3, 1, queen);
+
+                AMBIG_MOVE_CHECK(1, 3, 3, 3, "Q4");
+                AMBIG_MOVE_CHECK(1, 1, 3, 3, "Qb2");
+                AMBIG_MOVE_CHECK(3, 1, 3, 3, "Qd");
+            }
+
+            SECTION("5 queens in straight angle are disambiguated by row,row,full,col,col") {
+                board.setPiece(1, 5, queen);
+                board.setPiece(1, 3, queen);
+                board.setPiece(1, 1, queen);
+                board.setPiece(3, 1, queen);
+                board.setPiece(5, 1, queen);
+
+                AMBIG_MOVE_CHECK(1, 5, 3, 3, "Q6");
+                AMBIG_MOVE_CHECK(1, 3, 3, 3, "Q4");
+                AMBIG_MOVE_CHECK(1, 1, 3, 3, "Qb2");
+                AMBIG_MOVE_CHECK(3, 1, 3, 3, "Qd");
+                AMBIG_MOVE_CHECK(5, 1, 3, 3, "Qf");
+            }
+
+            SECTION("5 queens in U form are disambiguated") {
+                board.setPiece(1, 5, queen);
+                board.setPiece(1, 3, queen);
+                board.setPiece(1, 1, queen);
+                board.setPiece(3, 1, queen);
+                board.setPiece(3, 5, queen);
+
+                AMBIG_MOVE_CHECK(1, 5, 3, 3, "Qb6");
+                AMBIG_MOVE_CHECK(1, 3, 3, 3, "Q4");
+                AMBIG_MOVE_CHECK(1, 1, 3, 3, "Qb2");
+                AMBIG_MOVE_CHECK(3, 1, 3, 3, "Qd2");
+                AMBIG_MOVE_CHECK(3, 5, 3, 3, "Qd6");
+            }
+
+            SECTION("8 queens around square all need to be fully disambiguated") {
+                board.setPiece(1, 5, queen);
+                board.setPiece(1, 3, queen);
+                board.setPiece(1, 1, queen);
+                board.setPiece(3, 1, queen);
+                board.setPiece(5, 1, queen);
+                board.setPiece(5, 3, queen);
+                board.setPiece(5, 5, queen);
+                board.setPiece(3, 5, queen);
+
+                AMBIG_MOVE_CHECK(1, 5, 3, 3, "Qb6");
+                AMBIG_MOVE_CHECK(1, 3, 3, 3, "Qb4");
+                AMBIG_MOVE_CHECK(1, 1, 3, 3, "Qb2");
+                AMBIG_MOVE_CHECK(3, 1, 3, 3, "Qd2");
+                AMBIG_MOVE_CHECK(5, 1, 3, 3, "Qf2");
+                AMBIG_MOVE_CHECK(5, 3, 3, 3, "Qf4");
+                AMBIG_MOVE_CHECK(5, 5, 3, 3, "Qf6");
+                AMBIG_MOVE_CHECK(3, 5, 3, 3, "Qd6");
+            }
 
         }
 
         SECTION("Legality") {
+
+            SECTION("No ambiguity if bishop behind other") {
+                board.setPiece(0, 0, bishop);
+                board.setPiece(1, 1, bishop);
+
+                AMBIG_MOVE_CHECK(1, 1, 2, 2, "B");
+            }
+
+            SECTION("Queen cannot move through piece thus no disambiguation") {
+                board.setPiece(0, 0, queen);
+                board.setPiece(0, 1, knight);
+                board.setPiece(2, 0, queen);
+
+                // in case order matters we check both
+                AMBIG_MOVE_CHECK(2, 0, 0, 2, "Q");
+                board.setPiece(0, 1, std::nullopt);
+                board.setPiece(1, 1, knight);
+                AMBIG_MOVE_CHECK(0, 0, 0, 2, "Q");
+            }
+
+            SECTION("Rooks cannot move through piece thus no disambiguation") {
+                board.setPiece(0, 0, rook);
+                board.setPiece(5, 0, rook);
+
+                board.setPiece(3, 0, knight);
+                AMBIG_MOVE_CHECK(0, 0, 2, 0, "R");
+                AMBIG_MOVE_CHECK(5, 0, 4, 0, "R");
+            }
+
+            SECTION("4 bishops to squares where a single bishop can move are not disambiguated") {
+                board.setPiece(1, 6, bishop);
+                board.setPiece(1, 2, bishop);
+                board.setPiece(5, 2, bishop);
+                board.setPiece(5, 6, bishop);
+
+                AMBIG_MOVE_CHECK(1, 6, 2, 7, "B");
+                AMBIG_MOVE_CHECK(1, 2, 2, 1, "B");
+                AMBIG_MOVE_CHECK(5, 2, 4, 1, "B");
+                AMBIG_MOVE_CHECK(5, 6, 6, 5, "B");
+            }
+
+            SECTION("2 Rooks which cannot move to the square are not disambiguated") {
+                board.setPiece(0, 0, rook);
+                board.setPiece(4, 4, rook);
+
+                AMBIG_MOVE_CHECK(0, 0, 3, 0, "R");
+                AMBIG_MOVE_CHECK(4, 4, 4, 1, "R");
+            }
+
+            SECTION("Pinned rook") {
+                board.setPiece(0, 0, king);
+                board.setPiece(0, 1, rook); // pinned 1
+                board.setPiece(0, 8, Piece{Piece::Type::Rook, opposite(color)});
+                board.setPiece(1, 0, rook); // piece 2
+
+                AMBIG_MOVE_CHECK(1, 0, 1, 1, "R");
+                board.setPiece(0, 8, std::nullopt);
+                board.setPiece(0, 8, Piece{Piece::Type::Rook, opposite(color)});
+                // now pinning 2 in case of lucky order
+                AMBIG_MOVE_CHECK(0, 1, 1, 1, "R");
+            }
 
         }
 

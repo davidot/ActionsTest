@@ -68,7 +68,7 @@ namespace Chess {
         return moveToSAN(mv, generateAllMoves(*this));
     }
 
-    std::array<char, 8> sanPieceChar = {
+    constexpr std::array<char, 8> sanPieceChar = {
             '~',
             ' ', // pawn has no type char
             'K',
@@ -78,6 +78,10 @@ namespace Chess {
             'N',
             '-'
     };
+
+    static_assert(sanPieceChar[static_cast<int>(Piece::Type::Rook)] == 'R');
+    static_assert(sanPieceChar[static_cast<int>(Piece::Type::King)] == 'K');
+    static_assert(sanPieceChar[static_cast<int>(Piece::Type::Queen)] == 'Q');
 
     Piece::Type parseTypeChar(char c) {
         switch (c) {
@@ -140,6 +144,10 @@ namespace Chess {
 
         if (capturing) {
             destination.insert(0, "x");
+        }
+
+        if (tp.type() == Piece::Type::King) {
+            return typeChar(tp.type()) + destination;
         }
 
         // determine location(s) of pieces of same type which could move there as well
@@ -269,6 +277,69 @@ namespace Chess {
             }
         }
 
+        auto findDiagonal = [&, toCol=toCol, toRow=toRow](Piece::Type type) -> std::optional<Move> {
+          // TODO if disam figure out way to limit search
+          const Piece piece{type, colorToMove()};
+          for (BoardIndex dCol : {1, -1}) {
+              for (BoardIndex dRow : {1, -1}) {
+                  for (BoardIndex cCol = toCol + dCol, cRow = toRow + dRow;
+                       cCol < size && cRow < size;
+                       cCol += dCol, cRow += dRow) {
+                      if (fromCol < size && cCol != fromCol ||
+                          fromRow < size && cRow != fromRow) {
+                          continue;
+                      }
+
+                      if (pieceAt(cCol, cRow) == piece) {
+                          return Move{cCol, cRow, toCol, toRow};
+                      }
+                  }
+              }
+          }
+
+          return std::nullopt;
+        };
+
+        auto findCardinal = [&, toCol=toCol, toRow=toRow](Piece::Type type) -> std::optional<Move> {
+          const Piece piece{type, colorToMove()};
+
+          if (fromCol < size) {
+              if (fromCol != toCol) {
+                  ASSERT(pieceAt(fromCol, toRow) == piece);
+                  return Move{fromCol, toRow, toCol, toRow};
+              }
+          } else if (fromRow >= size || fromRow == toRow){
+              for (BoardIndex dCol : {-1, 1}) {
+                  BoardIndex cCol = toCol + dCol;
+                  while (cCol < size) {
+                      if (pieceAt(cCol, toRow) == piece) {
+                          return Move{cCol, toRow, toCol, toRow};
+                      }
+                      cCol += dCol;
+                  }
+              }
+          }
+
+          if (fromRow < size) {
+              if (fromRow != toRow) {
+                  ASSERT(pieceAt(toCol, fromRow) == piece);
+                  return Move{toCol, fromRow, toCol, toRow};
+              }
+          } else {
+              for (BoardIndex dRow : {-1, 1}) {
+                  BoardIndex cRow = toRow + dRow;
+                  while (cRow < size) {
+                      if (pieceAt(toCol, cRow) == piece) {
+                          return Move{toCol, cRow, toCol, toRow};
+                      }
+                      cRow += dRow;
+                  }
+              }
+          }
+
+          return std::nullopt;
+        };
+
         switch (tp) {
             case Piece::Type::Pawn:
                 if (capturing || destination == m_enPassant) {
@@ -305,111 +376,29 @@ namespace Chess {
                     auto [kingC, kingR] = kingSquare(colorToMove());
                     return Move{kingC, kingR, toCol, toRow};
                 }
-                break;
             case Piece::Type::Bishop:
                 {
-                    // TODO if disam figure out way to limit search
-                    const Piece bishop{Piece::Type::Bishop, colorToMove()};
-                    for (BoardIndex dCol : {1, -1}) {
-                        for (BoardIndex dRow : {1, -1}) {
-                            for (BoardIndex cCol = toCol + dCol, cRow = toRow + dRow;
-                                    cCol < size && cRow < size;
-                                    cCol += dCol, cRow += dRow) {
-                                if (fromCol < size && cCol != fromCol ||
-                                    fromRow < size && cRow != fromRow) {
-                                    continue;
-                                }
-
-                                if (pieceAt(cCol, cRow) == bishop) {
-                                    return Move{cCol, cRow, toCol, toRow};
-                                }
-                            }
-                        }
-                    }
-                    ASSERT_NOT_REACHED();
+                    auto diag = findDiagonal(Piece::Type::Bishop);
+                    ASSERT(diag.has_value());
+                    return diag.value();
                 }
-                break;
             case Piece::Type::Rook:
                 {
-                    const Piece rook{Piece::Type::Rook, colorToMove()};
-
-                    if (fromCol < size) {
-                        if (fromCol != toCol) {
-                            ASSERT(pieceAt(fromCol, toRow) == rook);
-                            return Move{fromCol, toRow, toCol, toRow};
-                        }
-                    } else if (fromRow >= size || fromRow == toRow){
-                        for (BoardIndex dCol : {-1, 1}) {
-                            BoardIndex cCol = toCol + dCol;
-                            while (cCol < size) {
-                                if (pieceAt(cCol, toRow) == rook) {
-                                    return Move{cCol, toRow, toCol, toRow};
-                                }
-                                cCol += dCol;
-                            }
-                        }
-                    }
-
-                    if (fromRow < size) {
-                        if (fromRow != toRow) {
-                            ASSERT(pieceAt(toCol, fromRow) == rook);
-                            return Move{toCol, fromRow, toCol, toRow};
-                        }
-                    } else {
-                        for (BoardIndex dRow : {-1, 1}) {
-                            BoardIndex cRow = toRow + dRow;
-                            while (cRow < size) {
-                                if (pieceAt(toCol, cRow) == rook) {
-                                    return Move{toCol, cRow, toCol, toRow};
-                                }
-                                cRow += dRow;
-                            }
-                        }
-                    }
-                    ASSERT_NOT_REACHED();
+                    auto mv = findCardinal(Piece::Type::Rook);
+                    ASSERT(mv.has_value());
+                    return mv.value();
                 }
-                break;
             case Piece::Type::Queen:
                 {
-                    // Diagonal
-                    const Piece queen{Piece::Type::Queen, colorToMove()};
-                    for (BoardIndex dCol : {1, -1}) {
-                        for (BoardIndex dRow : {1, -1}) {
-                            BoardIndex cCol = toCol + dCol;
-                            BoardIndex cRow = toRow + dRow;
-                            while (cCol < size && cRow < size) {
-                                if (pieceAt(cCol, cRow) == queen) {
-                                    return Move{cCol, cRow, toCol, toRow};
-                                }
-                                cCol += dCol;
-                                cRow += dRow;
-                            }
-                        }
+                    auto diag = findDiagonal(Piece::Type::Queen);
+                    if (diag) {
+                        return diag.value();
                     }
 
-                    for (BoardIndex dCol : {-1, 1}) {
-                        BoardIndex cCol = toCol + dCol;
-                        while (cCol < size) {
-                            if (pieceAt(cCol, toRow) == queen) {
-                                return Move{cCol, toRow, toCol, toRow};
-                            }
-                            cCol += dCol;
-                        }
-                    }
-
-                    for (BoardIndex dRow : {-1, 1}) {
-                        BoardIndex cRow = toRow + dRow;
-                        while (cRow < size) {
-                            if (pieceAt(toCol, cRow) == queen) {
-                                return Move{toCol, cRow, toCol, toRow};
-                            }
-                            cRow += dRow;
-                        }
-                    }
-
-                    ASSERT_NOT_REACHED();
+                    auto card = findCardinal(Piece::Type::Queen);
+                    ASSERT(card.has_value());
+                    return card.value();
                 }
-                break;
             case Piece::Type::Knight:
                 {
                     struct KO {
