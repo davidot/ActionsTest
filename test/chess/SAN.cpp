@@ -225,7 +225,7 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
         Piece rook{Piece::Type::Rook, color};
         Piece queen{Piece::Type::Queen, color};
         Piece knight{Piece::Type::Knight, color};
-        Piece king{Piece::Type::Knight, color};
+        Piece king{Piece::Type::King, color};
 
 
 #define AMBIG_MOVE_CHECK(fromCol, fromRow, toCol, toRow, pieceStr) \
@@ -528,12 +528,12 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
             SECTION("Pinned rook") {
                 board.setPiece(0, 0, king);
                 board.setPiece(0, 1, rook); // pinned 1
-                board.setPiece(0, 8, Piece{Piece::Type::Rook, opposite(color)});
+                board.setPiece(0, 7, Piece{Piece::Type::Rook, opposite(color)});
                 board.setPiece(1, 0, rook); // piece 2
 
                 AMBIG_MOVE_CHECK(1, 0, 1, 1, "R");
-                board.setPiece(0, 8, std::nullopt);
-                board.setPiece(0, 8, Piece{Piece::Type::Rook, opposite(color)});
+                board.setPiece(0, 7, std::nullopt);
+                board.setPiece(7, 0, Piece{Piece::Type::Rook, opposite(color)});
                 // now pinning 2 in case of lucky order
                 AMBIG_MOVE_CHECK(0, 1, 1, 1, "R");
             }
