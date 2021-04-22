@@ -196,6 +196,10 @@ namespace Chess {
     }
 
     std::optional<Move> Board::parseSANMove(std::string_view sv) const {
+        return parseSANMove(sv, generateAllMoves(*this));
+    }
+
+    std::optional<Move> Board::parseSANMove(std::string_view sv, const MoveList& moves) const {
         ASSERT(sv.size() >= 2);
         // do not want the check or checkmate data
         ASSERT(sv.back() != '+' && sv.back() != '#');
@@ -262,7 +266,9 @@ namespace Chess {
             ASSERT(tp != Piece::Type::Pawn);
             auto from = SANToIndex(sv);
             ASSERT(from.has_value());
-            return Move{from.value(), destination};
+            Move move{from.value(), destination};
+            ASSERT(moves.contains(move));
+            return move;
         }
 
         BoardIndex fromCol = -1;
@@ -277,169 +283,61 @@ namespace Chess {
             }
         }
 
-        auto findDiagonal = [&, toCol=toCol, toRow=toRow](Piece::Type type) -> std::optional<Move> {
-          // TODO if disam figure out way to limit search
-          const Piece piece{type, colorToMove()};
-          for (BoardIndex dCol : {1, -1}) {
-              for (BoardIndex dRow : {1, -1}) {
-                  for (BoardIndex cCol = toCol + dCol, cRow = toRow + dRow;
-                       cCol < size && cRow < size;
-                       cCol += dCol, cRow += dRow) {
-                      if (fromCol < size && cCol != fromCol ||
-                          fromRow < size && cRow != fromRow) {
-                          continue;
-                      }
+        Color us = colorToMove();
 
-                      if (pieceAt(cCol, cRow) == piece) {
-                          return Move{cCol, cRow, toCol, toRow};
-                      }
-                  }
-              }
-          }
+        if (tp == Piece::Type::Pawn) {
+            Move mv;
+            if (capturing || destination == m_enPassant) {
+                ASSERT(fromCol < size);
+                BoardIndex row = toRow - pawnDirection(colorToMove());
 
-          return std::nullopt;
-        };
-
-        auto findCardinal = [&, toCol=toCol, toRow=toRow](Piece::Type type) -> std::optional<Move> {
-          const Piece piece{type, colorToMove()};
-
-          if (fromCol < size) {
-              if (fromCol != toCol) {
-                  ASSERT(pieceAt(fromCol, toRow) == piece);
-                  return Move{fromCol, toRow, toCol, toRow};
-              }
-          } else if (fromRow >= size || fromRow == toRow){
-              for (BoardIndex dCol : {-1, 1}) {
-                  BoardIndex cCol = toCol + dCol;
-                  while (cCol < size) {
-                      if (pieceAt(cCol, toRow) == piece) {
-                          return Move{cCol, toRow, toCol, toRow};
-                      }
-                      cCol += dCol;
-                  }
-              }
-          }
-
-          if (fromRow < size) {
-              if (fromRow != toRow) {
-                  ASSERT(pieceAt(toCol, fromRow) == piece);
-                  return Move{toCol, fromRow, toCol, toRow};
-              }
-          } else {
-              for (BoardIndex dRow : {-1, 1}) {
-                  BoardIndex cRow = toRow + dRow;
-                  while (cRow < size) {
-                      if (pieceAt(toCol, cRow) == piece) {
-                          return Move{toCol, cRow, toCol, toRow};
-                      }
-                      cRow += dRow;
-                  }
-              }
-          }
-
-          return std::nullopt;
-        };
-
-        switch (tp) {
-            case Piece::Type::Pawn:
-                if (capturing || destination == m_enPassant) {
-                    ASSERT(fromCol < size);
-                    BoardIndex row = toRow - pawnDirection(colorToMove());
-
-                    if (destination == m_enPassant) {
-                        ASSERT(!pieceAt(destination).has_value());
-                        ASSERT(flag == Move::Flag::None);
-                        flag = Move::Flag::EnPassant;
-                    }
-
-                    return Move{columnRowToIndex(fromCol, row), destination, flag};
-                } else {
-                    ASSERT(sv.empty());
-                    Color us = colorToMove();
-                    BoardOffset pawnDir = pawnDirection(us);
-                    if (pieceAt(toCol, toRow - pawnDir) == Piece{Piece::Type::Pawn, us}) {
-                        return Move(toCol, toRow - pawnDir, toCol, toRow, flag);
-                    }
-                    // must be double push
+                if (destination == m_enPassant) {
+                    ASSERT(!pieceAt(destination).has_value());
                     ASSERT(flag == Move::Flag::None);
-                    if (pieceAt(toCol, toRow - pawnDir - pawnDir) == Piece{Piece::Type::Pawn, us}) {
-                        return Move(toCol, toRow - pawnDir - pawnDir, toCol, toRow, Move::Flag::DoublePushPawn);
-                    }
+                    flag = Move::Flag::EnPassant;
                 }
-                ASSERT_NOT_REACHED();
-                break;
-            case Piece::Type::King:
-                {
-                    ASSERT(sv.empty());
-                    // Should only be one king
-                    // TODO: we assume this is efficient should maybe switch to local search
-                    auto [kingC, kingR] = kingSquare(colorToMove());
-                    return Move{kingC, kingR, toCol, toRow};
-                }
-            case Piece::Type::Bishop:
-                {
-                    auto diag = findDiagonal(Piece::Type::Bishop);
-                    ASSERT(diag.has_value());
-                    return diag.value();
-                }
-            case Piece::Type::Rook:
-                {
-                    auto mv = findCardinal(Piece::Type::Rook);
-                    ASSERT(mv.has_value());
-                    return mv.value();
-                }
-            case Piece::Type::Queen:
-                {
-                    auto diag = findDiagonal(Piece::Type::Queen);
-                    if (diag) {
-                        return diag.value();
-                    }
 
-                    auto card = findCardinal(Piece::Type::Queen);
-                    ASSERT(card.has_value());
-                    return card.value();
+                mv = Move{columnRowToIndex(fromCol, row), destination, flag};
+            } else {
+                ASSERT(sv.empty());
+                Piece pawn{Piece::Type::Pawn, us};
+
+                BoardOffset pawnDir = pawnDirection(us);
+                if (pieceAt(toCol, toRow - pawnDir) == pawn) {
+                    mv = Move(toCol, toRow - pawnDir, toCol, toRow, flag);
+                } else {
+                    // must be double push so cannot be promotion or e.p.
+                    ASSERT(flag == Move::Flag::None);
+                    ASSERT(pieceAt(toCol, toRow - pawnDir - pawnDir) == pawn);
+                    mv = Move(toCol, toRow - pawnDir - pawnDir, toCol, toRow, Move::Flag::DoublePushPawn);
                 }
-            case Piece::Type::Knight:
-                {
-                    struct KO {
-                        BoardOffset colOff;
-                        BoardOffset rowOff;
-                    };
-                    // TODO: unify all knight offsets somewhere
-                    constexpr std::array<KO, 8> knightOffsets = {{
-                            {-2, -1},
-                            {-1, -2},
-                            {1, -2},
-                            {2, -1},
-                            {-2, 1},
-                            {-1, 2},
-                            {1, 2},
-                            {2, 1}
-                    }};
-                    Piece knight{Piece::Type::Knight, colorToMove()};
-                    for (KO ko : knightOffsets) {
-                        BoardIndex cCol = toCol - ko.colOff;
-                        BoardIndex cRow = toRow - ko.rowOff;
-                        if (cCol >= size || cRow >= size
-                            || (fromCol < size && cCol != fromCol)
-                            || (fromRow < size && cRow != fromRow)) {
-                            continue;
-                        }
-                        // TODO disam
-                        if (pieceAt(cCol, cRow) == knight) {
-                            return Move{cCol, cRow, toCol, toRow};
-                        }
-                    }
-                    ASSERT_NOT_REACHED();
-                }
-                break;
-            case Piece::Type::None:
-                ASSERT_NOT_REACHED();
-                break;
+            }
+            ASSERT(moves.contains(mv));
+            return mv;
         }
 
-        ASSERT_NOT_REACHED();
-        return std::nullopt;
+        bool foundSingleMove = false;
+        Move mv;
+
+        moves.forEachFilteredMove([&foundSingleMove, destination](const Move& move) {
+            return !foundSingleMove && move.toPosition == destination;
+        },
+                                  [&](const Move& move) {
+                                      ASSERT(pieceAt(move.fromPosition).has_value() && pieceAt(move.fromPosition)->color() == us);
+                                      auto [fromC, fromR] = move.colRowFromPosition();
+                                      if (fromCol < size && fromC != fromCol
+                                          || fromRow < size && fromR != fromRow) {
+                                          return;
+                                      }
+                                      if (pieceAt(move.fromPosition)->type() == tp) {
+                                          foundSingleMove = true;
+                                          mv = move;
+                                      }
+                                  });
+        if (!foundSingleMove) {
+            return std::nullopt;
+        }
+        return mv;
     }
 
 }

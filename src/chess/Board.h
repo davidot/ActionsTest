@@ -107,6 +107,8 @@ namespace Chess {
 
         std::string moveToSAN(Move mv) const;
 
+        std::optional<Move> parseSANMove(std::string_view, const MoveList&) const;
+
         std::optional<Move> parseSANMove(std::string_view) const;
 
     private:
