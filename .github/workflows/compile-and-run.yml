@@ -124,7 +124,7 @@ jobs:
         timeout-minutes: 15
         run: |
           cd ${{ env.build_folder_location }}
-          ctest --output-on-failure
+          ctest --verbose
 
       - name: Run benchmarks
         timeout-minutes: 15
