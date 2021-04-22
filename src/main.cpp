@@ -4,7 +4,7 @@
 #include <random>
 #include <sstream>
 
-int main() {
+int main(int argc, char** argv) {
     Chess::Board board = Chess::Board::standardBoard();
 
     std::cout << "Start fen: " << board.toFEN() << '\n';
@@ -17,7 +17,13 @@ int main() {
 
     std::stringstream pgn;
 
-    Chess::Color capturer = Chess::Color::White;
+    std::optional<Chess::Color> capturer;
+
+    if (argc > 1) {
+        char first = argv[1][0];
+        capturer = (first == 'w' || first == 'W') ? Chess::Color::White : Chess::Color::Black;
+        std::cout << "Using capturer: " << capturer.value() << '\n';
+    }
 
     while (moves.size() > 0 && moveNum < 1000) {
         size_t moveIndex = std::uniform_int_distribution<size_t>(0, moves.size() - 1)(rng);
