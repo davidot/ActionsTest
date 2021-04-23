@@ -134,9 +134,9 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
         }
 
 #define BASIC_MOVE_CHECK(fromCol, fromRow, toCol, toRow, pieceStr) \
-    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + Board::columnRowToSAN(toCol, toRow))/*; \
+    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + Board::columnRowToSAN(toCol, toRow)); \
     board.setPiece(toCol, toRow, Piece{Piece::Type::Bishop, opposite(color)}); \
-    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + ("x" + Board::columnRowToSAN(toCol, toRow)))*/
+    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + ("x" + Board::columnRowToSAN(toCol, toRow)))
 
         SECTION("King move") {
             BoardIndex col = GENERATE(TEST_SOME(range(3, 5)));
@@ -227,10 +227,10 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
 
 
 #define AMBIG_MOVE_CHECK(fromCol, fromRow, toCol, toRow, pieceStr) \
-    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + Board::columnRowToSAN(toCol, toRow))/*; \
+    CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + Board::columnRowToSAN(toCol, toRow)); \
     board.setPiece(toCol, toRow, Piece{Piece::Type::Rook, opposite(color)}); \
     CHECK_MOVE_WITH_NAME(Move(fromCol, fromRow, toCol, toRow), pieceStr + ("x" + Board::columnRowToSAN(toCol, toRow))); \
-    board.setPiece(toCol, toRow, std::nullopt) */
+    board.setPiece(toCol, toRow, std::nullopt)
 
         SECTION("Bishop") {
             SECTION("2 Bishops can move to square identify with col") {
