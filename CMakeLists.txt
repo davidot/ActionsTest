@@ -3,6 +3,7 @@ project(ActionsTest LANGUAGES CXX
         VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if (DEFINED ENV{CI})
     message(STATUS "Probably running in CI, skipping graphical things...")
