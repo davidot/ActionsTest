@@ -116,6 +116,10 @@ jobs:
         timeout-minutes: 30
         run: cmake --build ${{ env.build_folder_location }}
 
+      - name : Dmesg
+        if: startsWith(matrix.config.os, 'ubuntu')
+        run: dmesg
+
       - name: Post-build ccache
         if: startsWith(matrix.config.os, 'ubuntu')
         run: ccache -s
