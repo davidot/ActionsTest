@@ -114,6 +114,7 @@ jobs:
 
       - name: Build
         timeout-minutes: 30
+        continue-on-error: true
         run: cmake --build ${{ env.build_folder_location }}
 
       - name : Dmesg
