@@ -1,6 +1,8 @@
-#include <catch2/catch.hpp>
-#include <chess/Piece.h>
 #include "TestUtil.h"
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators_range.hpp>
+#include <chess/Piece.h>
+#include <chess/Move.h>
 
 TEST_CASE("Pieces", "[chess][base]") {
 

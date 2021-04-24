@@ -54,7 +54,7 @@ jobs:
             }
           - build_type: Release
             extra_cache: 'no-exception'
-            extra-flags: '-fno-exceptions -DCATCH_CONFIG_DISABLE_EXCEPTIONS=1 -Dthrow=""'
+            extra-flags: '-fno-exceptions -DCATCH_CONFIG_DISABLE_EXCEPTIONS=1'
             config: {
               compiler: g++-10,
               os: ubuntu-20.04,

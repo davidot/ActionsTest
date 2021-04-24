@@ -1,5 +1,6 @@
 #include "TestUtil.h"
 #include <chess/Board.h>
+#include <catch2/catch_test_macros.hpp>
 
 namespace TestUtil {
     Chess::Board makeCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook, bool opponent) {

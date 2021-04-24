@@ -1,10 +1,14 @@
 #pragma once
 
-#include <catch2/catch.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/generators/catch_generator_exception.hpp>
+#include <catch2/internal/catch_random_number_generator.hpp>
+#include <catch2/internal/catch_enforce.hpp>
+#include <catch2/internal/catch_context.hpp>
 #include <chess/Forward.h>
 #include <chess/Piece.h>
-#include <chess/Move.h>
 #include <vector>
+#include <random>
 
 #ifndef EXTENDED_TESTS
 #define TEST_SOME(x) sample(2, x)
@@ -41,7 +45,7 @@ namespace Catch::Generators {
                 }
             }
 
-            Catch::SimplePcg32& random = rng();
+            Catch::SimplePcg32& random = Catch::rng();
             do {
                 auto j = std::uniform_int_distribution<size_t>(0, generated)(random);
                 if (j < target) {
@@ -68,12 +72,12 @@ namespace Catch::Generators {
 
     template<typename T>
     GeneratorWrapper<T> sample(size_t target, GeneratorWrapper<T> &&generator) {
-        return GeneratorWrapper<T>(pf::make_unique<SamplingGenerator<T>>(target, std::move(generator)));
+        return GeneratorWrapper<T>(Catch::Detail::make_unique<SamplingGenerator<T>>(target, std::move(generator)));
     }
 
     template<typename T>
     GeneratorWrapper<T> sample(size_t target, size_t totalSize, GeneratorWrapper<T> &&generator) {
-        return GeneratorWrapper<T>(pf::make_unique<SamplingGenerator<T>>(target, totalSize, std::move(generator)));
+        return GeneratorWrapper<T>(Catch::Detail::make_unique<SamplingGenerator<T>>(target, totalSize, std::move(generator)));
     }
 
 }// namespace Catch::Generators

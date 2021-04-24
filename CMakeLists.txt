@@ -50,7 +50,7 @@ option(WITH_BENCHMARKS "Enable and run benchmarks" OFF)
 
 include(cmake/dependencies/catch.cmake)
 
-add_executable(ActionsTest test/main.cpp
+add_executable(ActionsTest
         test/util/StringUtil.cpp
         test/chess/TestUtil.cpp
         test/chess/Piece.cpp
@@ -60,7 +60,7 @@ add_executable(ActionsTest test/main.cpp
         test/chess/SAN.cpp
         )
 
-target_link_libraries(ActionsTest PRIVATE Catch2::Catch2 Actions)
+target_link_libraries(ActionsTest PRIVATE Catch2::Catch2WithMain Actions)
 if (EXTENDED_TESTS)
     target_compile_definitions(ActionsTest PRIVATE EXTENDED_TESTS=1)
     message(STATUS "Running full tests")
