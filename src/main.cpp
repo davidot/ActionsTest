@@ -3,6 +3,7 @@
 #include <iostream>
 #include <random>
 #include <sstream>
+#include <util/RandomUtil.h>
 
 int main(int argc, char** argv) {
     Chess::Board board = Chess::Board::standardBoard();
@@ -11,7 +12,7 @@ int main(int argc, char** argv) {
 
     Chess::MoveList moves = Chess::generateAllMoves(board);
 
-    std::mt19937_64 rng{std::random_device{}()};
+    auto rng = util::seedRNG<std::mt19937_64>();
 
     int moveNum = 0;
 
