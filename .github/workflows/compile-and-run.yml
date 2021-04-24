@@ -48,12 +48,12 @@ jobs:
               extra-flags: '-fno-omit-frame-pointer -Wall -fsanitize=address,undefined'
             }
           - build_type: Release
-              config: {
-                compiler: g++-10,
-                os: ubuntu-20.04,
-                os-base: '',
-                extra-flags: ''
-              }
+            config: {
+              compiler: g++-10,
+              os: ubuntu-20.04,
+              os-base: '',
+              extra-flags: ''
+            }
         exclude:
           - { config: { os-base: 'mac' }, runall: false, runmac: false }
           - { build_type: 'Release', config: { os-base: 'windows' }, runall: false, runwindows: false }
