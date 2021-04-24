@@ -5,6 +5,7 @@
 
 #include <chess/Board.h>
 #include <chess/MoveGen.h>
+#include <util/RandomUtil.h>
 
 int main() {
     std::string baseFolder = "visual/resources/";
@@ -39,15 +40,7 @@ int main() {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    Chess::Board board = Chess::Board::fromFEN("rnbqk3/"
-                                               "ppppp3/"
-                                               "8/"
-                                               "8/"
-                                               "8/"
-                                               "8/"
-                                               "3PPPPP/"
-                                               "3QKBNR"
-                                               " w Kq - 0 1").extract();
+    Chess::Board board = Chess::Board::standardBoard();
     sf::Vector2f boardOffset = {100, 100};
 
     sf::Text text;
@@ -74,6 +67,8 @@ int main() {
     };
 
     std::string fenStatus = "";
+
+    auto rng = util::seedRNG<std::mt19937_64>();
 
     sf::Clock deltaClock;
     while (window.isOpen()) {
@@ -127,13 +122,91 @@ int main() {
                     fenStatus = "Loaded";
                 }
             }
+            if (ImGui::Button("Reset board")) {
+                board = Chess::Board::standardBoard();
+            }
 
             ImGui::Text("%s", fenStatus.c_str());
 
             ImGui::Separator();
             ImGui::Text("%zu moves!", list.size());
+            ImGui::Indent();
+            if (list.size() > 0) {
+                Chess::Move selected{};
+                ImVec2 button_sz(50, 20);
+
+                bool random = false;
+
+                ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.85f, 0.6f, 0.6f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.85f, 0.7f, 0.7f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.85f, 0.8f, 0.8f));
+//                ImGui::Dummy(ImVec2((ImGui::GetContentRegionAvailWidth() - button_sz.x) / 2.0f, 25));
+                ImGui::Dummy(ImVec2(0, 25));
+                ImGui::SameLine();
+                if (ImGui::Button("Random move", button_sz)) {
+                    random = true;
+                }
+                static bool randomContinuous = false;
+                static int randomCountdown = 0;
+                static int randomTimer = 20;
+                ImGui::SameLine();
+                ImGui::Checkbox("Constant random", &randomContinuous);
+                ImGui::SameLine();
+                ImGui::DragInt("Timer", &randomTimer, 1.0f, 0, 300);
+                ImGui::PopStyleColor(3);
+
+
+                if (random || (randomContinuous && randomCountdown == 0)) {
+                    size_t moveIndex = std::uniform_int_distribution<size_t>(0, list.size() - 1)(rng);
+                    list.forEachMove([&selected, moveIndex, i = 0](const Chess::Move& move) mutable {
+                        if (i++ == moveIndex) {
+                            selected = move;
+                        }
+                    });
+                    if (randomContinuous) {
+                        randomCountdown = randomTimer;
+                    }
+                }
+                if (randomCountdown > 0) {
+                    --randomCountdown;
+                }
+
+                bool first = true;
+
+                ImGuiStyle& style = ImGui::GetStyle();
+                float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+
+                list.forEachMove([&](const Chess::Move& move) {
+                    std::string val = board.moveToSAN(move);
+                    // should! be unique
+
+                    float last_button_x2 = ImGui::GetItemRectMax().x;
+                    float next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_sz.x; // Expected position if next button was on same line
+                    if (!first && next_button_x2 < window_visible_x2)
+                        ImGui::SameLine();
+
+                    if (ImGui::Button(val.c_str(), button_sz)) {
+                        selected = move;
+                    }
+
+                    first = false;
+                });
+
+                if (selected.fromPosition != selected.toPosition) {
+                    board.makeMove(selected);
+                }
+            } else {
+                if (list.isCheckMate()) {
+                    ImGui::Text("Checkmate");
+                } else if (list.isStaleMate()) {
+                    ImGui::Text("Stalemate");
+                }
+            }
+            ImGui::Unindent();
         }
         ImGui::End();
+
+        ImGui::ShowDemoWindow();
 
         window.clear(sf::Color{0, 142, 29});
 
@@ -143,9 +216,9 @@ int main() {
         for (int col = 0; col < boardSquareSize; col++) {
             for (int row = 0; row < boardSquareSize; row++) {
                 if ((col + row) % 2 == 0) {
-                    square.setFillColor(sf::Color::White);
-                } else {
                     square.setFillColor(sf::Color::Black);
+                } else {
+                    square.setFillColor(sf::Color::White);
                 }
 
                 sf::Vector2f position = colRowToRect(col, row);
