@@ -593,7 +593,7 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
 
         SECTION("Pawn move resets halfmove counter to 0") {
             board = Board::standardBoard();
-            REQUIRE(board.halfMovesSinceIrreversible() < 10);
+            REQUIRE(board.halfMovesSinceIrreversible() == 0);
 
             setHalfMoves();
 
@@ -607,6 +607,26 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
                 REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves);
             }
 
+        }
+
+        SECTION("Pawn promotion resets halfmove counter to 0") {
+            BoardIndex toRow = Board::pawnPromotionRow(c);
+            BoardIndex fromRow = toRow - Board::pawnDirection(c);
+            board.setPiece(0, fromRow, Piece{Piece::Type::Pawn, c});
+
+            setHalfMoves();
+
+            Move::Flag flag = GENERATE(Move::Flag::PromotionToQueen, Move::Flag::PromotionToKnight, Move::Flag::PromotionToBishop, Move::Flag::PromotionToRook);
+            Move mv{0, fromRow, 0, toRow, flag};
+
+            MAKE_VALID_MOVE(mv);
+            REQUIRE(board.halfMovesSinceIrreversible() == 0);
+
+            SECTION("Undo sets it back") {
+                REQUIRE(board.undoMove());
+                REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves);
+                REQUIRE(board.pieceAt(0, fromRow) == Piece{Piece::Type::Pawn, c});
+            }
         }
 
         SECTION("Capture resets half move counter") {
@@ -624,6 +644,27 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
                 REQUIRE(board.undoMove());
                 REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves);
                 REQUIRE(board.pieceAt(1, 1) == Piece{Piece::Type::Queen, opposite(c)});
+            }
+        }
+
+        SECTION("Castling right change does not! reset half move counter") {
+            board = TestUtil::generateCastlingBoard(c, true, true, false, false);
+
+            setHalfMoves();
+
+            CastlingRight rights = board.castlingRights();
+
+            Move mv{Board::kingCol, Board::homeRow(c), Board::kingCol, Board::pawnHomeRow(c)};
+            MAKE_VALID_MOVE(mv);
+
+            REQUIRE(board.halfMovesSinceIrreversible() > 0);
+            REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves + 1);
+            REQUIRE(board.castlingRights() != rights);
+
+            SECTION("Undo sets it back") {
+                REQUIRE(board.undoMove());
+                REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves);
+                REQUIRE(board.castlingRights() == rights);
             }
         }
     }
