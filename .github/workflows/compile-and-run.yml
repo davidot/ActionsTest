@@ -14,12 +14,6 @@ jobs:
         build_type: [ Debug, Release ]
         config:
           - {
-            compiler: g++-10,
-            os: ubuntu-20.04,
-            os-base: '',
-            extra-flags: '-fno-omit-frame-pointer -Wall -fsanitize=address,undefined'
-          }
-          - {
             compiler: clang++-10,
             os: ubuntu-20.04,
             os-base: 'ubuntu',
@@ -45,6 +39,21 @@ jobs:
           - ${{ contains(github.event.head_commit.message, 'windows') }}
         runrelease:
           - ${{ contains(github.event.head_commit.message, 'release') }}
+        include:
+          - build_type: Debug
+            config: {
+              compiler: g++-10,
+              os: ubuntu-20.04
+              os-base: '',
+              extra-flags: '-fno-omit-frame-pointer -Wall -fsanitize=address,undefined'
+            }
+          - build_type: Release
+              config: {
+                compiler: g++-10,
+                os: ubuntu-20.04
+                os-base: '',
+                extra-flags: ''
+              }
         exclude:
           - { config: { os-base: 'mac' }, runall: false, runmac: false }
           - { build_type: 'Release', config: { os-base: 'windows' }, runall: false, runwindows: false }
