@@ -54,7 +54,7 @@ jobs:
             }
           - build_type: Release
             extra_cache: 'no-exception'
-            extra-flags: '-fno-exceptions -DCATCH_CONFIG_DISABLE_EXCEPTIONS'
+            extra-flags: '-fno-exceptions -DCATCH_CONFIG_DISABLE_EXCEPTIONS=1 -Dthrow=""'
             config: {
               compiler: g++-10,
               os: ubuntu-20.04,
@@ -91,7 +91,7 @@ jobs:
           path: /home/runner/.ccache
           key: ${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-${{ matrix.extra_cache }}time${{ steps.stamps.outputs.time }}
           restore-keys: |
-            ${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-
+            ${{ runner.os }}-ccache-${{ matrix.build_type }}-${{ matrix.config.compiler }}-${{ matrix.extra_cache }}
 
       # we have 4 distinct CCaches which means we should! have 1gb left for other things (fuzzing etc.)
       - name: Configure CCache limit
@@ -128,12 +128,11 @@ jobs:
 
       - name: Build
         timeout-minutes: 30
-        continue-on-error: true
         run: cmake --build ${{ env.build_folder_location }}
 
-      - name : Dmesg
-        if: startsWith(matrix.config.os, 'ubuntu')
-        run: dmesg
+#      - name : Dmesg
+#        if: startsWith(matrix.config.os, 'ubuntu')
+#        run: dmesg
 
       - name: Post-build ccache
         if: startsWith(matrix.config.os, 'ubuntu')
