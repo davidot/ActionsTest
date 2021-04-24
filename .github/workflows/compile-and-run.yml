@@ -12,24 +12,22 @@ jobs:
       fail-fast: false
       matrix:
         build_type: [ Debug, Release ]
+        extra-flags: ['']
         config:
           - {
             compiler: clang++-10,
             os: ubuntu-20.04,
             os-base: 'ubuntu',
-            extra-flags: ''
           }
           - {
             compiler: cl.exe,
             os: windows-2019,
             os-base: 'windows',
-            extra-flags: ''
           }
           - {
             compiler: clang++,
             os: macos-latest,
             os-base: 'mac',
-            extra-flags: ''
           }
         runall:
           - ${{ contains('refs/heads/mains refs/heads/develops', github.ref) || contains(github.event.head_commit.message, ' ci') || contains(github.event.head_commit.message, 'ci ')}}
@@ -45,14 +43,13 @@ jobs:
               compiler: g++-10,
               os: ubuntu-20.04,
               os-base: '',
-              extra-flags: '-fno-omit-frame-pointer -Wall -fsanitize=address,undefined'
             }
+            extra-flags: '-fno-omit-frame-pointer -Wall -fsanitize=address,undefined'
           - build_type: Release
             config: {
               compiler: g++-10,
               os: ubuntu-20.04,
               os-base: '',
-              extra-flags: ''
             }
         exclude:
           - { config: { os-base: 'mac' }, runall: false, runmac: false }
@@ -71,7 +68,6 @@ jobs:
           string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
           message("  set-output name=time::${current_date}")
           message("::set-output name=time::${current_date}")
-          # log and set
 
       - name: Install Dependencies (Ubuntu)
         if: startsWith(matrix.config.os, 'ubuntu')
@@ -119,7 +115,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DEXTENDED_TESTS=1
           -DWITH_BENCHMARKS=1
-          -DCMAKE_CXX_FLAGS="${{ matrix.config.extra-flags }}"
+          -DCMAKE_CXX_FLAGS="${{ matrix.extra-flags }}"
 
       - name: Build
         timeout-minutes: 30
