@@ -401,6 +401,10 @@ namespace Chess {
         return true;
     }
 
+    uint32_t Board::positionRepeated() const {
+        return 0;
+    }
+
     const std::string &ExpectedBoard::error() const {
         ASSERT(m_value.index() == 1);
         // in case it is a string we need to use the indices

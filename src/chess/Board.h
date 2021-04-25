@@ -111,6 +111,11 @@ namespace Chess {
 
         std::optional<Move> parseSANMove(std::string_view) const;
 
+        [[nodiscard]] bool isDrawn(bool forced = false) const;
+
+        // Note: counts null move as irreversible move
+        [[nodiscard]] uint32_t positionRepeated() const;
+
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 
