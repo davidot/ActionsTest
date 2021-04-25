@@ -1,14 +1,9 @@
 #pragma once
 
 #include <catch2/generators/catch_generators.hpp>
-#include <catch2/generators/catch_generator_exception.hpp>
-#include <catch2/internal/catch_random_number_generator.hpp>
-#include <catch2/internal/catch_enforce.hpp>
-#include <catch2/internal/catch_context.hpp>
 #include <chess/Forward.h>
 #include <chess/Piece.h>
 #include <vector>
-#include <random>
 
 #ifndef EXTENDED_TESTS
 #define TEST_SOME(x) sample(2, x)
@@ -26,6 +21,12 @@
 
 namespace Catch::Generators {
 
+    namespace SampleDetails {
+        size_t random_uniform_int(size_t min, size_t max);
+
+        void fail(const char* msg);
+    }
+
     template<typename T>
     class SamplingGenerator final : public IGenerator<T> {
         std::vector<T> m_values;
@@ -37,6 +38,8 @@ namespace Catch::Generators {
             assert(target != 0 && "Empty generators are not allowed");
             size_t generated = 0;
             m_values.reserve(target);
+
+            // fill up
             for (; generated < target; ++generated) {
                 m_values.push_back(generator.get());
                 if (!generator.next()) {
@@ -45,16 +48,16 @@ namespace Catch::Generators {
                 }
             }
 
-            Catch::SimplePcg32& random = Catch::rng();
             do {
-                auto j = std::uniform_int_distribution<size_t>(0, generated)(random);
+                size_t j = SampleDetails::random_uniform_int(0, generated);
                 if (j < target) {
                     m_values[j] = generator.get();
                 }
                 ++generated;
             } while (generated < generatorSize && generator.next());
+
             if (generated == generatorSize && generatorSize >= 1000 * target) {
-                Catch::throw_exception(GeneratorException("You probably want to limit the sample size"));
+                SampleDetails::fail("You probably want to limit the sample size");
             }
         }
 

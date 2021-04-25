@@ -1,6 +1,22 @@
 #include "TestUtil.h"
 #include <chess/Board.h>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generator_exception.hpp>
+#include <catch2/internal/catch_random_number_generator.hpp>
+#include <catch2/internal/catch_enforce.hpp>
+#include <catch2/internal/catch_context.hpp>
+#include <random>
+
+namespace Catch::Generators::SampleDetails {
+
+    size_t random_uniform_int(size_t min, size_t max) {
+        return std::uniform_int_distribution<size_t>(min, max)(Catch::rng());
+    }
+
+    void fail(const char *msg) {
+        Catch::throw_exception(GeneratorException(msg));
+    }
+}
 
 namespace TestUtil {
     Chess::Board makeCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook, bool opponent) {
