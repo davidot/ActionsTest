@@ -28,6 +28,7 @@ add_library(Actions
         src/chess/SAN.cpp
 
         src/util/Assertions.cpp
+        src/util/RandomUtil.cpp
         src/util/StringUtil.cpp
         )
 
