@@ -571,8 +571,8 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
     }
 
     SECTION("Half moves since irreversible is updated correctly") {
-
-        uint32_t makeHalfMoves = GENERATE(TEST_SOME(values({0, 1, 2, 5, 13, 99, 98})));
+        uint32_t makeHalfMoves = GENERATE(0, 1, 100, TEST_SOME(values({2, 5, 13, 98, 99, 139, 149, 150, 157})));
+        CAPTURE(makeHalfMoves);
 
         auto setHalfMoves = [&] {
           if (board.colorToMove() != c) {
@@ -670,5 +670,38 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
                 REQUIRE(board.castlingRights() == rights);
             }
         }
+
+        SECTION("Castling does not change half move counter") {
+            board = TestUtil::generateCastlingBoard(c, true, true, false, false);
+            setHalfMoves();
+
+            CastlingRight rights = board.castlingRights();
+
+            Move mv{Board::kingCol, Board::homeRow(c), Board::kingSideRookCol, Board::homeRow(c), Move::Flag::Castling};
+            MAKE_VALID_MOVE(mv);
+
+            REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves + 1);
+
+            SECTION("Undo sets it back") {
+                REQUIRE(board.undoMove());
+                REQUIRE(board.halfMovesSinceIrreversible() == makeHalfMoves);
+            }
+        }
+
+        if (makeHalfMoves > 99) {
+            // TODO it is actually legal to have 100 on the counter and be in checkmate
+            //      i.e. checkmate is more important in that case
+            SECTION("Gives draw for given half move counter") {
+                setHalfMoves();
+                REQUIRE(board.isDrawn());
+            }
+            if (makeHalfMoves > 149) {
+                SECTION("Forces draw for given half move counter") {
+                    setHalfMoves();
+                    REQUIRE(board.isDrawn(true));
+                }
+            }
+        }
+
     }
 }

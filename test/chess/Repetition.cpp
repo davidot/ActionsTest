@@ -52,13 +52,22 @@ TEST_CASE("Can detect repetition", "[chess][legal]") {
                 board.undoMove();
                 REQUIRE(board.positionRepeated() == times - 1);
             }
+            if (times > 3) {
+                SECTION("Gives possible draw") {
+                    REQUIRE(board.isDrawn());
+                }
+            }
+            if (times > 5) {
+                SECTION("Gives forced draw") {
+                    REQUIRE(board.isDrawn(true));
+                }
+            }
         }
 
         SECTION("Position with en passant differs from no en passant") {
             board.makeMove({"e2", "e4", Move::Flag::DoublePushPawn});
             REQUIRE(board.positionRepeated() == 0);
 
-            REQUIRE(board.positionRepeated() == 0);
             board.makeMove(blackMove1);
             REQUIRE(board.positionRepeated() == 0);
             board.makeMove(whiteMove1);
@@ -103,6 +112,10 @@ TEST_CASE("Can detect repetition", "[chess][legal]") {
 
             REPEAT_MOVE(3);
             REQUIRE(board.positionRepeated() == 7);
+            SECTION("Is drawn position") {
+                REQUIRE(board.isDrawn());
+                REQUIRE(board.isDrawn(true));
+            }
         }
 
         SECTION("Castling breaks repetition (both by rights and non reversible)") {
@@ -130,7 +143,23 @@ TEST_CASE("Can detect repetition", "[chess][legal]") {
             board.makeMove({Board::queenSideRookCol, Board::homeRow(opp), Board::queenSideRookCol, Board::pawnHomeRow(opp)});
             REQUIRE(board.positionRepeated() == 1);
         }
+
+        SECTION("Gives draw for repetition (strict after 5)") {
+            REPEAT_MOVE(4);
+            REQUIRE_FALSE(board.isDrawn(true));
+            REPEAT_MOVE(1);
+            REQUIRE(board.isDrawn(true));
+        }
+
+        SECTION("Gives draw for repetition (possible after 3)") {
+            REPEAT_MOVE(2);
+            REQUIRE_FALSE(board.isDrawn());
+            REPEAT_MOVE(1);
+            REQUIRE(board.isDrawn());
+        }
     }
+
+
 
     // TODO: define/test null moves behavior
 
