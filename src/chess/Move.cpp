@@ -65,7 +65,7 @@ namespace Chess {
     }
 
     std::string Move::toSANSquares() const {
-        if (flag == Flag::Castling) [[unlikely]] {
+        if (flag == Flag::Castling) {
             std::string to = Board::indexToSAN(toPosition);
             if (to[0] == 'h') {
                 to[0] = 'g';
@@ -75,9 +75,9 @@ namespace Chess {
                 ASSERT_NOT_REACHED();
             }
             return Board::indexToSAN(fromPosition) + to;
-        } else if (isPromotion()) [[unlikely]] {
+        } else if (isPromotion()) {
             return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition) + Piece{promotedType(), Color::White}.toFEN();
-        } else if (fromPosition == toPosition) [[unlikely]] {
+        } else if (fromPosition == toPosition) {
             return "-";
         }
         return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition);
