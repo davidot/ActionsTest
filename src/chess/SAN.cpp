@@ -325,8 +325,8 @@ namespace Chess {
                                   [&](const Move& move) {
                                       ASSERT(pieceAt(move.fromPosition).has_value() && pieceAt(move.fromPosition)->color() == us);
                                       auto [fromC, fromR] = move.colRowFromPosition();
-                                      if (fromCol < size && fromC != fromCol
-                                          || fromRow < size && fromR != fromRow) {
+                                      if ((fromCol < size && fromC != fromCol)
+                                          || (fromRow < size && fromR != fromRow)) {
                                           return;
                                       }
                                       if (pieceAt(move.fromPosition)->type() == tp) {

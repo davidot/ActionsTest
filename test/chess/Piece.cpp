@@ -55,8 +55,8 @@ TEST_CASE("Pieces", "[chess][base]") {
 
     // some hacky stuff to not have to hardcode the color mask here
     Piece::IntType colorMask = 0u
-            | Piece(Pt::Pawn, Color::White).toInt() & Piece(Pt::Knight, Color::White).toInt()
-            | Piece(Pt::Pawn, Color::Black).toInt() & Piece(Pt::Knight, Color::Black).toInt();
+            | (Piece(Pt::Pawn, Color::White).toInt() & Piece(Pt::Knight, Color::White).toInt())
+            | (Piece(Pt::Pawn, Color::Black).toInt() & Piece(Pt::Knight, Color::Black).toInt());
 
     SECTION("Pieces can be validated") {
 

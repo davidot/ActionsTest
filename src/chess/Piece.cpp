@@ -149,6 +149,8 @@ namespace Chess {
                 return "Queen";
             case Piece::Type::King:
                 return "King";
+            default:
+                break;
         }
         ASSERT_NOT_REACHED();
     }
