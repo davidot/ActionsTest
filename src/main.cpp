@@ -3,7 +3,6 @@
 #include <iostream>
 #include <random>
 #include <sstream>
-#include <util/Assertions.h>
 #include <util/RandomUtil.h>
 
 int main(int argc, char** argv) {
