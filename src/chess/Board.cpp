@@ -336,10 +336,9 @@ namespace Chess {
         removeCastlingRights(colFrom, rowFrom);
         removeCastlingRights(colTo, rowTo);
 
-        m_repeated = findRepetitions();
-
         m_nextTurnColor = opposite(m_nextTurnColor);
 
+        m_repeated = findRepetitions();
         return true;
     }
 
@@ -419,7 +418,6 @@ namespace Chess {
         Board copy = *this;
         auto currMove = m_history.rbegin();
 
-
         auto revertMoves = [&] {
             ASSERT(!copy.m_history.empty());
             ASSERT(currMove->performedMove == copy.m_history.back().performedMove);
@@ -430,7 +428,6 @@ namespace Chess {
             copy.undoMove();
             ++currMove;
         };
-
 
         revertMoves();
         ASSERT(currMove != m_history.rend());

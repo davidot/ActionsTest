@@ -104,7 +104,35 @@ TEST_CASE("Can detect repetition", "[chess][legal]") {
             REPEAT_MOVE(3);
             REQUIRE(board.positionRepeated() == 7);
         }
+
+        SECTION("Castling breaks repetition (both by rights and non reversible)") {
+            Color c = GENERATE(Color::White, Color::Black);
+            Color opp = opposite(c);
+
+            board = TestUtil::generateCastlingBoard(c, true, true, false, true);
+            REQUIRE(board.positionRepeated() == 0);
+
+            board.makeMove({Board::kingCol, Board::homeRow(c), Board::kingSideRookCol, Board::homeRow(c), Move::Flag::Castling});
+            REQUIRE(board.positionRepeated() == 0);
+
+            board.makeMove({Board::queenSideRookCol, Board::homeRow(opp), Board::queenSideRookCol, Board::pawnHomeRow(opp)});
+            REQUIRE(board.positionRepeated() == 0);
+
+            board.makeMove({Board::queenSideRookCol, Board::homeRow(c), Board::queenSideRookCol, Board::pawnHomeRow(c)});
+            REQUIRE(board.positionRepeated() == 0);
+
+            board.makeMove({Board::queenSideRookCol, Board::pawnHomeRow(opp), Board::queenSideRookCol, Board::homeRow(opp)});
+            REQUIRE(board.positionRepeated() == 0);
+
+            board.makeMove({Board::queenSideRookCol, Board::pawnHomeRow(c), Board::queenSideRookCol, Board::homeRow(c)});
+            REQUIRE(board.positionRepeated() == 0);
+
+            board.makeMove({Board::queenSideRookCol, Board::homeRow(opp), Board::queenSideRookCol, Board::pawnHomeRow(opp)});
+            REQUIRE(board.positionRepeated() == 1);
+        }
     }
+
+    // TODO: define/test null moves behavior
 
 
 }
