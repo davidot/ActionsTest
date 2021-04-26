@@ -3,6 +3,7 @@
 #include <iostream>
 #include <random>
 #include <sstream>
+#include <util/Assertions.h>
 #include <util/RandomUtil.h>
 
 int main(int argc, char** argv) {
@@ -12,10 +13,14 @@ int main(int argc, char** argv) {
 
     Chess::MoveList moves = Chess::generateAllMoves(board);
 
-    auto rng = util::seedRNG<std::mt19937_64>();
+    std::string seed;
+    auto orng = util::seedRNGFromString<std::mt19937_64>(seed, 64);
+    ASSERT(orng.has_value());
+    auto rng = orng.value();
 
-    int moveNum = 0;
+    std::cout << "Using seed:\n" << seed << '\n';
 
+    size_t moveNum = 0;
     std::stringstream pgn;
 
     std::optional<Chess::Color> capturer;
@@ -46,7 +51,7 @@ int main(int argc, char** argv) {
                 moves.forEachFilteredMove([&](const Chess::Move& move){
                   auto [toCol, toRow] = move.colRowToPosition();
                   return board.pieceAt(toCol, toRow) != std::nullopt;
-                }, [&mv, moveIndex, i = 0](const Chess::Move& move) mutable {
+                }, [&mv, moveIndex, i = 0u](const Chess::Move& move) mutable {
                   if (i++ == moveIndex) {
                       mv = move;
                   }
@@ -55,7 +60,7 @@ int main(int argc, char** argv) {
         }
 
         if (mv.fromPosition == mv.toPosition) {
-            moves.forEachMove([&mv, moveIndex, i = 0](const Chess::Move& move) mutable {
+            moves.forEachMove([&mv, moveIndex, i = 0u](const Chess::Move& move) mutable {
               if (i++ == moveIndex) {
                   mv = move;
               }
@@ -89,7 +94,4 @@ int main(int argc, char** argv) {
     std::cout << "Finished game!\n" << board.toFEN() << " after " << moveNum << " moves\n";
 
     std::cout << pgn.str();
-
-
-    return 0;
 }
