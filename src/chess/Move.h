@@ -1,6 +1,9 @@
 #pragma once
-#include "Forward.h"
 #include "Piece.h"
+#include "Types.h"
+#include <string>
+#include <string_view>
+#include <utility>
 
 namespace Chess {
     // TODO to make this actually fit in 16 bits use: struct __attribute__((packed)) Move {
@@ -39,7 +42,7 @@ namespace Chess {
 
         [[nodiscard]] Piece::Type promotedType() const;
 
-        bool operator==(const Move& move) const = default;
+        bool operator==(const Move& move) const;
 
         [[nodiscard]] std::string toSANSquares() const;
     };

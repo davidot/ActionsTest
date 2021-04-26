@@ -1,8 +1,13 @@
+#include "chess/Move.h"
+#include "chess/Piece.h"
 #include <chess/Board.h>
 #include <chess/MoveGen.h>
+#include <cstddef>
 #include <iostream>
+#include <optional>
 #include <random>
 #include <sstream>
+#include <string>
 #include <util/RandomUtil.h>
 
 int main(int argc, char** argv) {
@@ -23,7 +28,7 @@ int main(int argc, char** argv) {
     std::cout << "Using seed:\n" << seed << '\n';
 
     size_t moveNum = 0;
-    std::stringstream pgn;
+    std::ostringstream pgn;
 
     std::optional<Chess::Color> capturer;
     bool both = false;

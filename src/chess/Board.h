@@ -1,16 +1,22 @@
 #pragma once
 
-#include "Forward.h"
+#include "Types.h"
 #include "Move.h"
 #include "Piece.h"
 #include <array>
+#include <cstdint>
 #include <deque>
+#include <iosfwd>
 #include <optional>
+#include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 #include <variant>
-#include <tuple>
 
 namespace Chess {
+    class MoveList;
+    struct ExpectedBoard;
 
     enum class CastlingRight : uint8_t {
         NoCastling = 0u,

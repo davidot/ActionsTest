@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Board.h"
+#include "Types.h"
+#include "Move.h"
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 
 namespace Chess {

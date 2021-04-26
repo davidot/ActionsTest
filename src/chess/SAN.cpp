@@ -1,7 +1,16 @@
 #include "Board.h"
-#include "MoveGen.h"
+#include "Types.h"
 #include "../util/Assertions.h"
+#include "Move.h"
+#include "MoveGen.h"
+#include "Piece.h"
+#include <array>
 #include <cctype>
+#include <optional>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <utility>
 
 namespace Chess {
 

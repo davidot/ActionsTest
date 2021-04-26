@@ -1,4 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
+#include <string>
+#include <string_view>
+#include <vector>
 #include <util/StringUtil.h>
 
 TEST_CASE("Splitting strings", "[util]") {

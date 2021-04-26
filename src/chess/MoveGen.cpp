@@ -1,8 +1,11 @@
 #include "MoveGen.h"
 #include "../util/Assertions.h"
-#include <iostream>
-#include <set>
-
+#include "Piece.h"
+#include <array>
+#include <initializer_list>
+#include <optional>
+#include <tuple>
+#include <utility>
 
 namespace Chess {
 

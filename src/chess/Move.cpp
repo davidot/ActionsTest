@@ -1,6 +1,8 @@
 #include "Move.h"
 #include "../util/Assertions.h"
 #include "Board.h"
+#include <optional>
+#include <type_traits>
 
 namespace Chess {
 
@@ -37,7 +39,7 @@ namespace Chess {
     }
 
     bool Move::isPromotion() const {
-        return (static_cast<uint8_t>(flag) & 0x4u) != 0;
+        return (static_cast<std::underlying_type_t<Flag>>(flag) & 0x4u) != 0;
     }
 
     Piece::Type Move::promotedType() const {

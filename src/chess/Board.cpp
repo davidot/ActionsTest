@@ -1,5 +1,10 @@
 #include "Board.h"
 #include "../util/Assertions.h"
+#include <algorithm>
+#include <initializer_list>
+#include <iterator>
+#include <memory>
+#include <stddef.h>
 #include <string>
 #include <utility>
 
