@@ -540,10 +540,24 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
         CAPTURE(castling);
         std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w " + castling + " - 0 1";
         auto b = is_valid_board(basePosition);
-        // TODO: check we can actually make the appropriate castling moves
         if (castling == "-") {
             REQUIRE(b.castlingRights() == CastlingRight::NoCastling);
+        } else {
+            REQUIRE(b.castlingRights() != CastlingRight::NoCastling);
+            if (castling.size() == 4) {
+                REQUIRE(b.castlingRights() == CastlingRight::AnyCastling);
+            }
+            auto hit = 0u;
+            auto rights = b.castlingRights();
+            for (auto right : {CastlingRight::BlackQueenSide, CastlingRight::BlackKingSide, CastlingRight::WhiteQueenSide, CastlingRight::WhiteKingSide}) {
+                if ((right & rights) != CastlingRight::NoCastling) {
+                    hit++;
+                }
+            }
+            // yes this logic is not quite solid but it is hard to do without actually replicating the logic
+            REQUIRE(hit == castling.size());
         }
+
         // TODO: how to check this without actually replicating the logic??
         REQUIRE("TODO");
     }
@@ -573,7 +587,7 @@ TEST_CASE("Basic FEN parsing", "[chess][parsing][fen]") {
     }
 
     SECTION("Halfmoves since capture or pawn move") {
-        uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 100u, 75u, 149u, 150u, 151u, 500u, 750u);
+        uint32_t moves = GENERATE(0u, 1u, 25u, 50u, 99u, 100u, 75u, 149u, 150u, 151u, 500u, 750u);
         CAPTURE(moves);
         std::string basePosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - " + std::to_string(moves) + " 1";
         Board board = is_valid_board(basePosition);
