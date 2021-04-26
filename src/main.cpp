@@ -7,6 +7,8 @@
 #include <util/RandomUtil.h>
 
 int main(int argc, char** argv) {
+    int status = 0;
+
     Chess::Board board = Chess::Board::standardBoard();
 
     std::cout << "Start fen: " << board.toFEN() << '\n';
@@ -15,7 +17,10 @@ int main(int argc, char** argv) {
 
     std::string seed;
     auto orng = util::seedRNGFromString<std::mt19937_64>(seed, 64);
-    ASSERT(orng.has_value());
+    if (!orng.has_value()) {
+        std::cout << "Wrong seed\n";
+        return 2;
+    }
     auto rng = orng.value();
 
     std::cout << "Using seed:\n" << seed << '\n';
@@ -78,8 +83,17 @@ int main(int argc, char** argv) {
         moveNum++;
         moves = Chess::generateAllMoves(board);
 
-        if (moves.size() > 0 && board.halfMovesSinceIrreversible() >= 150) {
-            std::cout << "Draw by no irreversible halfmove\n";
+        if (moves.size() > 0 && board.isDrawn()) {
+            if (board.halfMovesSinceIrreversible() > 99 && board.positionRepeated() > 2) {
+                std::cout << "Draw by no irreversible halfmove !And! repetition\n";
+            } else if (board.halfMovesSinceIrreversible() > 99) {
+                std::cout << "Draw by no irreversible halfmove for 100 moves\n";
+            } else if (board.positionRepeated() > 2) {
+                std::cout << "Draw by a 3 times repeated position\n";
+            } else {
+                std::cout << "Draw by ????\n";
+                status = 4;
+            }
             break;
         }
 
@@ -94,4 +108,6 @@ int main(int argc, char** argv) {
     std::cout << "Finished game!\n" << board.toFEN() << " after " << moveNum << " moves\n";
 
     std::cout << pgn.str();
+
+    return status;
 }
