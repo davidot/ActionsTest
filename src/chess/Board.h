@@ -111,6 +111,7 @@ namespace Chess {
 
         [[nodiscard]] std::optional<Move> parseSANMove(std::string_view) const;
 
+        // Note: does not check stalemate
         [[nodiscard]] bool isDrawn(bool forced = false) const;
 
         // Note: counts null move as irreversible move

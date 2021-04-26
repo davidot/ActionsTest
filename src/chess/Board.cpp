@@ -448,6 +448,18 @@ namespace Chess {
         return 0;
     }
 
+
+    bool Board::isDrawn(bool forced) const {
+        uint32_t halfMoveLimit = 99;
+        uint32_t repetitionLimit = 2;
+        if (forced) {
+            halfMoveLimit = 149;
+            repetitionLimit = 4;
+        }
+        return m_halfMovesSinceCaptureOrPawn > halfMoveLimit
+               || m_repeated > repetitionLimit;
+    }
+
     const std::string &ExpectedBoard::error() const {
         ASSERT(m_value.index() == 1);
         // in case it is a string we need to use the indices
