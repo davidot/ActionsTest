@@ -1,8 +1,12 @@
 #pragma once
 
+#include <cstddef>
 #include <optional>
-#include <tuple>
 #include <random>
+#include <string>
+#include <utility>
+#include <vector>
+
 
 namespace util {
 

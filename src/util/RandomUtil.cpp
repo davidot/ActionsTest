@@ -1,8 +1,9 @@
 #include "RandomUtil.h"
 #include "Assertions.h"
-#include <functional>
+#include <cstdint>
 #include <iomanip>
 #include <sstream>
+#include <type_traits>
 
 namespace util {
 

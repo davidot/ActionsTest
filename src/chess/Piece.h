@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <ostream>
 #include <optional>
+#include <ostream>
+#include <string>
 
 namespace Chess {
 

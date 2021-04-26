@@ -1,4 +1,5 @@
 #include "Assertions.h"
+#include <stdlib.h>
 #include <iostream>
 
 namespace util::Assert {

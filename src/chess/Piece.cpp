@@ -1,6 +1,10 @@
 #include "Piece.h"
 #include "../util/Assertions.h"
 
+#include <algorithm>
+#include <iterator>
+#include <string_view>
+
 namespace Chess {
 
 #define ENUM_TO_INT(val) static_cast<Piece::IntType>(val)

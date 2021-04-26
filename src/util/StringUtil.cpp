@@ -1,5 +1,7 @@
 #include "StringUtil.h"
+#include <cstddef>
 #include <algorithm>
+#include <iterator>
 #include <vector>
 
 
