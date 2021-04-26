@@ -11,8 +11,6 @@ int main(int argc, char** argv) {
 
     Chess::Board board = Chess::Board::standardBoard();
 
-    std::cout << "Start fen: " << board.toFEN() << '\n';
-
     Chess::MoveList moves = Chess::generateAllMoves(board);
 
     std::string seed;
@@ -29,11 +27,17 @@ int main(int argc, char** argv) {
     std::stringstream pgn;
 
     std::optional<Chess::Color> capturer;
+    bool both = false;
 
     if (argc > 1) {
         char first = argv[1][0];
         capturer = (first == 'w' || first == 'W') ? Chess::Color::White : Chess::Color::Black;
-        std::cout << "Using capturer: " << capturer.value() << '\n';
+        if (argv[1] == std::string("wb")) {
+            both = true;
+            std::cout << "Using capturer: both\n";
+        } else {
+            std::cout << "Using capturer: " << capturer.value() << '\n';
+        }
     }
 
     while (moves.size() > 0 && moveNum < 1000) {
@@ -41,7 +45,7 @@ int main(int argc, char** argv) {
 
         Chess::Move mv;
 
-        if (board.colorToMove() == capturer) {
+        if (board.colorToMove() == capturer || both) {
             // prefer captures
             int count = 0;
             moves.forEachMove([&](const Chess::Move& move){
@@ -94,6 +98,46 @@ int main(int argc, char** argv) {
                 std::cout << "Draw by ????\n";
                 status = 4;
             }
+            break;
+        }
+
+        if (board.countPieces(Chess::Color::White) == 1 && board.countPieces(Chess::Color::Black) == 1) {
+            std::cout << "Draw by just kings left (boring)\n";
+
+            bool white = false;
+            bool black = false;
+
+            for (int col = 0; col < 8; col++) {
+                for (int row = 0; row < 8; row++) {
+                    auto p = board.pieceAt(col, row);
+                    if (p.has_value()) {
+                        if (p->type() != Chess::Piece::Type::King) {
+                            std::cout << "Non king at" << col << ',' << row << " ??\n";
+                            status = 5;
+                        } else {
+                            if (p->color() == Chess::Color::Black) {
+                                if (black) {
+                                    std::cout << "Two black kings??? at" << col << ',' << row << " ??\n";
+                                    status = 6;
+                                }
+                                black = true;
+                            } else {
+                                if (white) {
+                                    std::cout << "Two white kings??? at" << col << ',' << row << " ??\n";
+                                    status = 6;
+                                }
+                                white = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!white || !black) {
+                std::cout << "No king(s) left black: " << black << " white: " << white << " ??\n";
+                status = 7;
+            }
+
             break;
         }
 
