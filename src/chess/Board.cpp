@@ -229,13 +229,15 @@ namespace Chess {
         performedMove(move),
         previousEnPassant(board.m_enPassant),
         previousCastlingRights(board.m_castlingRights),
-        previousSinceCapture(board.m_halfMovesSinceCaptureOrPawn) {
+        previousSinceCapture(board.m_halfMovesSinceCaptureOrPawn),
+        timesRepeated(board.m_repeated) {
     }
 
     void Board::MoveData::takeValues(Board& board) {
         board.m_enPassant = previousEnPassant;
         board.m_castlingRights = previousCastlingRights;
         board.m_halfMovesSinceCaptureOrPawn = previousSinceCapture;
+        board.m_repeated = timesRepeated;
     }
 
     bool Board::makeMove(Move m) {
@@ -334,6 +336,8 @@ namespace Chess {
         removeCastlingRights(colFrom, rowFrom);
         removeCastlingRights(colTo, rowTo);
 
+        m_repeated = findRepetitions();
+
         m_nextTurnColor = opposite(m_nextTurnColor);
 
         return true;
@@ -402,6 +406,48 @@ namespace Chess {
     }
 
     uint32_t Board::positionRepeated() const {
+        return m_repeated;
+    }
+
+    uint32_t Board::findRepetitions() const {
+        uint32_t maxMoves = std::min<size_t>(m_halfMovesSinceCaptureOrPawn, m_history.size());
+
+        if (maxMoves < 4) {
+            return 0;
+        }
+
+        Board copy = *this;
+        auto currMove = m_history.rbegin();
+
+
+        auto revertMoves = [&] {
+            ASSERT(!copy.m_history.empty());
+            ASSERT(currMove->performedMove == copy.m_history.back().performedMove);
+            copy.undoMove();
+            ++currMove;
+            ASSERT(!copy.m_history.empty());
+            ASSERT(currMove->performedMove == copy.m_history.back().performedMove);
+            copy.undoMove();
+            ++currMove;
+        };
+
+
+        revertMoves();
+        ASSERT(currMove != m_history.rend());
+
+        for (uint32_t moveIndex = 4; moveIndex <= maxMoves; moveIndex += 2) {
+            revertMoves();
+
+            if (copy.m_castlingRights != m_castlingRights || copy.m_enPassant.has_value()) {
+                // castling and en passant do not reset directly but do break repetition
+                break;
+            }
+
+            if (copy.m_pieces == m_pieces) {
+                return copy.m_repeated + 1;
+            }
+        }
+
         return 0;
     }
 

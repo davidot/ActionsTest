@@ -133,6 +133,8 @@ namespace Chess {
 
         [[nodiscard]] static std::optional<BoardIndex> SANToIndex(std::string_view);
 
+        [[nodiscard]] uint32_t findRepetitions() const;
+
         std::array<Piece::IntType, size * size> m_pieces;
 
         Color m_nextTurnColor = Color::White;
@@ -142,6 +144,7 @@ namespace Chess {
         uint32_t m_halfMovesMade = 0;
         uint32_t m_halfMovesSinceCaptureOrPawn = 0;
 
+        uint32_t m_repeated = 0;
 
         struct MoveData {
             Move performedMove;
@@ -149,6 +152,7 @@ namespace Chess {
             std::optional<BoardIndex> previousEnPassant;
             CastlingRight previousCastlingRights = CastlingRight::NoCastling;
             uint32_t previousSinceCapture;
+            uint32_t timesRepeated;
 
             MoveData(const Board& board, Move move);
 
