@@ -49,7 +49,7 @@ namespace Chess {
         }
         // TODO: check at least one king on both sides
         // TODO: check king in non turn color is NOT in check (can take king)
-        return countPieces(Color::White) > 0 && countPieces(Color::Black);
+        return countPieces(Color::White) && countPieces(Color::Black);
     }
 
     int colorIndex(Color c) {
@@ -57,7 +57,17 @@ namespace Chess {
     }
 
     uint32_t Board::countPieces(Color c) const {
+#ifdef STORE_PIECE_COUNT
         return m_numPieces[colorIndex(c)];
+#else
+        BoardIndex count = 0;
+        for (auto p : m_pieces) {
+            if (p != Piece::noneValue() && Piece::colorFromInt(p) == c) {
+                count++;
+            }
+        }
+        return count;
+#endif
     }
 
     std::optional<Piece> Board::pieceAt(BoardIndex index) const {
@@ -76,11 +86,15 @@ namespace Chess {
         if (index >= size * size) {
             return;
         }
+#ifdef STORE_PIECE_COUNT
         if (auto p = pieceAt(index); p) {
             m_numPieces[colorIndex(p->color())]--;
         }
+#endif
         if (piece.has_value()) {
+#ifdef STORE_PIECE_COUNT
             m_numPieces[colorIndex(piece->color())]++;
+#endif
             m_pieces[index] = piece->toInt();
 #ifdef STORE_KING_POS
             if (piece->type() == Piece::Type::King) {
