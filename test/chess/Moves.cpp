@@ -675,8 +675,6 @@ TEST_CASE("Apply moves to board", "[chess][move]") {
             board = TestUtil::generateCastlingBoard(c, true, true, false, false);
             setHalfMoves();
 
-            CastlingRight rights = board.castlingRights();
-
             Move mv{Board::kingCol, Board::homeRow(c), Board::kingSideRookCol, Board::homeRow(c), Move::Flag::Castling};
             MAKE_VALID_MOVE(mv);
 

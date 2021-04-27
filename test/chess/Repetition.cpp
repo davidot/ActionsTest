@@ -21,7 +21,7 @@ TEST_CASE("Can detect repetition", "[chess][legal]") {
 // Any of the boards should all have occurred repeated times in history
 #define REPEAT_MOVE(times)                   \
     do {                                     \
-        for (auto i = 0; i < (times); ++i) { \
+        for (auto i = 0u; i < (times); ++i) { \
             board.makeMove(whiteMove1);      \
             board.makeMove(blackMove1);      \
             board.makeMove(whiteMove2);      \
