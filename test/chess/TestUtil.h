@@ -1,7 +1,7 @@
 #pragma once
 
 #include <catch2/generators/catch_generators.hpp>
-#include <chess/Forward.h>
+#include <chess/Types.h>
 #include <chess/Piece.h>
 #include <vector>
 
@@ -84,6 +84,11 @@ namespace Catch::Generators {
     }
 
 }// namespace Catch::Generators
+
+namespace Chess {
+    class Board;
+    struct Move;
+}
 
 namespace TestUtil {
     Chess::Board generateCastlingBoard(Chess::Color toMove, bool kingSide, bool queenSide, bool withOppositeRook, bool withOpponent = false);
