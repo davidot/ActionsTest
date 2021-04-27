@@ -84,4 +84,14 @@ namespace Chess {
         }
         return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition);
     }
+
+    bool Move::operator==(const Move& rhs) const {
+        return toPosition == rhs.toPosition &&
+               fromPosition == rhs.fromPosition &&
+               flag == rhs.flag;
+    }
+
+    bool Move::operator!=(const Move& rhs) const {
+        return !(rhs == *this);
+    }
 }

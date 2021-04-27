@@ -42,7 +42,8 @@ namespace Chess {
 
         [[nodiscard]] Piece::Type promotedType() const;
 
-        bool operator==(const Move& move) const;
+        bool operator==(const Move& rhs) const;
+        bool operator!=(const Move& rhs) const;
 
         [[nodiscard]] std::string toSANSquares() const;
     };
