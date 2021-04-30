@@ -30,7 +30,7 @@ add_library(Actions
         src/util/Assertions.cpp
         src/util/RandomUtil.cpp
         src/util/StringUtil.cpp
-        src/chess/players/TrivialPlayers.cpp src/chess/players/Game.cpp)
+        )
 
 target_include_directories(Actions INTERFACE src/)
 if (HEADLESS)
