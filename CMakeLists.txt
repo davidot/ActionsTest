@@ -30,7 +30,7 @@ add_library(Actions
         src/util/Assertions.cpp
         src/util/RandomUtil.cpp
         src/util/StringUtil.cpp
-        )
+        src/chess/players/TrivialPlayers.cpp src/chess/players/Game.cpp)
 
 target_include_directories(Actions INTERFACE src/)
 if (HEADLESS)
@@ -52,10 +52,11 @@ option(WITH_BENCHMARKS "Enable and run benchmarks" OFF)
 include(cmake/dependencies/catch.cmake)
 
 add_executable(ActionsTest
-        test/chess/Piece.cpp
         test/chess/Board.cpp
+        test/chess/Excursion.cpp
         test/chess/MoveGen.cpp
         test/chess/Moves.cpp
+        test/chess/Piece.cpp
         test/chess/Repetition.cpp
         test/chess/SAN.cpp
         test/chess/TestUtil.cpp
