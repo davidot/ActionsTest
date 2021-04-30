@@ -214,8 +214,7 @@ namespace Chess {
                 "", // unused
         };
 
-        int i = (color() == Color::Black ? 0 : 8) + ENUM_TO_INT(type());
-        ASSERT(i >= 0);
+        size_t i = (color() == Color::Black ? 0u : 8u) + ENUM_TO_INT(type());
         ASSERT(i < std::size(mappings));
         return mappings[i];
     }

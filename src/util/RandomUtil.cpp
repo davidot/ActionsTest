@@ -67,6 +67,6 @@ namespace util {
             }
         }
 
-        return std::move(values);
+        return values;
     }
 }
