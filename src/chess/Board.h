@@ -123,6 +123,21 @@ namespace Chess {
         // Note: counts null move as irreversible move
         [[nodiscard]] uint32_t positionRepeated() const;
 
+        template<typename F>
+        auto moveExcursion(Move mv, F&& func) const {
+            auto& me = const_cast<Board&>(*this);
+            me.makeMove(mv);
+            const Board& constMe = *this;
+            if constexpr (std::is_void_v<std::invoke_result_t<F, const Board&>>) {
+                func(constMe);
+                me.undoMove();
+            } else {
+                auto r = func(constMe);
+                me.undoMove();
+                return r;
+            }
+        }
+
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 
