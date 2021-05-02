@@ -57,7 +57,7 @@ namespace Chess {
         return result;
     }
 
-    GameResult Chess::playGame(const std::unique_ptr<Player> &white,
+    GameResult playGame(const std::unique_ptr<Player> &white,
                                const std::unique_ptr<Player> &black) {
         return playGame(white.get(), black.get());
     }

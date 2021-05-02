@@ -8,6 +8,10 @@
 #include <util/RandomUtil.h>
 
 int main() {
+    // Tiny single pawn fast mate:
+    // 1. h4 g5 2. hxg5 Nf6 3. gxf6 Bg7 4. fxg7 Nc6 5. gxh8=Q#
+    // :( https://chess.stackexchange.com/questions/23775/what-are-the-quckest-helpmates-delivered-by-the-rook-knight-bishop-and-pawn
+
     std::string baseFolder = "visual/resources/";
     sf::Texture texture;
     if (!texture.loadFromFile(baseFolder + "pieces.png"))
