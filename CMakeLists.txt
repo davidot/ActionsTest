@@ -26,6 +26,7 @@ add_library(Actions
         src/chess/MoveGen.cpp
         src/chess/Piece.cpp
         src/chess/SAN.cpp
+        src/chess/players/TrivialPlayers.cpp
 
         src/util/Assertions.cpp
         src/util/RandomUtil.cpp
