@@ -187,6 +187,10 @@ namespace Chess {
         std::array<uint8_t, 2> m_numPieces = {0, 0};
 #endif
 
+#ifndef COMPUTE_KING_POS
+#define STORE_KING_POS 1
+#endif
+
 #ifdef STORE_KING_POS
         constexpr static BoardIndex invalidVal = -1;
         std::array<BoardIndex, 2> m_kingPos = {invalidVal, invalidVal};
