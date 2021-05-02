@@ -86,19 +86,15 @@ namespace Chess {
             return std::make_unique<StatelessState>(*m_player);
         }
 
-
         std::string name() const final {
             return m_player->name();
         }
 
-
         template<typename ...Args>
         explicit StatelessWrapper(Args... args) : m_player(std::make_unique<P>(std::forward<Args>(args)...)) {
         }
-
     private:
         std::unique_ptr<StatelessPlayer> m_player;
-
     };
 
 
