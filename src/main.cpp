@@ -20,32 +20,32 @@ int main(int argc, char** argv) {
     auto players = {
             Chess::indexPlayer(0),
             Chess::indexPlayer(1),
-            Chess::indexPlayer(2),
-            Chess::indexPlayer(3),
-            Chess::indexPlayer(4),
-            Chess::indexPlayer(5),
-            Chess::indexPlayer(6),
-            Chess::indexPlayer(7),
             Chess::indexPlayer(8),
             Chess::indexPlayer(-1),
-            Chess::indexPlayer(-2),
-            Chess::indexPlayer(-3),
             Chess::indexPlayer(-4),
-            Chess::minOpponentMoves(),
     };
 
     for (const auto& white : players) {
         for (const auto& black : players) {
             auto res = Chess::playGame(white, black);
-            if (res.state != Chess::GameResult::State::Draw) {
+            if (res.final() != Chess::GameResult::Final::Draw) {
                 std::cout << "Non draw! "
-                          << (res.state == Chess::GameResult::State::BlackWin ? "Black" : "White")
+                          << (res.final() == Chess::GameResult::Final::BlackWin ? "Black" : "White")
                           << " won\n"
                           << white->name() << " vs " << black->name() << "\n"
                           << "PGN: " << res.pgn << '\n';
             }
         }
     }
+
+    auto minOpp = Chess::minOpponentMoves();
+
+    auto oppRes = Chess::playGame(minOpp, minOpp);
+    std::cout << "Non draw! "
+              << oppRes.stringifyResult()
+              << " won\n"
+              << minOpp->name() << " vs " << minOpp->name() << "\n"
+              << "PGN: " << oppRes.pgn << '\n';
 
     Chess::Board board = Chess::Board::standardBoard();
 
