@@ -2,6 +2,8 @@
 #include "chess/Piece.h"
 #include <chess/Board.h>
 #include <chess/MoveGen.h>
+#include <chess/players/Game.h>
+#include <chess/players/TrivialPlayers.h>
 #include <cstddef>
 #include <iostream>
 #include <optional>
@@ -12,6 +14,30 @@
 
 int main(int argc, char** argv) {
     int status = 0;
+
+    auto rand = Chess::randomPlayer();
+    auto first = Chess::indexPlayer(0);
+    auto last = Chess::indexPlayer(-1);
+
+    auto res1 = Chess::playGame(first.get(), last.get());
+    auto res2 = Chess::playGame(first.get(), first.get());
+    auto res3 = Chess::playGame(last.get(), last.get());
+    auto res4 = Chess::playGame(last.get(), first.get());
+
+    for (auto res : {res1, res2, res3, res4}) {
+        switch (res) {
+            case Chess::GameResult::WhiteWin:
+                std::cout << "White won\n";
+                break;
+            case Chess::GameResult::BlackWin:
+                std::cout << "Black won\n";
+                break;
+            case Chess::GameResult::Draw:
+                std::cout << "Draw\n";
+                break;
+        }
+    }
+
 
     Chess::Board board = Chess::Board::standardBoard();
 
