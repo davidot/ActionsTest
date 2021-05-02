@@ -22,10 +22,12 @@ namespace Chess {
             board.moveExcursion(mv, [&](const Board& board) {
               rMove.ranking = rankMove(mv, board);
             });
-
+            ++index;
         });
 
-        return std::max_element(ranked.begin(), ranked.end())->mv;
+        auto best = std::max_element(ranked.begin(), ranked.end());
+        ASSERT(best != ranked.end());
+        return best->mv;
     }
 
     bool RankingPlayer::RankedMove::operator<(const RankingPlayer::RankedMove& rhs) const {
@@ -82,6 +84,30 @@ namespace Chess {
 
     std::unique_ptr<Player> indexPlayer(int32_t val) {
         return make_stateless<ConstIndexPlayer>(val);
+    }
+
+    std::unique_ptr<Player> minOpponentMoves() {
+        return make_stateless<LeastOpponentMoves>();
+    }
+
+    int32_t LeastOpponentMoves::rankMove(Move, const Board &board) {
+        MoveList list = generateAllMoves(board);
+        if (list.size() > 0) {
+            ASSERT(list.size() < 512);
+            return int32_t(list.size());
+        }
+
+        // prefer checkmate over stalemate
+        if (list.isCheckMate()) {
+            return -1;
+        }
+        ASSERT(list.isStaleMate());
+        // This does still prefer stale mate over moves left but that is the point
+        return 0;
+    }
+
+    std::string LeastOpponentMoves::name() const {
+        return "Least opponent moves";
     }
 }
 
