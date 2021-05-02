@@ -291,7 +291,8 @@ int main() {
 
         ImGui::ShowDemoWindow();
 
-        window.clear(sf::Color{0, 142, 29});
+        uint8_t gray = 180;
+        window.clear(sf::Color{gray, gray, gray});
 
         sf::RectangleShape square {{squareSize, squareSize}};
 
