@@ -18,4 +18,6 @@ namespace Chess {
 
     GameResult playGame(const Player* whitePlayer, const Player* blackPlayer);
 
+    GameResult playGame(const std::unique_ptr<Player>& white, const std::unique_ptr<Player>& black);
+
 }

@@ -56,4 +56,10 @@ namespace Chess {
         result.pgn = pgn.str();
         return result;
     }
+
+    GameResult Chess::playGame(const std::unique_ptr<Player> &white,
+                               const std::unique_ptr<Player> &black) {
+        return playGame(white.get(), black.get());
+    }
+
 }

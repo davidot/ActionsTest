@@ -31,11 +31,12 @@ int main(int argc, char** argv) {
             Chess::indexPlayer(-2),
             Chess::indexPlayer(-3),
             Chess::indexPlayer(-4),
+            Chess::minOpponentMoves(),
     };
 
     for (const auto& white : players) {
         for (const auto& black : players) {
-            auto res = Chess::playGame(white.get(), black.get());
+            auto res = Chess::playGame(white, black);
             if (res.state != Chess::GameResult::State::Draw) {
                 std::cout << "Non draw! "
                           << (res.state == Chess::GameResult::State::BlackWin ? "Black" : "White")
