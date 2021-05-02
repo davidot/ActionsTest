@@ -64,7 +64,7 @@ namespace Chess {
 
     size_t ConstIndexPlayer::index(const Board&, const MoveList& list) {
         if (val >= 0) {
-            return std::min(size_t(val), list.size());
+            return std::min(size_t(val), list.size() - 1u);
         }
         if (-val >= int32_t(list.size())) {
             return 0;
