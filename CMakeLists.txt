@@ -84,8 +84,5 @@ enable_testing()
 add_test(NAME UnitTests COMMAND ActionsTest)
 
 add_test(NAME StartUpTest COMMAND ActionsMain)
-add_test(NAME StartUpTestWhiteCapture COMMAND ActionsMain w)
-add_test(NAME StartUpTestBlackCapture COMMAND ActionsMain b)
-add_test(NAME StartUpTestBothCapture COMMAND ActionsMain wb)
 
 add_subdirectory(fuzzer)
