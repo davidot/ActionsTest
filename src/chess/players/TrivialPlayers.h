@@ -48,12 +48,8 @@ namespace Chess {
         int32_t val;
     };
 
-    std::unique_ptr<Player> randomPlayer() {
-        return make_stateless<RandomPlayer>();
-    }
+    std::unique_ptr<Player> randomPlayer();
 
-    std::unique_ptr<Player> indexPlayer(int32_t val) {
-        return make_stateless<ConstIndexPlayer>(val);
-    }
+    std::unique_ptr<Player> indexPlayer(int32_t val);
 
 }
