@@ -16,28 +16,35 @@ int main(int argc, char** argv) {
     int status = 0;
 
     auto rand = Chess::randomPlayer();
-    auto first = Chess::indexPlayer(0);
-    auto last = Chess::indexPlayer(-1);
 
-    auto res1 = Chess::playGame(first.get(), last.get());
-    auto res2 = Chess::playGame(first.get(), first.get());
-    auto res3 = Chess::playGame(last.get(), last.get());
-    auto res4 = Chess::playGame(last.get(), first.get());
+    auto players = {
+            Chess::indexPlayer(0),
+            Chess::indexPlayer(1),
+            Chess::indexPlayer(2),
+            Chess::indexPlayer(3),
+            Chess::indexPlayer(4),
+            Chess::indexPlayer(5),
+            Chess::indexPlayer(6),
+            Chess::indexPlayer(7),
+            Chess::indexPlayer(8),
+            Chess::indexPlayer(-1),
+            Chess::indexPlayer(-2),
+            Chess::indexPlayer(-3),
+            Chess::indexPlayer(-4),
+    };
 
-    for (auto res : {res1, res2, res3, res4}) {
-        switch (res) {
-            case Chess::GameResult::WhiteWin:
-                std::cout << "White won\n";
-                break;
-            case Chess::GameResult::BlackWin:
-                std::cout << "Black won\n";
-                break;
-            case Chess::GameResult::Draw:
-                std::cout << "Draw\n";
-                break;
+    for (const auto& white : players) {
+        for (const auto& black : players) {
+            auto res = Chess::playGame(white.get(), black.get());
+            if (res.state != Chess::GameResult::State::Draw) {
+                std::cout << "Non draw! "
+                          << (res.state == Chess::GameResult::State::BlackWin ? "Black" : "White")
+                          << " won\n"
+                          << white->name() << " vs " << black->name() << "\n"
+                          << "PGN: " << res.pgn << '\n';
+            }
         }
     }
-
 
     Chess::Board board = Chess::Board::standardBoard();
 
