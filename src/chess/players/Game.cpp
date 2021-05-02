@@ -1,3 +1,4 @@
+#include <sstream>
 #include "Game.h"
 #include "../../util/Assertions.h"
 #include "../MoveGen.h"
@@ -10,6 +11,8 @@ namespace Chess {
         Board board = Board::standardBoard();
         auto whiteState = whitePlayer->startGame(Color::White);
         auto blackState = blackPlayer->startGame(Color::White);
+
+        std::ostringstream pgn;
 
         MoveList list = generateAllMoves(board);
 
@@ -24,6 +27,12 @@ namespace Chess {
 
             ASSERT(list.contains(mv));
             ASSERT(mv.fromPosition != mv.toPosition);
+
+            if (board.colorToMove() == Chess::Color::White) {
+                pgn << board.fullMoves() << ". ";
+            }
+            pgn << board.moveToSAN(mv, list) << " ";
+
             board.makeMove(mv);
             whiteState->movePlayed(mv, board);
             blackState->movePlayed(mv, board);
@@ -31,13 +40,20 @@ namespace Chess {
             list = generateAllMoves(board);
         }
 
+
+        GameResult result;
+
+
         if (board.isDrawn() || list.isStaleMate()) {
-            return GameResult::Draw;
+            result.state = GameResult::State::Draw;
+        } else if (list.isCheckMate()) {
+            if (board.colorToMove() == Color::White) {
+                result.state = GameResult::State::BlackWin;
+            } else {
+                result.state = GameResult::State::WhiteWin;
+            }
         }
-        ASSERT(list.isCheckMate());
-        if (board.colorToMove() == Color::White) {
-            return GameResult::BlackWin;
-        }
-        return GameResult::WhiteWin;
+        result.pgn = pgn.str();
+        return result;
     }
 }
