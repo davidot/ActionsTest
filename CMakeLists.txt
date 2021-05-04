@@ -32,6 +32,7 @@ add_library(Actions
         src/util/Assertions.cpp
         src/util/RandomUtil.cpp
         src/util/StringUtil.cpp
+        src/util/Process.cpp
         )
 
 target_include_directories(Actions INTERFACE src/)
@@ -77,9 +78,9 @@ if (WITH_BENCHMARKS)
     message(STATUS "Building with benchmarks")
 endif()
 
-add_subdirectory(test/standalone)
-
 enable_testing()
+
+add_subdirectory(test/standalone)
 
 add_test(NAME UnitTests COMMAND ActionsTest)
 
