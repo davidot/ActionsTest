@@ -67,7 +67,7 @@ int main(int argv, char** argc) {
                 if (!keepGoing) {
                     return 3;
                 }
-            } else if (eb.value().halfMovesSinceIrreversible() >= 150) {
+            } else if (eb.value().isDrawn(true)) {
                 ++overDraw;
             }
             ++readLines;
