@@ -1,14 +1,50 @@
 #pragma once
 
 #include <string_view>
+#include <vector>
+#include <optional>
+#include <memory>
 
-class SubProcess {
-public:
-    SubProcess(std::string_view commandLine);
+#if !defined(POSIX_PROCESS) && !defined(WINDOWS_PROCESS)
+#error Must define one of POSIX_PROCESS or WINDOWS_PROCESS
+#endif
 
-    bool write(std::string_view);
+namespace util {
 
-    bool read(std::string&);
+    class SubProcess {
+    public:
+        ~SubProcess();
 
-    void stop();
-};
+        static std::unique_ptr<SubProcess> create(std::vector<std::string> command);
+
+        bool writeTo(std::string_view) const;
+
+        bool readLine(std::string&);
+
+        struct ProcessExit {
+            bool stopped = false;
+            std::optional<int> exitCode;
+        };
+
+        ProcessExit stop();
+    private:
+        bool running = true;
+
+#ifdef POSIX_PROCESS
+        pid_t m_procPid;
+
+        std::vector<char> readBuffer = std::vector<char>(4096lu, '\0');
+        ssize_t m_bufferLoc = 0;
+
+        int m_stdIn = -1;
+        int m_stdOut = -1;
+
+        std::optional<int> m_exitCode;
+
+        bool readLineFromBuffer(std::string&);
+#elif defined(WINDOWS_PROCESS)
+
+#endif
+    };
+
+}

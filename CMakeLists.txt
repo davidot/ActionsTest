@@ -32,13 +32,25 @@ add_library(Actions
         src/util/Assertions.cpp
         src/util/RandomUtil.cpp
         src/util/StringUtil.cpp
-        src/util/Process.cpp
         )
 
 target_include_directories(Actions INTERFACE src/)
 if (HEADLESS)
     target_compile_definitions(Actions PUBLIC ABORT_IMMEDIATE_ON_ASSERT=1)
 endif()
+
+if (UNIX)
+    target_compile_definitions(Actions PUBLIC POSIX_PROCESS=1)
+    target_sources(Actions PRIVATE src/util/Process_Unix.cpp)
+elseif(WIN32)
+    target_compile_definitions(Actions PUBLIC WINDOWS_PROCESS=1)
+    target_sources(Actions PRIVATE src/util/Process_Windows.cpp)
+elseif (MINGW)
+    message(ERROR "Do not support MINGW at the moment")
+    # Explicitly target Windows 10. This allows us to use features that are only available on newer versions of Windows.
+#    add_definitions(-D_WIN32_WINNT=0x0A00 -DWIN32_LEAN_AND_MEAN)
+#    add_compile_definitions(WPWRAPPER_WIN=1)
+endif ()
 
 add_executable(ActionsMain src/main.cpp)
 target_link_libraries(ActionsMain PRIVATE Actions)
