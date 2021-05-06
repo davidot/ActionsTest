@@ -19,7 +19,7 @@ namespace util {
         stop();
     }
 
-    bool SubProcess::writeTo(std::string_view str) {
+    bool SubProcess::writeTo(std::string_view str) const {
         char const* head = str.data();
         auto toWrite = static_cast<ssize_t>(str.size());
 
@@ -36,7 +36,7 @@ namespace util {
         return true;
     }
 
-    bool SubProcess::readLineFromBuffer(std::string& line) {
+    bool SubProcess::readLineFromBuffer(std::string& line) const {
         if (m_bufferLoc <= 0) {
             return false;
         }
@@ -62,7 +62,7 @@ namespace util {
         return true;
     }
 
-    bool SubProcess::readLine(std::string& line) {
+    bool SubProcess::readLine(std::string& line) const {
         if (readLineFromBuffer(line)) {
             return true;
         }

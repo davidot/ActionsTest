@@ -19,7 +19,7 @@ namespace util {
 
         bool writeTo(std::string_view) const;
 
-        bool readLine(std::string&);
+        bool readLine(std::string&) const;
 
         struct ProcessExit {
             bool stopped = false;
@@ -33,15 +33,15 @@ namespace util {
 #ifdef POSIX_PROCESS
         pid_t m_procPid;
 
-        std::vector<char> readBuffer = std::vector<char>(4096lu, '\0');
-        ssize_t m_bufferLoc = 0;
+        mutable std::vector<char> readBuffer = std::vector<char>(4096lu, '\0');
+        mutable ssize_t m_bufferLoc = 0;
 
         int m_stdIn = -1;
         int m_stdOut = -1;
 
         std::optional<int> m_exitCode;
 
-        bool readLineFromBuffer(std::string&);
+        bool readLineFromBuffer(std::string&) const;
 #elif defined(WINDOWS_PROCESS)
 
 #endif
