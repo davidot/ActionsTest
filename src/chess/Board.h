@@ -107,6 +107,8 @@ namespace Chess {
 
         constexpr static BoardIndex size = 8;
 
+        static_assert(sizeof(BitBoard) * 8 == size * size);
+
         bool operator==(const Board &rhs) const;
 
         [[nodiscard]] std::string moveToSAN(Move, const MoveList&) const;

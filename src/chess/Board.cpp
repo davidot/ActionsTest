@@ -12,6 +12,12 @@
 #include <iostream>
 #endif
 
+#include <climits>
+#if CHAR_BIT != 8
+#error Please use 8 bit wide char/bytes
+#endif
+
+
 namespace Chess {
 
     CastlingRight operator|(const CastlingRight& lhs, const CastlingRight& rhs) {
