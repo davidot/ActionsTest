@@ -28,8 +28,6 @@ namespace Chess {
 
         Move(BoardIndex fromIndex, BoardIndex toIndex, Flag flags = Flag::None);
 
-        Move(BoardIndex fromCol, BoardIndex fromRow, BoardOffset offset, Flag flags = Flag::None);
-
         Move(BoardIndex fromCol, BoardIndex fromRow,
              BoardIndex toCol, BoardIndex toRow, Flag flags = Flag::None);
 

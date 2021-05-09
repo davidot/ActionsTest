@@ -12,12 +12,6 @@ namespace Chess {
           flag(flags) {
     }
 
-    Move::Move(BoardIndex fromCol, BoardIndex fromRow, BoardOffset offset, Move::Flag flags) : flag(flags) {
-        BoardIndex index = Board::columnRowToIndex(fromCol, fromRow);
-        toPosition = index + offset;
-        fromPosition = index;
-    }
-
     Move::Move(BoardIndex fromCol, BoardIndex fromRow, BoardIndex toCol, BoardIndex toRow, Move::Flag flags) :
        toPosition(Board::columnRowToIndex(toCol, toRow)),
        fromPosition(Board::columnRowToIndex(fromCol, fromRow)),
