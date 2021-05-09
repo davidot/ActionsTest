@@ -1,7 +1,9 @@
-#include <chess/MoveGen.h>
-#include <iostream>
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <chess/MoveGen.h>
+#include <chess/players/Game.h>
+#include <chess/players/TrivialPlayers.h>
+#include <iostream>
 
 #define BENCHMARK_TAGS "[.][chess][benchmark]"
 
@@ -196,6 +198,12 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
 
     {
         Board board = Board::fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1").extract();
+
+        BENCHMARK("Perft(2) from Kiwipete position") {
+            auto count = countMoves(board, 2);
+            REQUIRE(count == 2039);
+        };
+
         BENCHMARK("Perft(3) from Kiwipete position") {
             auto count = countMoves(board, 3);
             REQUIRE(count == 97862);
@@ -211,6 +219,13 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
 
     {
         Board board = Board::fromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1").extract();
+
+        BENCHMARK("Perft(4) from position 3") {
+            auto count = countMoves(board, 2);
+            REQUIRE(count == 191);
+        };
+
+
         BENCHMARK("Perft(4) from position 3") {
             auto count = countMoves(board, 4);
             REQUIRE(count == 43238);
@@ -351,5 +366,30 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
         };
 #endif
     }
+
+}
+
+TEST_CASE("Game benchmarks", "[moving][game]" BENCHMARK_TAGS) {
+
+    auto minOpp = Chess::minOpponentMoves();
+#ifdef LONG_BENCHMARKS
+    BENCHMARK("Play minOpp v minOpp") {
+        return Chess::playGame(minOpp, minOpp);
+    };
+#endif
+
+    auto randPlayer = Chess::randomPlayer();
+
+    BENCHMARK("Play rand vs minOpp") {
+        return Chess::playGame(randPlayer, minOpp);
+    };
+
+    BENCHMARK("Play minOpp vs rand") {
+        return Chess::playGame(minOpp, randPlayer);
+    };
+
+    BENCHMARK("Play rand vs rand") {
+        return Chess::playGame(randPlayer, randPlayer);
+    };
 
 }
