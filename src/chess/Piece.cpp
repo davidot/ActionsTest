@@ -192,6 +192,9 @@ namespace Chess {
         ASSERT_NOT_REACHED();
     }
 
+    Piece::Type Piece::typeFromInt(uint8_t val) {
+        return static_cast<Piece::Type>(val & typeMask);
+    }
 
 
     std::string Piece::toUTF8Char() const {

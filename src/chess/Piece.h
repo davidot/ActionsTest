@@ -40,6 +40,8 @@ namespace Chess {
             Knight = 0b110,
         };
 
+        constexpr static IntType pieceTypes = 6;
+
 
         Piece(Type tp, Color c) noexcept;
 
@@ -68,6 +70,8 @@ namespace Chess {
         [[nodiscard]] static bool isPiece(IntType val);
 
         [[nodiscard]] static Color colorFromInt(IntType val);
+
+        [[nodiscard]] static Piece::Type typeFromInt(IntType val);
 
         [[nodiscard]] static IntType noneValue();
 
