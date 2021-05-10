@@ -119,7 +119,7 @@ namespace Chess {
                                Move::Flag::PromotionToBishop,
                                Move::Flag::PromotionToRook,
                                Move::Flag::PromotionToQueen}) {
-            validateMove(list, board, Move{toIndex - indexOffsets[direction], toIndex,  promotion});
+            validateMove(list, board, Move(toIndex - indexOffsets[direction], toIndex,  promotion));
         }
     }
 
