@@ -176,12 +176,12 @@ namespace Chess {
 
         while (push) {
             BoardIndex index = popLsb(push);
-            validateMove(list, board, Move{index + Back , index});
+            validateMove(list, board, Move(index + Back, index));
         }
 
         while (doublePush) {
             BoardIndex index = popLsb(doublePush);
-            validateMove(list, board, Move{index + Back + Back, index, Move::Flag::DoublePushPawn});
+            validateMove(list, board, Move(index + Back + Back, index, Move::Flag::DoublePushPawn));
         }
 
         if (promoRowPawn) {
@@ -210,12 +210,12 @@ namespace Chess {
 
         while (captureLeft) {
             BoardIndex index = popLsb(captureLeft);
-            validateMove(list, board, Move{index - indexOffsets[LeftForward], index});
+            validateMove(list, board, Move(index - indexOffsets[LeftForward], index));
         }
 
         while (captureRight) {
             BoardIndex index = popLsb(captureRight);
-            validateMove(list, board, Move{index - indexOffsets[RightForward], index});
+            validateMove(list, board, Move(index - indexOffsets[RightForward], index));
         }
 
         if (epBB.has_value()) {
