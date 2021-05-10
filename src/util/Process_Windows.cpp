@@ -10,19 +10,22 @@ namespace util {
         stop();
     }
 
-    bool writeTo(std::string_view str) {
-
+    bool SubProcess::writeTo(std::string_view) const {
+        return false;
     }
 
-    bool readLine(std::string& line) {
-
+    bool SubProcess::readLine(std::string&) const {
+        return false;
     }
 
-    ProcessExit stop() {
-
+    SubProcess::ProcessExit SubProcess::stop() {
+        if (running) {
+            running = false;
+        }
+        return {};
     }
 
-    static std::unique_ptr<SubProcess> SubProcess::create(std::vector<std::string> command) {
+    std::unique_ptr<SubProcess> SubProcess::create(std::vector<std::string>) {
         return nullptr;
     }
 
