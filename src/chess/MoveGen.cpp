@@ -162,7 +162,7 @@ namespace Chess {
         constexpr BitBoard promoRow = color == Color::White ? row6 : row1;
         constexpr Direction Forward = Board::pawnDirection(color) > 0 ? Up : Down;
         constexpr Direction Backward = Board::pawnDirection(color) > 0 ? Down : Up;
-        constexpr BoardOffset Back = indexOffsets[Backward];
+        constexpr BoardIndex Back = indexOffsets[Backward];
         constexpr auto LeftForward = static_cast<Direction>(Forward + ToLeft);
         constexpr auto RightForward = static_cast<Direction>(Forward + ToRight);
 
