@@ -20,6 +20,7 @@ endif(CCACHE_FOUND)
 include(FetchContent)
 
 add_library(Actions
+        src/chess/BitBoard.cpp
         src/chess/Board.cpp
         src/chess/FEN.cpp
         src/chess/Move.cpp

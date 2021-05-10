@@ -1,5 +1,7 @@
 #include "Board.h"
 #include "../util/Assertions.h"
+#include "BitBoard.h"
+
 #include <algorithm>
 #include <initializer_list>
 #include <iterator>
@@ -11,12 +13,6 @@
 #ifdef OUTPUT_FEN
 #include <iostream>
 #endif
-
-#include <climits>
-#if CHAR_BIT != 8
-#error Please use 8 bit wide char/bytes
-#endif
-
 
 namespace Chess {
 
@@ -62,54 +58,56 @@ namespace Chess {
         return c == Color::Black;
     }
 
+    BoardIndex typeIndex(Piece::Type tp) {
+        ASSERT(tp != Piece::Type::None);
+        return static_cast<BoardIndex>(tp) - 1u;
+    }
+
     uint32_t Board::countPieces(Color c) const {
-#ifdef STORE_PIECE_COUNT
-        return m_numPieces[colorIndex(c)];
-#else
-        BoardIndex count = 0;
-        for (auto p : m_pieces) {
-            if (p != Piece::noneValue() && Piece::colorFromInt(p) == c) {
-                count++;
-            }
-        }
-        return count;
-#endif
+        return BB::countBits(colorPiecesBB[colorIndex(c)]);
     }
 
     std::optional<Piece> Board::pieceAt(BoardIndex index) const {
-        if (index >= size * size) {
+        if (index >= size * size || !(piecesBB & BB::squareBoard(index))) {
             return std::nullopt;
         }
 
-        if (auto& val = m_pieces[index]; Piece::isPiece(val)) {
-            return Piece::fromInt(m_pieces[index]);
-        } else {
-            return std::nullopt;
-        }
+        ASSERT(Piece::isPiece(m_pieces[index]));
+        return Piece::fromInt(m_pieces[index]);
     }
 
     void Board::setPiece(BoardIndex index, std::optional<Piece> piece) {
         if (index >= size * size) {
             return;
         }
-#ifdef STORE_PIECE_COUNT
-        if (auto p = pieceAt(index); p) {
-            m_numPieces[colorIndex(p->color())]--;
-        }
-#endif
-        if (piece.has_value()) {
-#ifdef STORE_PIECE_COUNT
-            m_numPieces[colorIndex(piece->color())]++;
-#endif
-            m_pieces[index] = piece->toInt();
-#ifdef STORE_KING_POS
-            if (piece->type() == Piece::Type::King) {
-                m_kingPos[colorIndex(piece->color())] = index;
-            }
-#endif
-        } else {
+        BitBoard square = BB::squareBoard(index);
+        // first clear
+        if (piecesBB & square) {
+            ASSERT(Piece::isPiece(m_pieces[index]));
+
+            Piece p = Piece::fromInt(m_pieces[index]);
+            BitBoard erase = ~square;
+            piecesBB &= erase;
+
+            colorPiecesBB[colorIndex(p.color())] &= erase;
+            typePiecesBB[typeIndex(p.type())] &= erase;
             m_pieces[index] = Piece::noneValue();
         }
+        if (!piece.has_value()) {
+            return;
+        }
+
+        m_pieces[index] = piece->toInt();
+
+
+#ifdef STORE_KING_POS
+        if (piece->type() == Piece::Type::King) {
+            m_kingPos[colorIndex(piece->color())] = index;
+        }
+#endif
+        piecesBB |= square;
+        colorPiecesBB[colorIndex(piece->color())] |= square;
+        typePiecesBB[typeIndex(piece->type())] |= square;
     }
 
     Board Board::standardBoard() {
@@ -473,7 +471,6 @@ namespace Chess {
         return 0;
     }
 
-
     bool Board::isDrawn(bool forced) const {
         uint32_t halfMoveLimit = 99;
         uint32_t repetitionLimit = 2;
@@ -483,6 +480,137 @@ namespace Chess {
         }
         return m_halfMovesSinceCaptureOrPawn > halfMoveLimit
                || m_repeated > repetitionLimit;
+    }
+
+    BitBoard Board::colorBitboard(Color c) const {
+        return colorPiecesBB[colorIndex(c)];
+    }
+
+    BitBoard Board::typeBitboard(Piece::Type tp) const {
+        return typePiecesBB[typeIndex(tp)];
+    }
+
+    BitBoard Board::pieceBitBoard(Piece p) const {
+        return colorPiecesBB[colorIndex(p.color())] & typePiecesBB[typeIndex(p.type())];
+    }
+
+    BitBoard Board::typeBitboards(Piece::Type tp1, Piece::Type tp2) const {
+        return typeBitboard(tp1) | typeBitboard(tp2);
+    }
+
+    std::optional<BitBoard> Board::enPassantBB() const {
+        if (!m_enPassant) {
+            return std::nullopt;
+        }
+        return BB::squareBoard(*m_enPassant);
+    }
+
+    bool Board::attacked(BoardIndex col, BoardIndex row) const {
+        if (col >= size || row >= size) {
+            return false;
+        }
+        return attacked(Board::columnRowToIndex(col, row));
+    }
+
+    BitBoard Board::attacksOn(BoardIndex square, BitBoard occupied) const {
+        if (square >= size * size) {
+            return 0;
+        }
+        return (BB::pawnAttacksBB<Color::White>(square) & pieceBitBoard(Piece{Piece::Type::Pawn, Color::Black}))
+             | (BB::pawnAttacksBB<Color::Black>(square) & pieceBitBoard(Piece{Piece::Type::Pawn, Color::White}))
+             | (BB::pieceAttacksBB<Piece::Type::Knight>(square) & typeBitboard(Piece::Type::Knight))
+             | (BB::generateSliders<Piece::Type::Bishop>(square, occupied) & typeBitboards(Piece::Type::Bishop, Piece::Type::Queen))
+             | (BB::generateSliders<Piece::Type::Rook>(square, occupied) & typeBitboards(Piece::Type::Rook, Piece::Type::Queen))
+             | (BB::pieceAttacksBB<Piece::Type::King>(square) & typeBitboard(Piece::Type::King));
+    }
+
+
+    bool Board::attacked(BoardIndex index) const {
+        BitBoard a = attacksOn(index);
+        BitBoard b = ~colorBitboard(colorToMove());
+        return a & b;
+    }
+
+    bool Board::isPinned(BoardIndex square) const {
+        Color them = opposite(colorToMove());
+        BitBoard pinned = 0;
+
+        BitBoard attackers =
+                ((BB::pieceAttacksBB<Piece::Type::Bishop>(square) & typeBitboards(Piece::Type::Bishop, Piece::Type::Queen))
+              | (BB::pieceAttacksBB<Piece::Type::Rook>(square) & typeBitboards(Piece::Type::Rook, Piece::Type::Queen)))
+                & colorIndex(them);
+
+        BitBoard allBlockers = attackers ^ piecesBB;
+
+        while (attackers) {
+            BoardIndex sniper = BB::popLsb(attackers);
+
+            BitBoard lineBlockers = BB::between(square, sniper) & allBlockers;
+
+            if (lineBlockers && !BB::moreThanOne(lineBlockers)) {
+                pinned |= lineBlockers;
+            }
+        }
+
+        return pinned;
+    }
+
+    bool Board::isLegal(Move mv) const {
+        using namespace BB;
+
+        ASSERT(mv.fromPosition != mv.toPosition);
+        Color c = colorToMove();
+        uint8_t piece = m_pieces[mv.fromPosition];
+
+        ASSERT(Piece::isPiece(piece));
+        ASSERT(Piece::colorFromInt(piece) == c);
+        ASSERT(squareBoard(mv.fromPosition) & piecesBB);
+
+        if (mv.flag == Move::Flag::Castling) {
+            BoardIndex step = 0;
+            BoardIndex stop = 0;
+            if (mv.toPosition > mv.fromPosition) {
+                // kingSide
+                ASSERT(Board::indexToColumnRow(mv.toPosition).first == Board::kingSideRookCol);
+                step = 1;
+                stop = mv.fromPosition + 3;
+            } else {
+                // queen side
+                ASSERT(Board::indexToColumnRow(mv.toPosition).first == Board::queenSideRookCol);
+
+                step = -1;
+                stop = mv.fromPosition - 3;
+            }
+
+            for (BoardIndex i = mv.fromPosition; i != stop; i += step) {
+                if (attacked(i)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        if (Piece::typeFromInt(piece) == Piece::Type::King) {
+            return !(attacksOn(mv.toPosition, piecesBB ^ BB::squareBoard(mv.fromPosition)) & colorBitboard(opposite(c)));
+        }
+
+
+        BitBoard afterMoveBoard = (piecesBB ^ BB::squareBoard(mv.fromPosition)) | BB::squareBoard(mv.toPosition);
+        BitBoard opponentsAfterMove = colorBitboard(opposite(c)) & ~BB::squareBoard(mv.toPosition);
+
+        if (mv.flag == Move::Flag::EnPassant) {
+            ASSERT(m_enPassant.has_value());
+            BoardIndex capturedPieceIndex = mv.toPosition + BB::indexOffsets[colorToMove() == Color::White ? Down : Up];
+            ASSERT(pieceAt(capturedPieceIndex) == Piece(Piece::Type::Pawn, opposite(colorToMove())));
+            afterMoveBoard ^= BB::squareBoard(capturedPieceIndex);
+            opponentsAfterMove ^= BB::squareBoard(capturedPieceIndex);
+        }
+
+        BitBoard attackedFrom = attacksOn(m_kingPos[colorIndex(c)], afterMoveBoard);
+
+        return !(attackedFrom & opponentsAfterMove);
+//        return !isPinned(mv.fromPosition) || BB::aligned(mv.fromPosition, mv.toPosition, m_kingPos[colorIndex(c)]);
     }
 
     const std::string &ExpectedBoard::error() const {

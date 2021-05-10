@@ -140,6 +140,12 @@ namespace Chess {
             }
         }
 
+        // Must! be a pseudo legal (does not check this and could fail)
+        [[nodiscard]] bool isLegal(Move) const;
+
+        [[nodiscard]] bool attacked(BoardIndex col, BoardIndex row) const;
+
+        // TODO: isPseudoLegal
     private:
         std::optional<std::string> parseFENBoard(std::string_view);
 
@@ -158,6 +164,8 @@ namespace Chess {
         [[nodiscard]] static std::optional<BoardIndex> SANToIndex(std::string_view);
 
         [[nodiscard]] uint32_t findRepetitions() const;
+
+        [[nodiscard]] bool attacked(BoardIndex index) const;
 
         std::array<Piece::IntType, size * size> m_pieces;
 
@@ -185,10 +193,6 @@ namespace Chess {
 
         std::deque<MoveData> m_history;
 
-#ifdef STORE_PIECE_COUNT
-        std::array<uint8_t, 2> m_numPieces = {0, 0};
-#endif
-
 #ifndef COMPUTE_KING_POS
 #define STORE_KING_POS 1
 #endif
@@ -199,8 +203,29 @@ namespace Chess {
         static_assert(invalidVal > size, "-1 is used as out of bounds");
 #endif
 
+        // TODO: simplify the friend structure here
         friend struct Move;
         friend class MoveList;
+        friend MoveList generateAllMoves(const Board& board);
+        friend bool validateMove(MoveList& list, const Board&, Move);
+
+        BitBoard piecesBB = 0u;
+        std::array<BitBoard, 2> colorPiecesBB{};
+        std::array<BitBoard, Piece::pieceTypes> typePiecesBB{};
+
+        [[nodiscard]] BitBoard colorBitboard(Color) const;
+        [[nodiscard]] BitBoard typeBitboard(Piece::Type) const;
+        [[nodiscard]] std::optional<BitBoard> enPassantBB() const;
+
+        [[nodiscard]] BitBoard attacksOn(BoardIndex index, BitBoard occupied) const;
+
+        [[nodiscard]] BitBoard attacksOn(BoardIndex index) const {
+            return attacksOn(index, piecesBB);
+        };
+        [[nodiscard]] BitBoard pieceBitBoard(Piece p) const;
+        [[nodiscard]] BitBoard typeBitboards(Piece::Type tp1, Piece::Type tp2) const;
+
+        [[nodiscard]] bool isPinned(BoardIndex square) const;
     };
 
     struct ExpectedBoard {

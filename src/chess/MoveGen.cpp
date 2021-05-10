@@ -2,12 +2,13 @@
 #include "../util/Assertions.h"
 #include "Piece.h"
 #include <array>
-#include <initializer_list>
 #include <optional>
-#include <tuple>
-#include <utility>
+
+#include "BitBoard.h"
 
 namespace Chess {
+
+    using namespace BB;
 
     void MoveList::addMove(Move move) {
         // not sure we actually want to reject none moves?
@@ -34,47 +35,6 @@ namespace Chess {
 
     constexpr static BoardIndex boardSize = Board::size;
 
-    using Offsets = std::pair<BoardOffset, BoardOffset>;
-
-    constexpr static Offsets offsets[] = {
-            {-1, 1},
-            {0, 1},
-            {1, 1},
-            {-1, 0},
-            {0, 0},
-            {1, 0},
-            {-1, -1},
-            {0, -1},
-            {1, -1},
-    };
-
-    // TODO: unify all knight offsets somewhere
-    constexpr static std::array<Offsets, 8> knightOffsets = {{
-        {-2, -1},
-        {-1, -2},
-        {1, -2},
-        {2, -1},
-        {-2, 1},
-        {-1, 2},
-        {1, 2},
-        {2, 1}
-    }};
-
-    enum Direction {
-        LeftUp = 0,
-        Up = 1,
-        RightUp = 2,
-        Left = 3,
-        Middle = 4,
-        Right = 5,
-        LeftDown = 6,
-        Down = 7,
-        RightDown = 8,
-
-        ToLeft = -1,
-        ToRight = +1,
-    };
-
 #define ALL_DIRECTIONS LeftUp, Up, RightUp, Left, Right, LeftDown, Down, RightDown
 
     bool withinRange(BoardIndex v, BoardOffset o) {
@@ -93,166 +53,21 @@ namespace Chess {
         return false;
     }
 
-    bool attacked(BoardIndex col, BoardIndex row, const Board &board, std::initializer_list<std::tuple<BoardIndex, BoardIndex, bool>> specialSquares = {}) {
-        if (col >= Board::size || row >= Board::size) {
-            return false;
-        }
-        // we assume it is a legal move
-        Color us = board.colorToMove();
-        Color other = opposite(us);
-        auto hasKnight = [&](BoardIndex c, BoardIndex r) {
-            if (std::find(specialSquares.begin(), specialSquares.end(), std::make_tuple(c, r, false)) != specialSquares.end()) {
-                return false;
-            }
-            return board.pieceAt(c, r) == Piece{Piece::Type::Knight, other};
-        };
-
-        for (auto &off : knightOffsets) {
-            if (hasKnight(col + off.first, row + off.second)) {
-                return true;
-            }
-        }
-
-        for (auto &direction : offsets) {
-            if (direction.first == 0 && direction.second == 0) {
-                continue;
-            }
-
-            BoardIndex currCol = col;
-            BoardIndex currRow = row;
-            unsigned steps = 0;
-            while (validOffset(currCol, currRow, direction)) {
-                auto p = board.pieceAt(currCol, currRow);
-                auto exception = std::find_if(specialSquares.begin(), specialSquares.end(), [&](auto &tup) {
-                    return std::get<0>(tup) == currCol && std::get<1>(tup) == currRow;
-                });
-                bool empty = !p;
-
-                if (exception != specialSquares.end()) {
-                    if (std::get<2>(*exception)) {
-                        // true -> ignore me
-                        empty = true;
-                    } else {
-                        // false -> im here
-                        break;
-                    }
-                }
-                if (empty) {
-                    ASSERT(steps < 9);
-                    steps++;
-                    continue;
-                }
-                if (p->color() == us) {
-                    break;
-                }
-                switch (p->type()) {
-                    case Piece::Type::Queen:
-                        return true;
-                    case Piece::Type::Pawn: {
-                        BoardOffset forward = other == Color::White ? Down : Up;
-                        if (steps == 0 && (direction == offsets[forward + ToLeft] || direction == offsets[forward + ToRight])) {
-                            return true;
-                        }
-                    } break;
-                    case Piece::Type::King:
-                        if (steps == 0) {
-                            return true;
-                        }
-                        break;
-                    case Piece::Type::Bishop:
-                        if (direction.first != 0 && direction.second != 0) {
-                            return true;
-                        }
-                        break;
-                    case Piece::Type::Rook:
-                        if (direction.first == 0 || direction.second == 0) {
-                            return true;
-                        }
-                        break;
-                    case Piece::Type::Knight:
-                        // covered above
-                        break;
-                    default:
-                        ASSERT_NOT_REACHED();
-                }
-                break;
-            }
-        }
-
-        return false;
-    }
-
     bool validateMove(MoveList &list, const Board &board, Move m) {
         ASSERT(m.fromPosition != m.toPosition);
-        auto pieceAtToLocation = board.pieceAt(m.colRowToPosition());
-        auto pieceAtFromLocation = board.pieceAt(m.colRowFromPosition());
-        ASSERT(pieceAtFromLocation.has_value() && pieceAtFromLocation->color() == board.colorToMove());
+        ASSERT(board.pieceAt(m.colRowFromPosition()).has_value() && board.pieceAt(m.colRowFromPosition())->color() == board.colorToMove());
 
-        auto isAttacked = [&](BoardIndex col, BoardIndex row) -> bool {
-            if (col >= boardSize || row >= boardSize) {
-                return false;
-            }
-            auto [colFrom, rowFrom] = m.colRowFromPosition();
-            auto [colTo, rowTo] = m.colRowToPosition();
-            if (m.flag == Move::Flag::EnPassant) {
-                ASSERT(board.pieceAt(colTo, rowFrom) == Piece(Piece::Type::Pawn, opposite(board.colorToMove())));
-                return attacked(col, row, board, {{colFrom, rowFrom, true}, {colTo, rowTo, false}, {colTo, rowFrom, true}});
-            }
-            return attacked(col, row, board, {{colFrom, rowFrom, true}, {colTo, rowTo, false}});
-        };
-
-
-        if (m.flag == Move::Flag::Castling) {
-            ASSERT(pieceAtToLocation.has_value() && pieceAtToLocation->type() == Piece::Type::Rook && pieceAtFromLocation->type() == Piece::Type::King);
-            auto [colFrom, rowFrom] = m.colRowFromPosition();
-            auto [colTo, rowTo] = m.colRowToPosition();
-            ASSERT(rowFrom == rowTo);
-            ASSERT(colFrom != colTo);
-            ASSERT(colFrom == 4);
-            // we assume empty here for now
-            if (colFrom > colTo) {
-                // queen side
-                BoardIndex finalKingSpot = colFrom - 2;
-                for (BoardIndex i = colFrom; i >= finalKingSpot; i--) {
-                    if (attacked(i, rowFrom, board)) {
-                        return false;
-                    }
-                }
-            } else {
-                // king side
-                BoardIndex finalKingSpot = colFrom + 2;
-                for (BoardIndex i = colFrom; i <= finalKingSpot; i++) {
-                    if (attacked(i, rowFrom, board)) {
-                        return false;
-                    }
-                }
-            }
-
-            list.addMove(m);
-            return true;
-        }
-
-        if (pieceAtToLocation.has_value() &&
-                   (pieceAtToLocation->type() == Piece::Type::King || pieceAtToLocation->color() == pieceAtFromLocation->color())) {
-            // if not castling then capturing own piece or king is invalid and should stop sliders
+        BitBoard toBB = squareBoard(m.toPosition);
+        if (m.flag != Move::Flag::Castling &&
+            (toBB & (board.typeBitboard(Piece::Type::King) | board.colorBitboard(board.colorToMove())))) {
             return false;
         }
 
-        if (pieceAtFromLocation->type() == Piece::Type::King) {
-            // king move check final position
-            auto [colTo, rowTo] = m.colRowToPosition();
-            if (isAttacked(colTo, rowTo)) {
-                return false;
-            }
-        } else {
-            // find the king
-            if (auto [kingCol, kingRow] = board.kingSquare(board.colorToMove()); isAttacked(kingCol, kingRow)) {
-                return !pieceAtToLocation.has_value();
-            }
+        if (board.isLegal(m)) {
+            list.addMove(m);
         }
 
-        list.addMove(m);
-        return !pieceAtToLocation.has_value();
+        return !(toBB & board.piecesBB);
     }
 
     template<Direction direction>
@@ -298,55 +113,13 @@ namespace Chess {
     }
 
 
-    void addPawnMoves(MoveList &list, const Board &board, const BoardIndex col, const BoardIndex row, Color color) {
-        BoardOffset forward = Board::pawnDirection(color) > 0 ? Up : Down;
-
-        auto addMove = [col, row, promoRow = Board::pawnPromotionRow(color), &list, &board](BoardIndex newCol, BoardIndex newRow, Move::Flag flags = Move::Flag::None) {
-            if (newRow == promoRow) {
-                // we do not want double push and promotion (on 4x4 board which we do not support)
-                ASSERT(flags == Move::Flag::None);
-
-                for (auto promotion : {Move::Flag::PromotionToKnight,
-                                       Move::Flag::PromotionToBishop,
-                                       Move::Flag::PromotionToRook,
-                                       Move::Flag::PromotionToQueen}) {
-                    validateMove(list, board, Move{col, row, newCol, newRow, promotion});
-                }
-            } else {
-                validateMove(list, board, Move{col, row, newCol, newRow, flags});
-            }
-        };
-
-        {
-            BoardIndex newCol = col;
-            BoardIndex newRow = row;
-            if (validOffset(newCol, newRow, offsets[forward]) && board.pieceAt(newCol, newRow) == std::nullopt) {
-
-                addMove(newCol, newRow);
-
-                if (row == Board::pawnHomeRow(color) && validOffset(newCol, newRow, offsets[forward]) && board.pieceAt(newCol, newRow) == std::nullopt) {
-                    // note it is always valid but this changes the position
-
-                    addMove(newCol, newRow, Move::Flag::DoublePushPawn);
-                }
-            }
-        }
-
-        auto [epCol, epRow] = board.enPassantColRow().value_or(std::make_pair(boardSize + 1, boardSize + 1));
-
-        for (auto change : {ToLeft, ToRight}) {
-            auto offset = offsets[forward + change];
-            BoardIndex newCol = col;
-            BoardIndex newRow = row;
-            if (!validOffset(newCol, newRow, offset)) {
-                continue;
-            }
-            auto pieceAt = board.pieceAt(newCol, newRow);
-            if (pieceAt.has_value() && pieceAt->color() != color) {
-                addMove(newCol, newRow);
-            } else if (newCol == epCol && newRow == epRow) {
-                addMove(newCol, newRow, Move::Flag::EnPassant);
-            }
+    template<Direction direction>
+    void addPromotion(MoveList& list, const Board& board, BoardIndex toIndex) {
+        for (auto promotion : {Move::Flag::PromotionToKnight,
+                               Move::Flag::PromotionToBishop,
+                               Move::Flag::PromotionToRook,
+                               Move::Flag::PromotionToQueen}) {
+            validateMove(list, board, Move{toIndex - indexOffsets[direction], toIndex,  promotion});
         }
     }
 
@@ -383,50 +156,147 @@ namespace Chess {
         addCastleMove(CastlingRight::QueenSideCastling, Board::queenSideRookCol);
     }
 
+    template<Color color>
+    void generatePawnMoves(BitBoard pawns, const Board& board, MoveList& list, BitBoard us, BitBoard them, std::optional<BitBoard> epBB) {
+        constexpr BitBoard doublePushRow = color == Color::White ? row2 : row5;
+        constexpr BitBoard promoRow = color == Color::White ? row6 : row1;
+        constexpr Direction Forward = Board::pawnDirection(color) > 0 ? Up : Down;
+        constexpr Direction Backward = Board::pawnDirection(color) > 0 ? Down : Up;
+        constexpr BoardOffset Back = indexOffsets[Backward];
+        constexpr auto LeftForward = static_cast<Direction>(Forward + ToLeft);
+        constexpr auto RightForward = static_cast<Direction>(Forward + ToRight);
+
+        BitBoard empty = ~(us | them);
+
+        BitBoard promoRowPawn = pawns & promoRow;
+        const BitBoard otherPawns = pawns & ~promoRow;
+
+        BitBoard push = shift<Forward>(otherPawns) & empty;
+        BitBoard doublePush = shift<Forward>(push & doublePushRow) & empty;
+
+        while (push) {
+            BoardIndex index = popLsb(push);
+            validateMove(list, board, Move{index + Back , index});
+        }
+
+        while (doublePush) {
+            BoardIndex index = popLsb(doublePush);
+            validateMove(list, board, Move{index + Back + Back, index, Move::Flag::DoublePushPawn});
+        }
+
+        if (promoRowPawn) {
+            BitBoard captureLeft = shift<LeftForward>(promoRowPawn) & them;
+            BitBoard captureRight = shift<RightForward>(promoRowPawn) & them;
+            BitBoard move = shift<Forward>(promoRowPawn) & empty;
+
+            while (captureLeft) {
+                BoardIndex index = popLsb(captureLeft);
+                addPromotion<LeftForward>(list, board, index);
+            }
+
+            while (captureRight) {
+                BoardIndex index = popLsb(captureRight);
+                addPromotion<RightForward>(list, board, index);
+            }
+
+            while (move) {
+                BoardIndex index = popLsb(move);
+                addPromotion<Forward>(list, board, index);
+            }
+        }
+
+        BitBoard captureLeft = shift<LeftForward>(otherPawns) & them;
+        BitBoard captureRight = shift<RightForward>(otherPawns) & them;
+
+        while (captureLeft) {
+            BoardIndex index = popLsb(captureLeft);
+            validateMove(list, board, Move{index - indexOffsets[LeftForward], index});
+        }
+
+        while (captureRight) {
+            BoardIndex index = popLsb(captureRight);
+            validateMove(list, board, Move{index - indexOffsets[RightForward], index});
+        }
+
+        if (epBB.has_value()) {
+            BitBoard epSquare = *epBB;
+            if (shift<static_cast<Direction>(Backward + ToLeft)>(epSquare) & pawns) {
+                BoardIndex epIndex = popLsb(epSquare);
+                validateMove(list, board, Move(epIndex + indexOffsets[Backward + ToLeft], epIndex, Move::Flag::EnPassant));
+            }
+
+            epSquare = *epBB;
+            if (shift<static_cast<Direction>(Backward + ToRight)>(epSquare) & pawns) {
+                BoardIndex epIndex = popLsb(epSquare);
+                validateMove(list, board, Move(epIndex + indexOffsets[Backward + ToRight], epIndex, Move::Flag::EnPassant));
+            }
+        }
+
+
+    }
+
     MoveList generateAllMoves(const Board &board) {
 #ifdef OUTPUT_FEN
         std::cout << board.toFEN() << '\n';
 #endif
-        using BI = BoardIndex;
-
         MoveList list{};
         Color color = board.colorToMove();
-        for (BI row = 0; row < Board::size; row++) {
-            for (BI col = 0; col < Board::size; col++) {
-                auto opt_piece = board.pieceAt(col, row);
-                if (!opt_piece || opt_piece->color() != color) {
-                    continue;
-                }
-                switch (opt_piece->type()) {
-                    case Piece::Type::Pawn:
-                        addPawnMoves(list, board, col, row, color);
-                        break;
-                    case Piece::Type::King:
-                        addMoves<ALL_DIRECTIONS>(list, board, col, row);
-                        addCastles(list, board, col, row, color);
-                        break;
-                    case Piece::Type::Knight:
-                        addKnightMoves(list, board, col, row);
-                        break;
-                    case Piece::Type::Bishop:
-                        addAllSlidingMoves<LeftUp, RightUp, LeftDown, RightDown>(list, board, col, row);
-                        break;
-                    case Piece::Type::Rook:
-                        addAllSlidingMoves<Up, Left, Right, Down>(list, board, col, row);
-                        break;
-                    case Piece::Type::Queen:
-                        addAllSlidingMoves<ALL_DIRECTIONS>(list, board, col, row);
-                        break;
-                    default:
-                        ASSERT_NOT_REACHED();
-                }
+
+        ASSERT((board.colorPiecesBB[0] | board.colorPiecesBB[1]) == board.piecesBB);
+        ASSERT((board.piecesBB ^ board.colorPiecesBB[0]) == board.colorPiecesBB[1]);
+        ASSERT((board.piecesBB ^ board.colorPiecesBB[1]) == board.colorPiecesBB[0]);
+
+        BitBoard pieces = board.colorBitboard(color);
+        BitBoard them = board.colorBitboard(opposite(color));
+
+        {
+            BitBoard pawns = pieces & board.typeBitboard(Piece::Type::Pawn);
+
+            if (color == Color::White) {
+                generatePawnMoves<Color::White>(pawns, board, list, pieces, them, board.enPassantBB());
+            } else {
+                generatePawnMoves<Color::Black>(pawns, board, list, pieces, them, board.enPassantBB());
             }
+
+            pieces &= ~pawns;
+        }
+
+        while (pieces != 0) {
+            BoardIndex index = popLsb(pieces);
+
+            ASSERT(board.pieceAt(index).has_value());
+            auto piece = board.pieceAt(index).value();
+
+            auto [col, row] = Board::indexToColumnRow(index);
+
+            switch (piece.type()) {
+                case Piece::Type::King:
+                    addMoves<ALL_DIRECTIONS>(list, board, col, row);
+                    addCastles(list, board, col, row, color);
+                    break;
+                case Piece::Type::Knight:
+                    addKnightMoves(list, board, col, row);
+                    break;
+                case Piece::Type::Bishop:
+                    addAllSlidingMoves<LeftUp, RightUp, LeftDown, RightDown>(list, board, col, row);
+                    break;
+                case Piece::Type::Rook:
+                    addAllSlidingMoves<Up, Left, Right, Down>(list, board, col, row);
+                    break;
+                case Piece::Type::Queen:
+                    addAllSlidingMoves<ALL_DIRECTIONS>(list, board, col, row);
+                    break;
+                case Piece::Type::Pawn:
+                default:
+                    ASSERT_NOT_REACHED();
+            }
+
         }
 
         if (list.size() == 0) {
             // add king check to differentiate check and stale mate
             auto [kingCol, kingRow] = board.kingSquare(board.colorToMove());
-            if (attacked(kingCol, kingRow, board)) {
+            if (board.attacked(kingCol, kingRow)) {
                 list.kingAttacked();
             }
         }
