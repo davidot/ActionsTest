@@ -117,7 +117,7 @@ TEST_CASE(ReadMultipleLines) {
 
 TEST_CASE(ReadLineWithSpaces) {
     std::string arg = "This string has spaces!";
-    auto proc = SubProcess::create({testAppLocation, "--write", '"' + arg + '"'});
+    auto proc = SubProcess::create({testAppLocation, "--write", arg});
     EXPECT(proc);
     std::string line;
     EXPECT(proc->readLine(line));

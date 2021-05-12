@@ -143,9 +143,24 @@ namespace util {
         startupInfo.dwFlags |= STARTF_USESTDHANDLES;
 
         ASSERT(!command.empty());
-        std::string fullCommand = std::accumulate(std::next(command.begin()), command.end(), *command.begin(), [](const std::string& acc, const std::string& rhs){
-            return acc + ' ' + rhs;
-        });
+
+        auto quoteIfSpaces = [](const std::string& str) {
+            if (auto space = std::find(str.begin(), str.end(), ' '); space != str.end() &&
+                    str.front() != '"') {
+                return '"' + str + '"';
+            }
+            return str;
+        };
+
+        std::string program = quoteIfSpaces(command.front());
+
+        std::string fullCommand = std::accumulate(std::next(command.begin()), command.end(), program,
+              [&quoteIfSpaces](const std::string& acc, const std::string& rhs){
+                            if (rhs.empty()) {
+                                return acc;
+                            }
+                            return acc + ' ' + quoteIfSpaces(rhs);
+                        });
 
         if (!CreateProcess(nullptr, (LPSTR)fullCommand.c_str(),
                              nullptr, nullptr, true, CREATE_NO_WINDOW, nullptr, nullptr,
