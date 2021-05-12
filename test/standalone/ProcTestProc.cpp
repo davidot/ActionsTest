@@ -58,12 +58,16 @@ int write(const char* str, int times = 1) {
 
 int slow_write(int sleepTime) {
     std::chrono::milliseconds restTime(sleepTime);
-    std::string output = "write\n";
+    std::string output = "write";
 
     for (char c : output) {
-        std::cout << c;
+        for (int i = 0; i < 50; i++) {
+            std::cout << c;
+        }
+        std::cout.flush();
         std::this_thread::sleep_for(restTime);
     }
+    std::cout << std::endl;
     return 0;
 }
 
