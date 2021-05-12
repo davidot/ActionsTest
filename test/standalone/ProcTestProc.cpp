@@ -61,9 +61,7 @@ int slow_write(int sleepTime) {
     std::string output = "write";
 
     for (char c : output) {
-        for (int i = 0; i < 50; i++) {
-            std::cout << c;
-        }
+        std::cout << c;
         std::cout.flush();
         std::this_thread::sleep_for(restTime);
     }

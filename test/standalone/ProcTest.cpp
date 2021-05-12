@@ -214,7 +214,7 @@ TEST_CASE(SlowReadWaitsUntilLine) {
 
     std::string line;
     EXPECT(proc->readLine(line));
-    EXPECT(line.size() >= 150);
+    EXPECT_EQ(line, "write\n");
 
     EXPECT(!proc->readLine(line));
 
