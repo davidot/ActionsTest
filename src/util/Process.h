@@ -5,7 +5,10 @@
 #include <optional>
 #include <memory>
 
-#if !defined(POSIX_PROCESS) && !defined(WINDOWS_PROCESS)
+#ifdef POSIX_PROCESS
+#elif defined(WINDOWS_PROCESS)
+#include <windows.h>
+#else
 #error Must define one of POSIX_PROCESS or WINDOWS_PROCESS
 #endif
 
@@ -30,20 +33,25 @@ namespace util {
     private:
         bool running = true;
 
+        mutable std::vector<char> readBuffer = std::vector<char>(4096lu, '\0');
+        mutable int32_t m_bufferLoc = 0;
+        bool readLineFromBuffer(std::string&) const;
+
 #ifdef POSIX_PROCESS
         pid_t m_procPid;
-
-        mutable std::vector<char> readBuffer = std::vector<char>(4096lu, '\0');
-        mutable ssize_t m_bufferLoc = 0;
 
         int m_stdIn = -1;
         int m_stdOut = -1;
 
         std::optional<int> m_exitCode;
-
-        bool readLineFromBuffer(std::string&) const;
 #elif defined(WINDOWS_PROCESS)
+        HANDLE m_childProc;
 
+        HANDLE m_stdIn;
+        HANDLE m_stdOut;
+
+        // Do not use before stop is called (i.e. running = true)
+        ProcessExit exitState{};
 #endif
     };
 

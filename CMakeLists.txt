@@ -31,6 +31,7 @@ add_library(Actions
         src/chess/players/Game.cpp
 
         src/util/Assertions.cpp
+        src/util/Process_Base.cpp
         src/util/RandomUtil.cpp
         src/util/StringUtil.cpp
         )
