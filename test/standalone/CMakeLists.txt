@@ -9,6 +9,3 @@ add_dependencies(ProcTest ProcTestApp)
 
 add_test(NAME ProcTestTest COMMAND ProcTest $<TARGET_FILE:ProcTestApp>)
 set_tests_properties(ProcTestTest PROPERTIES TIMEOUT 60)
-if(WIN32)
-    set_tests_properties(ProcTestTest PROPERTIES DISABLED True)
-endif()
