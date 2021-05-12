@@ -1,6 +1,7 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <util/Process.h>
 
 using util::SubProcess;
@@ -97,6 +98,16 @@ TEST_CASE(ReadSingleLine) {
 TEST_CASE(ReadNoTextRead) {
     auto proc = SubProcess::create({testAppLocation, "--write"});
     EXPECT(proc);
+
+    EXIT_ZERO();
+}
+
+TEST_CASE(WriteToNoRead) {
+    auto proc = SubProcess::create({testAppLocation, "--write"});
+    EXPECT(proc);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    EXPECT(!proc->writeTo("test\n"));
 
     EXIT_ZERO();
 }
