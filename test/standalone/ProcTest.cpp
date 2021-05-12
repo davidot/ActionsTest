@@ -32,6 +32,7 @@ static std::vector<std::function<void()>> tests;
         if (!TEST_NAME_INTERNAL(name)()) {           \
             passed = false;                          \
             std::cout << "Failed test: " #name "\n"; \
+            std::cerr << "Failed test: " #name "\n"; \
         } else {                                     \
             std::cout << "Test " #name " passed\n";  \
         }                                            \
@@ -43,6 +44,14 @@ static std::vector<std::function<void()>> tests;
 #define EXPECT(expr) \
     if (!(expr)) {   \
         std::cerr << "Expected: " #expr " but failed in" << currentTest << ' ' << __FILE__ << ':' << __LINE__ << '\n'; \
+        return false;\
+    }
+
+#define EXPECT_EQ(lhs, rhs) \
+    if (!((lhs) == (rhs))) {    \
+        std::cerr << "Expected: " #lhs " == " #rhs " in " \
+                  << currentTest << ' ' << __FILE__ << ':' << __LINE__ \
+                  << "\nBut got   _" << (lhs) << "_ != _" << (rhs) << "_\n";\
         return false;\
     }
 
@@ -78,7 +87,7 @@ TEST_CASE(ReadSingleLine) {
     EXPECT(proc);
     std::string line;
     EXPECT(proc->readLine(line));
-    EXPECT(line == "write\n");
+    EXPECT_EQ(line, "write\n");
 
     EXPECT(!proc->readLine(line));
 
@@ -98,7 +107,7 @@ TEST_CASE(ReadMultipleLines) {
     std::string line;
     for (int i = 0; i < 10; ++i) {
         EXPECT(proc->readLine(line));
-        EXPECT(line == "write\n");
+        EXPECT_EQ(line, "write\n");
     }
 
     EXPECT(!proc->readLine(line));
@@ -108,11 +117,11 @@ TEST_CASE(ReadMultipleLines) {
 
 TEST_CASE(ReadLineWithSpaces) {
     std::string arg = "This string has spaces!";
-    auto proc = SubProcess::create({testAppLocation, "--write", arg});
+    auto proc = SubProcess::create({testAppLocation, "--write", '"' + arg + '"'});
     EXPECT(proc);
     std::string line;
     EXPECT(proc->readLine(line));
-    EXPECT(line == arg + "\n");
+    EXPECT_EQ(line, arg + "\n");
 
     EXPECT(!proc->readLine(line));
 
@@ -151,13 +160,29 @@ TEST_CASE(WriteReadLoopWithQuit) {
     EXPECT(proc->writeTo("ping\n"));
     std::string line;
     EXPECT(proc->readLine(line));
-    EXPECT(line == "pong\n");
+    EXPECT_EQ(line, "pong\n");
 
     EXPECT(proc->writeTo("quit\n"));
 
     EXIT_ZERO();
 }
 
+TEST_CASE(MultipleWriteReads) {
+    auto proc = SubProcess::create({testAppLocation, "--continue-until-quit"});
+    EXPECT(proc);
+
+    EXPECT(proc->writeTo("ping\n"));
+    std::string line;
+    EXPECT(proc->readLine(line));
+    EXPECT_EQ(line, "pong\n");
+
+    EXPECT(proc->writeTo("nice\n"));
+
+    EXPECT(proc->readLine(line));
+    EXPECT_EQ(line, "noce\n");
+
+    EXIT_FAILED();
+}
 
 TEST_CASE(WriteReadLoopNoQuit) {
     auto proc = SubProcess::create({testAppLocation, "--continue-until-quit"});
@@ -166,7 +191,7 @@ TEST_CASE(WriteReadLoopNoQuit) {
     EXPECT(proc->writeTo("ping\n"));
     std::string line;
     EXPECT(proc->readLine(line));
-    EXPECT(line == "pong\n");
+    EXPECT_EQ(line, "pong\n");
 
     EXIT_FAILED();
 }
@@ -184,6 +209,18 @@ TEST_CASE(CanReadExitCode) {
     return true;
 }
 
+TEST_CASE(SlowReadWaitsUntilLine) {
+    auto proc = SubProcess::create({testAppLocation, "--slow-write"});
+
+    std::string line;
+    EXPECT(proc->readLine(line));
+    EXPECT_EQ(line, "write\n");
+
+    EXPECT(!proc->readLine(line));
+
+    EXIT_ZERO();
+}
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         std::cout << "Give location of test app\n";
@@ -193,8 +230,20 @@ int main(int argc, char** argv) {
     testAppLocation = argv[1];
     std::cerr << "Test app at: " << argv[1] << std::endl;
 
+    bool failFast = false;
+    if (argc > 2) {
+        std::string flag = argv[2];
+        if (flag == "-f" || flag == "--fail-fast") {
+            failFast = true;
+        }
+    }
+
     for (auto& t : tests) {
         t();
+        if (failFast && !passed) {
+            std::cout << "Stopping at first test failure!\n";
+            break;
+        }
     }
 
     return passed ? 0 : 1;

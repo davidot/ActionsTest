@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <thread>
 
 int read() {
     std::string word;
@@ -55,6 +56,17 @@ int write(const char* str, int times = 1) {
     return 0;
 }
 
+int slow_write(int sleepTime) {
+    std::chrono::milliseconds restTime(sleepTime);
+    std::string output = "write\n";
+
+    for (char c : output) {
+        std::cout << c;
+        std::this_thread::sleep_for(restTime);
+    }
+    return 0;
+}
+
 int argToInt(char* str, int defaultVal) {
     char* end;
     int code = static_cast<int>(strtol(str, &end, 10));
@@ -94,7 +106,13 @@ int main(int argc, char** argv) {
         if (argc > 2) {
             times = argToInt(argv[2], 10);
         }
-        write("write", times);
+        return write("write", times);
+    } else if (arg == "--slow-write") {
+        int sleepTime = 50;
+        if (argc > 2) {
+            sleepTime = argToInt(argv[2], 50);
+        }
+        return slow_write(sleepTime);
     } else {
         std::cerr << "Unknown argument" << argv[2] << '\n';
         return 1;
