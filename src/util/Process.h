@@ -31,7 +31,7 @@ namespace util {
 
         ProcessExit stop();
     private:
-        bool running = true;
+        mutable bool running = true;
 
         mutable std::vector<char> readBuffer = std::vector<char>(4096lu, '\0');
         mutable int32_t m_bufferLoc = 0;

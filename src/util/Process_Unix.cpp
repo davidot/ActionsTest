@@ -1,17 +1,19 @@
 #include "Process.h"
 
 #ifndef POSIX_PROCESS
-#error Only for windows process handling
+#error Only for posix process handling
 #endif
 
 #include "Assertions.h"
 #include "StringUtil.h"
+#include <csignal>
 #include <cstdlib>
+#include <fcntl.h>
+#include <functional>
 #include <iostream>
 #include <string>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 namespace util {
 
@@ -20,12 +22,27 @@ namespace util {
     }
 
     bool SubProcess::writeTo(std::string_view str) const {
+        if (!running) {
+            return false;
+        }
         char const* head = str.data();
         auto toWrite = static_cast<ssize_t>(str.size());
+
+        struct sigaction act{};
+        struct sigaction oldAct{};
+        act.sa_flags = 0;
+        act.sa_handler = SIG_IGN;
+        if (sigaction(SIGPIPE, &act, &oldAct) < 0) {
+            perror("sigaction");
+            return false;
+        }
 
         while (toWrite > 0) {
             ssize_t written = write(m_stdIn, head, toWrite);
             if (written < 0) {
+                if (written == -EPIPE) {
+                    running = false;
+                }
                 perror("write");
                 return false;
             }
@@ -33,22 +50,28 @@ namespace util {
             head += toWrite;
         }
 
+        if (sigaction(SIGPIPE, &oldAct, nullptr) < 0) {
+            perror("sigaction");
+        }
         return true;
     }
 
     bool SubProcess::readLine(std::string& line) const {
-        if (readLineFromBuffer(line)) {
-            return true;
-        }
-
-        ssize_t readBytes = read(m_stdOut, readBuffer.data() + m_bufferLoc, readBuffer.size() - m_bufferLoc);
-        if (readBytes < 0) {
-            perror("read");
+        if (!running) {
             return false;
         }
-        m_bufferLoc += readBytes;
-
-        return readLineFromBuffer(line);
+        while (!readLineFromBuffer(line)) {
+            ssize_t readBytes = read(m_stdOut, readBuffer.data() + m_bufferLoc, readBuffer.size() - m_bufferLoc);
+            if (readBytes < 0) {
+                perror("read");
+                return false;
+            }
+            if (readBytes == 0) {
+                return false;
+            }
+            m_bufferLoc += readBytes;
+        }
+        return true;
     }
 
     SubProcess::ProcessExit SubProcess::stop() {
@@ -149,8 +172,9 @@ namespace util {
                     perror("read");
                     std::cerr << "Read fail!\n";
                 } else {
-                    std::cerr << "Failed to start: " << command[0] << '\n'
-                              << "Got: _" << buf << "_\n";
+                    std::cerr << "Failed to start: " << command[0] << '\n';
+                    std::string response(buf, readStart);
+                    ASSERT(response == "fail");
                 }
 
                 close(startPipe[pipeRead]);
