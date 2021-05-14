@@ -177,7 +177,7 @@ namespace util {
         process->m_stdIn = childStdinWrite;
         process->m_stdOut = childStdoutRead;
         process->m_childProc = childInfo.hProcess;
-        proc->running = true;
+        process->running = true;
 
         return process;
     }
