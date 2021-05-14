@@ -4,6 +4,7 @@
 #include <chess/Types.h>
 #include <chess/Piece.h>
 #include <vector>
+#include <limits>
 
 #ifndef EXTENDED_TESTS
 #define TEST_SOME(x) sample(2, x)

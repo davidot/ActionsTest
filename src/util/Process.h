@@ -1,9 +1,10 @@
 #pragma once
 
-#include <string_view>
 #include <array>
-#include <optional>
 #include <memory>
+#include <optional>
+#include <string_view>
+#include <vector>
 
 #ifdef POSIX_PROCESS
 #elif defined(WINDOWS_PROCESS)
