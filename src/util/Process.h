@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string_view>
-#include <vector>
+#include <array>
 #include <optional>
 #include <memory>
 
@@ -16,6 +16,8 @@ namespace util {
 
     class SubProcess {
     public:
+        constexpr static uint32_t BufferSize = 4096;
+
         ~SubProcess();
 
         static std::unique_ptr<SubProcess> create(std::vector<std::string> command);
@@ -31,14 +33,14 @@ namespace util {
 
         ProcessExit stop();
     private:
-        mutable bool running = true;
+        mutable bool running = false;
 
-        mutable std::vector<char> readBuffer = std::vector<char>(4096lu, '\0');
+        mutable std::array<char, BufferSize> readBuffer{};
         mutable int32_t m_bufferLoc = 0;
         bool readLineFromBuffer(std::string&) const;
 
 #ifdef POSIX_PROCESS
-        pid_t m_procPid;
+        pid_t m_procPid = -1;
 
         int m_stdIn = -1;
         int m_stdOut = -1;

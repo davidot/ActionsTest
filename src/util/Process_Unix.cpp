@@ -181,11 +181,11 @@ namespace util {
 
                 close(inPipe[pipeWrite]);
                 close(outPipe[pipeRead]);
-                proc->running = false;
 
                 return nullptr;
             }
 
+            proc->running = true;
             close(startPipe[pipeRead]);
 
             return proc;
