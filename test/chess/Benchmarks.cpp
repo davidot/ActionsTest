@@ -56,14 +56,23 @@ TEST_CASE("Board FEN parsing", "[fen]" BENCHMARK_TAGS) {
 #undef TEST_FEN
 
 TEST_CASE("MoveGen benchmarks", "[movegen]" BENCHMARK_TAGS) {
-#define TEST_FEN(fen, note)                      \
-    {                                            \
-        auto eb = Board::fromFEN(fen);            \
-        REQUIRE(eb);                              \
-        Board b = eb.extract();\
-        BENCHMARK("Moves from FEN " note) {      \
-            return generateAllMoves(b);          \
-        };                                       \
+#define TEST_FEN(fen, note)                                  \
+    {                                                        \
+        auto eb = Board::fromFEN(fen);                       \
+        REQUIRE(eb);                                         \
+        Board b = eb.extract();                              \
+        BENCHMARK("Moves from FEN " note) {                  \
+            return generateAllMoves(b);                      \
+        };                                                   \
+        auto moves = generateAllMoves(b);                    \
+        BENCHMARK("Move ex. from " note) {                   \
+            return moves.hasMove([&](const Move& move) {     \
+                b.moveExcursion(move, [&](const Board& bb) { \
+                    return bb.colorToMove() == Color::White; \
+                });                                          \
+                return false;                                \
+            });                                              \
+        };                                                   \
     }
 
     {
@@ -106,7 +115,7 @@ TEST_CASE("SAN moves benchmarks", "[san]" BENCHMARK_TAGS) {
         REQUIRE(eb);                                                 \
         Board b = eb.extract();                                      \
                                                                      \
-        BENCHMARK("PGN from FEN " note) {                     \
+        BENCHMARK("PGN from FEN " note) {                            \
             auto moves = generateAllMoves(b);                        \
             int i = 0;                                               \
             moves.forEachMove([&](const Move& move) {                \
