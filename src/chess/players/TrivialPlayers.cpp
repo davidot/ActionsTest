@@ -4,39 +4,6 @@
 
 namespace Chess {
 
-    Move RankingPlayer::pickMove(const Board& board, const MoveList& list) {
-        // TODO somehow log every seed?
-        static std::uniform_int_distribution<uint32_t> fullRangeDist{};
-        static auto rng = util::seedRNG<std::mt19937>();
-
-        ASSERT(list.size() > 0);
-
-        std::vector<RankedMove> ranked(list.size());
-
-        size_t index = 0;
-
-        list.forEachMove([&](Move mv) {
-            RankedMove& rMove = ranked[index];
-            rMove.mv = mv;
-            rMove.random = fullRangeDist(rng);
-            board.moveExcursion(mv, [&](const Board& board) {
-              rMove.ranking = rankMove(mv, board);
-            });
-            ++index;
-        });
-
-        auto best = std::max_element(ranked.begin(), ranked.end());
-        ASSERT(best != ranked.end());
-        return best->mv;
-    }
-
-    bool RankingPlayer::RankedMove::operator<(const RankingPlayer::RankedMove& rhs) const {
-        if (ranking == rhs.ranking) {
-            return random < rhs.random;
-        }
-        return ranking < rhs.ranking;
-    }
-
     Move IndexPlayer::pickMove(const Board& board, const MoveList& list) {
         ASSERT(list.size() > 0);
         size_t moveIndex = index(board, list);
@@ -60,8 +27,7 @@ namespace Chess {
     }
 
     size_t RandomPlayer::index(const Board&, const MoveList& list) {
-        static auto rng = util::seedRNG<std::mt19937>();
-        return std::uniform_int_distribution<size_t>(0, list.size() - 1)(rng);
+        return randomInt(list.size() - 1);
     }
 
     size_t ConstIndexPlayer::index(const Board&, const MoveList& list) {
@@ -90,24 +56,15 @@ namespace Chess {
         return make_stateless<LeastOpponentMoves>();
     }
 
-    int32_t LeastOpponentMoves::rankMove(Move, const Board &board) {
-        MoveList list = generateAllMoves(board);
-        if (list.size() > 0) {
-            ASSERT(list.size() < 512);
-            return int32_t(list.size());
-        }
-
-        // prefer checkmate over stalemate
-        if (list.isCheckMate()) {
-            return -1;
-        }
-        ASSERT(list.isStaleMate());
-        // This does still prefer stale mate over moves left but that is the point
-        return 0;
+    std::unique_ptr<Player> maxOpponentMoves() {
+        return make_stateless<MostOpponentMoves>();
     }
 
-    std::string LeastOpponentMoves::name() const {
-        return "Least opponent moves";
+    uint32_t randomInt(uint32_t upperBound, uint32_t lowerBound) {
+        static std::string seed = "";
+        static auto rng = util::seedRNGFromString<std::mt19937>(seed, 64).value();
+
+        return std::uniform_int_distribution<uint32_t>(lowerBound, upperBound)(rng);
     }
 }
 
