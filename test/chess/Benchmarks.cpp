@@ -380,25 +380,118 @@ TEST_CASE("Perft benchmarks", "[perft][moving]" BENCHMARK_TAGS) {
 
 TEST_CASE("Game benchmarks", "[moving][game]" BENCHMARK_TAGS) {
 
-    auto minOpp = Chess::minOpponentMoves();
-#ifdef LONG_BENCHMARKS
-    BENCHMARK("Play minOpp v minOpp") {
-        return Chess::playGame(minOpp, minOpp);
+    std::vector<std::tuple<Board, MoveList, Move>> whiteMoves;
+    std::vector<std::tuple<Board, MoveList, Move>> blackMoves;
+
+    whiteMoves.reserve(128);
+    blackMoves.reserve(128);
+
+    auto random = Chess::randomPlayer();
+
+    {
+        Board currentBoard = Board::standardBoard();
+        auto whitePlayer = random->startGame(Color::White);
+        auto blackPlayer = random->startGame(Color::Black);
+        auto* thinkState = &whiteMoves;
+        auto* nextPlayer = whitePlayer.get();
+        MoveList list = generateAllMoves(currentBoard);
+        while (list.size() > 0 && !currentBoard.isDrawn() && currentBoard.fullMoves() < 129) {
+
+            Move nextMove = nextPlayer->pickMove(currentBoard, list);
+
+            thinkState->emplace_back(currentBoard, list, nextMove);
+
+
+            currentBoard.makeMove(nextMove);
+
+            // We know that random is stateless so do not even need to inform it of the move
+
+            list = generateAllMoves(currentBoard);
+            thinkState = currentBoard.colorToMove() == Color::White ? &whiteMoves : &blackMoves;
+            nextPlayer = currentBoard.colorToMove() == Color::White ? whitePlayer.get() : blackPlayer.get();
+        }
+
+        REQUIRE(whiteMoves.size() < 129);
+        REQUIRE(blackMoves.size() < 129);
+        WARN("Game has " << whiteMoves.size() << " white moves");
+        WARN("Game has " << blackMoves.size() << " black moves");
+        WARN("Final FEN: " << currentBoard.toFEN());
+
+    }
+
+    whiteMoves.shrink_to_fit();
+    blackMoves.shrink_to_fit();
+
+    auto playMoves = [&](auto& player) {
+        std::array<Move, 256> madeMoves;
+        auto whitePlayer = player->startGame(Color::White);
+        auto blackPlayer = player->startGame(Color::Black);
+        for (int i = 0; i < blackMoves.size(); i++) {
+            auto& wState = whiteMoves[i];
+
+            [[maybe_unused]] Move wMove = whitePlayer->pickMove(std::get<Board>(wState), std::get<MoveList>(wState));
+            madeMoves[i * 2] = wMove;
+
+            auto& bState = blackMoves[i];
+            whitePlayer->movePlayed(std::get<Move>(wState), std::get<Board>(bState));
+            blackPlayer->movePlayed(std::get<Move>(wState), std::get<Board>(bState));
+
+            [[maybe_unused]] Move bMove = blackPlayer->pickMove(std::get<Board>(bState), std::get<MoveList>(bState));
+            madeMoves[i * 2 + 1] = bMove;
+
+            if (i == blackMoves.size() - 1) {
+                if (whiteMoves.size() > blackMoves.size()) {
+                    // white move follows
+                    auto& nextWState = whiteMoves[i + 1];
+
+                    whitePlayer->movePlayed(std::get<Move>(bState), std::get<Board>(nextWState));
+                    blackPlayer->movePlayed(std::get<Move>(bState), std::get<Board>(nextWState));
+
+                    [[maybe_unused]] Move wMove2 = whitePlayer->pickMove(std::get<Board>(nextWState), std::get<MoveList>(nextWState));
+
+                }
+            } else {
+                auto& nextWState = whiteMoves[i + 1];
+                whitePlayer->movePlayed(std::get<Move>(bState), std::get<Board>(nextWState));
+                blackPlayer->movePlayed(std::get<Move>(bState), std::get<Board>(nextWState));
+            }
+        }
+//        std::cout << "Moves [" << madeMoves[0].toSANSquares() << ','
+//                  << madeMoves[1].toSANSquares() << ','
+//                  << madeMoves[5].toSANSquares() << ','
+//                  << madeMoves[6].toSANSquares() << "]\n";
+        return madeMoves;
     };
-#endif
 
-    auto randPlayer = Chess::randomPlayer();
 
-    BENCHMARK("Play rand vs minOpp") {
-        return Chess::playGame(randPlayer, minOpp);
-    };
+#define PLAY_MOVES(player) \
+    BENCHMARK("Move calculation by " #player) { \
+        return playMoves(player);                       \
+    }
 
-    BENCHMARK("Play minOpp vs rand") {
-        return Chess::playGame(minOpp, randPlayer);
-    };
+    PLAY_MOVES(random);
 
-    BENCHMARK("Play rand vs rand") {
-        return Chess::playGame(randPlayer, randPlayer);
-    };
+    auto minMoves = Chess::minOpponentMoves();
+    PLAY_MOVES(minMoves);
 
+    auto maxMoves = Chess::maxOpponentMoves();
+    PLAY_MOVES(maxMoves);
+
+    auto lexicographic = Chess::lexicographically();
+    PLAY_MOVES(lexicographic);
+
+    auto alphabetical = Chess::alphabetically();
+    PLAY_MOVES(alphabetical);
+
+    auto descAlphabet = Chess::alphabetically(false);
+    PLAY_MOVES(descAlphabet);
+
+    auto constIndex = Chess::indexPlayer(1);
+    PLAY_MOVES(constIndex);
+
+    auto minConstIndex = Chess::indexPlayer(-1);
+    PLAY_MOVES(minConstIndex);
+
+    auto negating = Chess::indexOp();
+    PLAY_MOVES(negating);
 }
