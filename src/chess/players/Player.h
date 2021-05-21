@@ -51,6 +51,8 @@ namespace Chess {
         [[nodiscard]] virtual std::unique_ptr<PlayerGameState> startGame(Color) const = 0;
 
         [[nodiscard]] virtual std::string name() const = 0;
+
+        [[nodiscard]] virtual bool isDeterministic() const = 0;
     };
 
     class StatelessPlayer {
@@ -60,6 +62,8 @@ namespace Chess {
         [[nodiscard]] virtual Move pickMove(const Board& board, const MoveList& list) = 0;
 
         [[nodiscard]] virtual std::string name() const = 0;
+
+        [[nodiscard]] virtual bool isDeterministic() const = 0;
     };
 
 
@@ -82,12 +86,16 @@ namespace Chess {
     template<typename P>
     class StatelessWrapper final : public Player {
     public:
-        std::unique_ptr<PlayerGameState> startGame(Color) const final {
+        [[nodiscard]] std::unique_ptr<PlayerGameState> startGame(Color) const final {
             return std::make_unique<StatelessState>(*m_player);
         }
 
-        std::string name() const final {
+        [[nodiscard]] std::string name() const final {
             return m_player->name();
+        }
+
+        [[nodiscard]] bool isDeterministic() const override {
+            return m_player->isDeterministic();
         }
 
         template<typename ...Args>
