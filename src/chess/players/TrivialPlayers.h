@@ -20,6 +20,10 @@ namespace Chess {
     public:
         virtual R rankMove(Move mv, const Board& board) = 0;
 
+        bool isDeterministic() const override {
+            return true;
+        }
+
     private:
         struct RankedMove {
             Move mv;
@@ -42,11 +46,10 @@ namespace Chess {
             size_t index = 0;
 
             list.forEachMove([&](Move mv) {
-              RankedMove& rMove = ranked[index];
-              rMove.mv = mv;
-              board.moveExcursion(mv, [&](const Board& board) {
-                rMove.ranking = rankMove(mv, board);
-              });
+              ranked[index] = {
+                  mv,
+                  rankMove(mv, board)
+              };
               ++index;
             });
 
@@ -73,16 +76,22 @@ namespace Chess {
     uint32_t randomInt(uint32_t upperBound = std::numeric_limits<uint32_t>::max(), uint32_t lowerBound = 0);
 
     template<Ranking R, typename Compare = std::less<>>
-    class TieBreakingRankingPlayer : public RankingPlayer<RankingWithRandom<R, Compare>> {
+    class EvaluateAfterMovePlayer : public RankingPlayer<RankingWithRandom<R, Compare>> {
     public:
         RankingWithRandom<R, Compare> rankMove(Move mv, const Board& board) override {
             return {
-                ranking(mv, board),
+                board.moveExcursion(mv, [&](const Board& postMoveBoard) {
+                    return ranking(mv, postMoveBoard);
+                }),
                 randomInt()
             };
         }
 
         virtual R ranking(Move mv, const Board& board) = 0;
+
+        bool isDeterministic() const override {
+            return false;
+        }
     };
 
     template<bool Ascending>
@@ -96,7 +105,7 @@ namespace Chess {
                                             std::pair<BoardIndex, BoardIndex>,
                                             Ordering<Ascending>> {
     public:
-        std::pair<BoardIndex, BoardIndex> rankMove(Move mv, const Board& board) final {
+        std::pair<BoardIndex, BoardIndex> rankMove(Move mv, const Board&) final {
             if constexpr (FromFirst) {
                 return std::make_pair(BoardIndex{mv.fromPosition}, BoardIndex{mv.toPosition});
             }
@@ -119,11 +128,25 @@ namespace Chess {
         }
     };
 
+    template<bool Ascending = true>
+    class PGNAlphabeticallyPlayer : public RankingPlayer<std::string, Ordering<Ascending>> {
+    public:
+        std::string name() const override {
+            return std::string("PGN") + (Ascending ? "AFirst" : "ZFirst");
+        }
+        std::string rankMove(Move mv, const Board& board) override {
+            return board.moveToSAN(mv);
+        }
+    };
+
+
     class IndexPlayer : public StatelessPlayer {
     public:
         Move pickMove(const Board& board, const MoveList& list) final;
 
         virtual size_t index(const Board& board, const MoveList& list) = 0;
+
+        bool isDeterministic() const override;
     };
 
     class RandomPlayer : public IndexPlayer {
@@ -145,7 +168,7 @@ namespace Chess {
     };
 
     template<bool Least>
-    class CountOpponentMoves : public TieBreakingRankingPlayer<int32_t, Ordering<Least>> {
+    class CountOpponentMoves : public EvaluateAfterMovePlayer<int32_t, Ordering<Least>> {
     public:
         int32_t ranking(Move, const Board &board) final {
             MoveList list = generateAllMoves(board);
@@ -166,6 +189,34 @@ namespace Chess {
         }
     };
 
+    class ProgressiveIndexPlayer : public Player {
+    public:
+        struct ProgressiveIndexPlayerState : public PlayerGameState {
+            explicit ProgressiveIndexPlayerState(const std::function<int32_t(int32_t)>& operation, Color us, int32_t val);
+
+            Move pickMove(const Board& board, const MoveList& list) override;
+
+            void movePlayed(Move move, const Board& board) override;
+        private:
+            int32_t val = 0;
+            const std::function<int32_t(int32_t)>& operation;
+            Color me;
+        };
+
+        std::unique_ptr<PlayerGameState> startGame(Color color) const override;
+        std::string name() const override;
+        bool isDeterministic() const override {
+            return true;
+        }
+
+        ProgressiveIndexPlayer(std::string baseName, std::function<int32_t(int32_t)> mOperation, int32_t mStartVal = 0);
+
+    private:
+        std::string baseName;
+        int32_t m_startVal;
+        std::function<int32_t(int32_t)> m_operation;
+    };
+
     using LeastOpponentMoves = CountOpponentMoves<true>;
     using MostOpponentMoves = CountOpponentMoves<false>;
 
@@ -176,5 +227,11 @@ namespace Chess {
     std::unique_ptr<Player> minOpponentMoves();
 
     std::unique_ptr<Player> maxOpponentMoves();
+
+    std::unique_ptr<Player> lexicographically(bool ascending = true, bool from = true);
+
+    std::unique_ptr<Player> alphabetically(bool ascending = true);
+
+    std::unique_ptr<Player> indexOp();
 
 }
