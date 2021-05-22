@@ -6,6 +6,7 @@
 #include <iostream>
 #include <cstdint>
 #include <random>
+#include <functional>
 
 namespace Chess {
 
