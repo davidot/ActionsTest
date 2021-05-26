@@ -1,4 +1,5 @@
 #include "Process.h"
+#include <algorithm>
 
 namespace util {
     bool SubProcess::readLineFromBuffer(std::string& line) const {

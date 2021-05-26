@@ -5,6 +5,7 @@
 #include <catch2/generators/catch_generators_adapters.hpp>
 #include <chess/Board.h>
 #include <set>
+#include <algorithm>
 
 using namespace Chess;
 
