@@ -26,6 +26,11 @@ jobs:
             os-base: 'windows',
           }
           - {
+            compiler: g++,
+            os: windows-latest,
+            os-base: 'windows-mingw'
+          }
+          - {
             compiler: clang++,
             os: macos-latest,
             os-base: 'mac',
@@ -111,7 +116,7 @@ jobs:
           brew install ninja
 
       - name: Configure MSVC console (Windows)
-        if: startsWith(matrix.config.os, 'windows')
+        if: startsWith(matrix.config.os, 'windows') && !contains(matrix.config.os, 'mingw')
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Make build folder
