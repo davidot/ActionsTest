@@ -9,11 +9,15 @@
 #include <functional>
 
 namespace Chess {
-
+#ifdef __MINGW32__
+#warning Beyond dangerous macro!!
+#define Ranking typename
+#else
     template<typename T>
     concept Ranking = requires(T r) {
         r < r;
     };
+#endif
 
     // Note you cannot have ties!
     template<Ranking R, typename Compare = std::less<>>
