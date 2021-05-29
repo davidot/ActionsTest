@@ -41,7 +41,8 @@ namespace Chess {
 
         virtual Move pickMove(const Board& board, const MoveList& list) = 0;
 
-        virtual void movePlayed(Move move, const Board& board) = 0;
+        virtual void movePlayed(Move move, const Board& board) {
+        };
     };
 
     class Player {
@@ -71,9 +72,6 @@ namespace Chess {
     public:
         Move pickMove(const Board& board, const MoveList& list) override {
             return m_plr.pickMove(board, list);
-        }
-
-        void movePlayed(Move, const Board&) override {
         }
 
         explicit StatelessState(StatelessPlayer& plr) : m_plr(plr) {
