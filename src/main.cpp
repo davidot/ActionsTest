@@ -3,6 +3,7 @@
 #include <chess/Board.h>
 #include <chess/MoveGen.h>
 #include <chess/players/Game.h>
+#include <chess/players/Stockfish.h>
 #include <chess/players/TrivialPlayers.h>
 #include <cstddef>
 #include <iostream>
@@ -37,6 +38,21 @@ int main(int argc, char** argv) {
 //            }
 //        }
 //    }
+
+    bool hasStockfish = false;
+
+    if (hasStockfish) {
+        auto stockfish = Chess::Stockfish(Chess::Stockfish::SearchLimit::nodes(1000000));
+        std::cout << "Stockfish started!\n";
+        Chess::Board board = Chess::Board::standardBoard();
+        board = Chess::Board::fromFEN("1k3rr1/3q3p/R2N4/1p6/1P2Q3/8/P1P2PPP/1K6 w - - 2 40").value();
+        std::cout << "Board created!\n";
+        auto res = stockfish.bestMove(board);
+        std::cout << "Got best move: " << res.bestMove << '\n';
+
+        return 0;
+    }
+
 
     auto minOpp = Chess::minOpponentMoves();
     auto maxOpp = Chess::maxOpponentMoves();
