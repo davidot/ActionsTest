@@ -29,6 +29,8 @@ add_library(Actions
         src/chess/SAN.cpp
         src/chess/players/TrivialPlayers.cpp
         src/chess/players/Game.cpp
+        src/chess/players/StockfishPlayer.cpp
+        src/chess/players/Stockfish.cpp
 
         src/util/Assertions.cpp
         src/util/Process_Base.cpp
