@@ -6,9 +6,15 @@
 #include "../../util/StringUtil.h"
 #include "../Board.h"
 
+//#define STOCKFISH_DEBUG
+#ifdef STOCKFISH_DEBUG
 #define READ_LINE(line) std::cout << "Stockfish -> " << line
 
 #define WRITE_LINE(line) std::cout << "Stockfish <- " << line
+#else
+#define READ_LINE(line)
+#define WRITE_LINE(line)
+#endif
 
 namespace Chess {
 
@@ -61,23 +67,28 @@ namespace Chess {
         }
 
         ASSERT(line.find("bestmove") != std::string::npos);
+        ASSERT(line.back() == '\n');
+        line.pop_back();
 
         auto parts = util::split(line, " ");
-        ASSERT(parts.size() == 4);
+        ASSERT(parts.size() >= 2);
         auto bestMove = parts[1];
 
         // TODO: extract score
-        std::cout << "Got move: " << bestMove << " and score: \n" << lastInfo;
+//        std::cout << "Got move: " << bestMove << " and score: \n" << lastInfo;
+
+        std::cout << "Bestmove line: " << line << '\n';
 
         return {
             std::string(bestMove),
         };
     }
 
-    static constexpr const char* STOCKFISH_LOCATION = "./stockfish";
+    static constexpr const char* STOCKFISH_LOCATION = "stockfish.exe";
 
     Stockfish::Stockfish(Stockfish::SearchLimit limit, int difficulty) {
         m_proc = util::SubProcess::create({STOCKFISH_LOCATION});
+        // TODO: maybe wrap in factory to ensure it started properly?
         ASSERT(m_proc);
 
         WRITE_LINE("uci\n");

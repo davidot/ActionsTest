@@ -4,6 +4,7 @@
 #include "Stockfish.h"
 
 namespace Chess {
+
     class StockfishPlayer : public Player {
     public:
         std::unique_ptr<PlayerGameState> startGame(Color color) const override;
@@ -11,14 +12,19 @@ namespace Chess {
         bool isDeterministic() const override;
 
         struct StockfishGame : public PlayerGameState {
-            Stockfish m_fish;
+            Move pickMove(const Board &board, const MoveList &list) override;
+
+            explicit StockfishGame(Stockfish::SearchLimit limit, int difficulty);
+        private:
+            Stockfish stockfish;
         };
 
-        StockfishPlayer(Stockfish::SearchLimit limit);
+        explicit StockfishPlayer(Stockfish::SearchLimit limit, int difficulty = 20);
     private:
-        void startProcess();
-
         Stockfish::SearchLimit m_limit;
+        int m_difficulty;
 
     };
+
+    std::unique_ptr<Player> stockfish(Stockfish::SearchLimit limit, int difficulty = 20);
 }
