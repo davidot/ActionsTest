@@ -740,3 +740,39 @@ TEST_CASE("SAN move parsing", "[chess][parsing][san][move]") {
     }
 
 }
+
+TEST_CASE("Long Move format", "[chess][san][parsing]") {
+
+#define MOVE_HAS_NAME(move, str) \
+    REQUIRE((move).toSANSquares() == str)
+
+    SECTION("Basic move correctness") {
+#define SIMPLE_MOVE(from, to) \
+        MOVE_HAS_NAME(Move(from, to), from to)
+        SIMPLE_MOVE("a1", "a2");
+        SIMPLE_MOVE("b1", "a2");
+        SIMPLE_MOVE("d1", "a7");
+        SIMPLE_MOVE("e1", "e5");
+        SIMPLE_MOVE("e2", "e4");
+    }
+
+    SECTION("Castling") {
+        Color c = GENERATE(Color::White, Color::Black);
+        std::string row = c == Color::White ? "1" : "8";
+        MOVE_HAS_NAME(Move(Board::kingCol, Board::homeRow(c), Board::queenSideRookCol, Board::homeRow(c), Move::Flag::Castling), "e" + row + "c" + row);
+        MOVE_HAS_NAME(Move(Board::kingCol, Board::homeRow(c), Board::kingSideRookCol, Board::homeRow(c), Move::Flag::Castling), "e" + row + "g" + row);
+    }
+
+    SECTION("Promotion") {
+        Color c = GENERATE(Color::White, Color::Black);
+        char col = GENERATE(TEST_SOME(range('a', char('h' + 1))));
+        std::string from = col + std::to_string(Board::pawnHomeRow(opposite(c)) + 1);
+        std::string to = col + std::to_string(Board::homeRow(opposite(c)) + 1);
+
+        MOVE_HAS_NAME(Move(from, to, Move::Flag::PromotionToQueen), from + to + "q");
+        MOVE_HAS_NAME(Move(from, to, Move::Flag::PromotionToBishop), from + to + "b");
+        MOVE_HAS_NAME(Move(from, to, Move::Flag::PromotionToKnight), from + to + "n");
+        MOVE_HAS_NAME(Move(from, to, Move::Flag::PromotionToRook), from + to + "r");
+    }
+
+}

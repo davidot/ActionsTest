@@ -72,7 +72,7 @@ namespace Chess {
             }
             return Board::indexToSAN(fromPosition) + to;
         } else if (isPromotion()) {
-            return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition) + Piece{promotedType(), Color::White}.toFEN();
+            return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition) + Piece{promotedType(), Color::Black}.toFEN();
         } else if (fromPosition == toPosition) {
             return "-";
         }
