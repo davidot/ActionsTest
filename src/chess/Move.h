@@ -19,7 +19,7 @@ namespace Chess {
             PromotionToQueen = 7
         };
 
-        BoardIndex toPosition: 6;
+        BoardIndex toPosition : 6;
         BoardIndex fromPosition : 6;
 
         Flag flag : 3;
@@ -44,5 +44,9 @@ namespace Chess {
         bool operator!=(const Move& rhs) const;
 
         [[nodiscard]] std::string toSANSquares() const;
+
+        static Move fromSANSquares(std::string_view vw, const Board& board);
+
+        static Move::Flag promotionFromType(Piece::Type);
     };
 }

@@ -231,22 +231,7 @@ namespace Chess {
             ASSERT(sv.size() >= 4);
             // it is a promotion
             Piece::Type tp = parseTypeChar(sv[sv.size() - 1]);
-            switch (tp) {
-                case Piece::Type::Queen:
-                    flag = Move::Flag::PromotionToQueen;
-                    break;
-                case Piece::Type::Knight:
-                    flag = Move::Flag::PromotionToKnight;
-                    break;
-                case Piece::Type::Bishop:
-                    flag = Move::Flag::PromotionToBishop;
-                    break;
-                case Piece::Type::Rook:
-                    flag = Move::Flag::PromotionToRook;
-                    break;
-                default:
-                    ASSERT_NOT_REACHED();
-            }
+            flag = Move::promotionFromType(tp);
             sv.remove_suffix(2);
         }
 
