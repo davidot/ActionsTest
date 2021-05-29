@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include <util/RandomUtil.h>
+#include <chess/players/StockfishPlayer.h>
 
 int main(int argc, char** argv) {
     int status = 0;
@@ -39,16 +40,22 @@ int main(int argc, char** argv) {
 //        }
 //    }
 
+    auto playGame = [](auto& white, auto& black) {
+        auto result = Chess::playGame(white, black);
+        std::cout << white->name() << " vs " << black->name() << "\n"
+                  << result.stringifyResult() << '\n'
+                  << "PGN: " << result.pgn << "\n\n";
+        return result;
+    };
+
     bool hasStockfish = false;
 
     if (hasStockfish) {
-        auto stockfish = Chess::Stockfish(Chess::Stockfish::SearchLimit::nodes(1000000));
-        std::cout << "Stockfish started!\n";
-        Chess::Board board = Chess::Board::standardBoard();
-        board = Chess::Board::fromFEN("1k3rr1/3q3p/R2N4/1p6/1P2Q3/8/P1P2PPP/1K6 w - - 2 40").value();
-        std::cout << "Board created!\n";
-        auto res = stockfish.bestMove(board);
-        std::cout << "Got best move: " << res.bestMove << '\n';
+        auto limit = Chess::Stockfish::SearchLimit::nodes(1000000);
+        auto stockfishBad = Chess::stockfish(limit, 0);
+        auto stockfishGood = Chess::stockfish(limit, 20);
+        playGame(stockfishGood, stockfishBad);
+        playGame(stockfishBad, stockfishGood);
 
         return 0;
     }
@@ -63,16 +70,6 @@ int main(int argc, char** argv) {
     auto alpha = Chess::alphabetically(true);
     auto alphaR = Chess::alphabetically(false);
     auto rand = Chess::randomPlayer();
-
-
-    auto playGame = [](auto& white, auto& black) {
-        auto result = Chess::playGame(white, black);
-        std::cout << white->name() << " vs " << black->name() << "\n"
-                  << result.stringifyResult() << '\n'
-                  << "PGN: " << result.pgn << "\n\n";
-        return result;
-    };
-
 
 //    playGame(minOpp, minOpp);
 //    playGame(maxOpp, minOpp);
