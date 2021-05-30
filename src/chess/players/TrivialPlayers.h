@@ -7,22 +7,22 @@
 #include <cstdint>
 #include <random>
 #include <functional>
-//#include <version>
 
 
 namespace Chess {
-#ifdef __cpp_concepts
+#if defined(__cpp_concepts)
     template<typename T>
     concept Ranking = requires(T r) {
         r < r;
     };
+#define RANKING_CONCEPT_IMPL Ranking
 #else
-#warning Beyond dangerous macro!!
-#define Ranking typename
+#warning No concepts using ugly macro to fake!
+#define RANKING_CONCEPT_IMPL typename
 #endif
 
     // Note you cannot have ties!
-    template<Ranking R, typename Compare = std::less<>>
+    template<RANKING_CONCEPT_IMPL R, typename Compare = std::less<>>
     class RankingPlayer : public StatelessPlayer {
     public:
         virtual R rankMove(Move mv, const Board& board) = 0;
@@ -65,7 +65,7 @@ namespace Chess {
         }
     };
 
-    template<Ranking R, typename Compare = std::less<>>
+    template<RANKING_CONCEPT_IMPL R, typename Compare = std::less<>>
     struct RankingWithRandom {
         R ranking;
         uint32_t random;
@@ -82,7 +82,7 @@ namespace Chess {
 
     uint32_t randomInt(uint32_t upperBound = std::numeric_limits<uint32_t>::max(), uint32_t lowerBound = 0);
 
-    template<Ranking R, typename Compare = std::less<>>
+    template<RANKING_CONCEPT_IMPL R, typename Compare = std::less<>>
     class EvaluateAfterMovePlayer : public RankingPlayer<RankingWithRandom<R, Compare>> {
     public:
         RankingWithRandom<R, Compare> rankMove(Move mv, const Board& board) override {
