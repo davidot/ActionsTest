@@ -7,16 +7,18 @@
 #include <cstdint>
 #include <random>
 #include <functional>
+//#include <version>
+
 
 namespace Chess {
-#ifdef __MINGW32__
-#warning Beyond dangerous macro!!
-#define Ranking typename
-#else
+#ifdef __cpp_concepts
     template<typename T>
     concept Ranking = requires(T r) {
         r < r;
     };
+#else
+#warning Beyond dangerous macro!!
+#define Ranking typename
 #endif
 
     // Note you cannot have ties!
