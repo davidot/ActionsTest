@@ -1,7 +1,7 @@
-#include <sstream>
 #include "Game.h"
 #include "../../util/Assertions.h"
 #include "../MoveGen.h"
+#include <sstream>
 
 namespace Chess {
 
@@ -73,8 +73,8 @@ namespace Chess {
         return result;
     }
 
-    GameResult playGame(const std::unique_ptr<Player> &white,
-                               const std::unique_ptr<Player> &black) {
+    GameResult playGame(const std::unique_ptr<Player>& white,
+                        const std::unique_ptr<Player>& black) {
         return playGame(white.get(), black.get());
     }
 
@@ -119,4 +119,4 @@ namespace Chess {
         }
     }
 
-}
+}// namespace Chess

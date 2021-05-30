@@ -3,8 +3,8 @@
 #include "../Board.h"
 #include "../Move.h"
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace Chess {
 
@@ -25,7 +25,6 @@ namespace Chess {
         };
 
         virtual void outputMoveListRanking(std::vector<ExplainedMove>) = 0;
-
     };
 
     class NullExplainer : Explainer {
@@ -34,15 +33,13 @@ namespace Chess {
         }
     };
 
-
     class PlayerGameState {
     public:
         virtual ~PlayerGameState() = default;
 
         virtual Move pickMove(const Board& board, const MoveList& list) = 0;
 
-        virtual void movePlayed(Move move, const Board& board) {
-        };
+        virtual void movePlayed(Move move, const Board& board){};
     };
 
     class Player {
@@ -66,7 +63,6 @@ namespace Chess {
 
         [[nodiscard]] virtual bool isDeterministic() const = 0;
     };
-
 
     class StatelessState : public PlayerGameState {
     public:
@@ -96,18 +92,17 @@ namespace Chess {
             return m_player->isDeterministic();
         }
 
-        template<typename ...Args>
+        template<typename... Args>
         explicit StatelessWrapper(Args... args) : m_player(std::make_unique<P>(std::forward<Args>(args)...)) {
         }
+
     private:
         std::unique_ptr<StatelessPlayer> m_player;
     };
 
-
-    template<typename T, typename ...Args>
+    template<typename T, typename... Args>
     static std::unique_ptr<Player> make_stateless(Args... args) {
         return std::make_unique<StatelessWrapper<T>>(std::forward<Args>(args)...);
     }
 
-
-}
+}// namespace Chess

@@ -46,9 +46,8 @@ namespace Chess {
         return {LimitType::Depth, depth};
     }
 
-    Stockfish::SearchLimit::SearchLimit(Stockfish::SearchLimit::LimitType tp, uint32_t val) :
-            val(val),
-            type(tp) {
+    Stockfish::SearchLimit::SearchLimit(Stockfish::SearchLimit::LimitType tp, uint32_t val) : val(val),
+                                                                                              type(tp) {
     }
 
     Stockfish::MoveResult Stockfish::bestMove(const Board& board) const {
@@ -75,12 +74,12 @@ namespace Chess {
         auto bestMove = parts[1];
 
         // TODO: extract score
-//        std::cout << "Got move: " << bestMove << " and score: \n" << lastInfo;
+        //        std::cout << "Got move: " << bestMove << " and score: \n" << lastInfo;
 
         std::cout << "Bestmove line: " << line << '\n';
 
         return {
-            std::string(bestMove),
+                std::string(bestMove),
         };
     }
 
@@ -115,4 +114,4 @@ namespace Chess {
 
     Stockfish::~Stockfish() = default;
 
-}
+}// namespace Chess

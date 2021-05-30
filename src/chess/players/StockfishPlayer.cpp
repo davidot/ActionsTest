@@ -1,7 +1,7 @@
-#include <iostream>
 #include "StockfishPlayer.h"
-#include "../MoveGen.h"
 #include "../../util/Assertions.h"
+#include "../MoveGen.h"
+#include <iostream>
 
 namespace Chess {
 
@@ -18,7 +18,7 @@ namespace Chess {
     }
 
 
-    Move StockfishPlayer::StockfishGame::pickMove(const Board &board, const MoveList &list) {
+    Move StockfishPlayer::StockfishGame::pickMove(const Board& board, const MoveList& list) {
         auto result = stockfish.bestMove(board);
         Move mv;
         list.hasMove([&mv, &bestMove = result.bestMove](const Move& move) {
@@ -43,5 +43,4 @@ namespace Chess {
     std::unique_ptr<Player> stockfish(Stockfish::SearchLimit limit, int difficulty) {
         return std::make_unique<StockfishPlayer>(limit, difficulty);
     }
-}
-
+}// namespace Chess

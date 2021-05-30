@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory>
 #include "Player.h"
+#include <memory>
 
 namespace Chess {
 
@@ -38,4 +38,4 @@ namespace Chess {
 
     GameResult playGame(const std::unique_ptr<Player>& white, const std::unique_ptr<Player>& black);
 
-}
+}// namespace Chess

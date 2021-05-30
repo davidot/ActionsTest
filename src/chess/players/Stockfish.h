@@ -2,8 +2,8 @@
 
 #include "../Move.h"
 #include "../Types.h"
-#include <string>
 #include <memory>
+#include <string>
 
 namespace util {
     class SubProcess;
@@ -44,9 +44,9 @@ namespace Chess {
         explicit Stockfish(SearchLimit limit, int difficulty = 20);
 
         ~Stockfish();
+
     private:
         std::string m_limitedGo;
         std::unique_ptr<util::SubProcess> m_proc;
-
     };
-}
+}// namespace Chess
