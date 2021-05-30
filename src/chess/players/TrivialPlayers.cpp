@@ -1,6 +1,5 @@
 #include "TrivialPlayers.h"
 #include "../../util/Assertions.h"
-#include "../MoveGen.h"
 
 namespace Chess {
 
@@ -10,10 +9,10 @@ namespace Chess {
         Move mv;
 
         list.forEachMove([&, i = 0u](const Move& move) mutable {
-          if (index == i) {
-              mv = move;
-          }
-          ++i;
+            if (index == i) {
+                mv = move;
+            }
+            ++i;
         });
 
         ASSERT(mv.fromPosition != mv.toPosition);
@@ -112,7 +111,7 @@ namespace Chess {
     }
 
     ProgressiveIndexPlayer::ProgressiveIndexPlayerState::ProgressiveIndexPlayerState(
-           const std::function<int32_t(int32_t)>& operation, Color us, int32_t val)
+            const std::function<int32_t(int32_t)>& operation, Color us, int32_t val)
         : val(val),
           operation(operation),
           me(us) {
@@ -130,9 +129,10 @@ namespace Chess {
     }
 
     std::unique_ptr<Player> indexOp() {
-        return std::make_unique<ProgressiveIndexPlayer>("Negated", [](int32_t i) {
-            return -i;
-        }, 1);
+        return std::make_unique<ProgressiveIndexPlayer>(
+                "Negated", [](int32_t i) {
+                    return -i;
+                },
+                1);
     }
-}
-
+}// namespace Chess

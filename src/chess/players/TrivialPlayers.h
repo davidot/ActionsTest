@@ -3,10 +3,10 @@
 #include "../../util/RandomUtil.h"
 #include "../MoveGen.h"
 #include "Player.h"
-#include <iostream>
 #include <cstdint>
-#include <random>
 #include <functional>
+#include <iostream>
+#include <random>
 
 
 namespace Chess {
@@ -35,15 +35,11 @@ namespace Chess {
         struct RankedMove {
             Move mv;
             R ranking;
-            // TODO: somehow be able to have multiple / other ranking things?
-//            int32_t ranking;
-//            uint32_t random;
 
             // Note you cannot have ties!
             bool operator<(const RankingPlayer::RankedMove& rhs) const {
                 return Compare{}(ranking, rhs.ranking);
             }
-
         };
 
     public:
@@ -53,11 +49,10 @@ namespace Chess {
             size_t index = 0;
 
             list.forEachMove([&](Move mv) {
-              ranked[index] = {
-                  mv,
-                  rankMove(mv, board)
-              };
-              ++index;
+                ranked[index] = {
+                        mv,
+                        rankMove(mv, board)};
+                ++index;
             });
 
             auto best = std::min_element(ranked.begin(), ranked.end());
@@ -87,11 +82,10 @@ namespace Chess {
     public:
         RankingWithRandom<R, Compare> rankMove(Move mv, const Board& board) override {
             return {
-                board.moveExcursion(mv, [&](const Board& postMoveBoard) {
-                    return ranking(mv, postMoveBoard);
-                }),
-                randomInt()
-            };
+                    board.moveExcursion(mv, [&](const Board& postMoveBoard) {
+                        return ranking(mv, postMoveBoard);
+                    }),
+                    randomInt()};
         }
 
         virtual R ranking(Move mv, const Board& board) = 0;
@@ -104,9 +98,6 @@ namespace Chess {
     template<bool Ascending>
     using Ordering = std::conditional_t<Ascending, std::less<>, std::greater<>>;
 
-    // TODO this technically does not need the move excursion (i.e. the board in post move state)
-    //   but we pay the cost so maybe somehow be able to not use that?
-    //   in fact PGN based wants the original board...
     template<bool Ascending = true, bool FromFirst = true>
     class LexicographicallyPlayer : public RankingPlayer<
                                             std::pair<BoardIndex, BoardIndex>,
@@ -165,11 +156,12 @@ namespace Chess {
 
     class ConstIndexPlayer : public IndexPlayer {
     public:
-        explicit ConstIndexPlayer(int32_t i) : val(i) {};
+        explicit ConstIndexPlayer(int32_t i) : val(i){};
 
         size_t index(const Board& board, const MoveList& list) override;
 
         [[nodiscard]] std::string name() const override;
+
     private:
         int32_t val;
     };
@@ -177,7 +169,7 @@ namespace Chess {
     template<bool Least>
     class CountOpponentMoves : public EvaluateAfterMovePlayer<int32_t, Ordering<Least>> {
     public:
-        int32_t ranking(Move, const Board &board) final {
+        int32_t ranking(Move, const Board& board) final {
             MoveList list = generateAllMoves(board);
             if (list.size() > 0) {
                 return int32_t(list.size());
@@ -204,6 +196,7 @@ namespace Chess {
             Move pickMove(const Board& board, const MoveList& list) override;
 
             void movePlayed(Move move, const Board& board) override;
+
         private:
             int32_t val = 0;
             const std::function<int32_t(int32_t)>& operation;
@@ -241,4 +234,4 @@ namespace Chess {
 
     std::unique_ptr<Player> indexOp();
 
-}
+}// namespace Chess
