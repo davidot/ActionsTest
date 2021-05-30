@@ -14,18 +14,59 @@
 #include <util/RandomUtil.h>
 #include <chess/players/StockfishPlayer.h>
 
+std::optional<std::string> envVar(const std::string& name) {
+    char* value = getenv(name.c_str());
+    if (value == nullptr) {
+        return std::nullopt;
+    }
+    return value;
+}
+
 int main(int argc, char** argv) {
+    bool hasStockfish = false;
+
+    {
+        auto stockfishLoc = envVar("STOCKFISH_PATH");
+        if (stockfishLoc.has_value()) {
+            Chess::setStockfishLocation(*stockfishLoc);
+            hasStockfish = true;
+        }
+    }
+
+    if (argc > 1) {
+        for (int i = 1; i < argc; i++) {
+            if (argv[i] == std::string("--stockfish")) {
+                i++;
+                if (i >= argc) {
+                    std::cout << "Stockfish argument missing value\n";
+                    return 1;
+                }
+                Chess::setStockfishLocation(argv[i]);
+                hasStockfish = true;
+            }
+        }
+    }
+
     int status = 0;
 
 //    auto rand = Chess::randomPlayer();
 
-//    auto players = {
-//            Chess::indexPlayer(0),
-//            Chess::indexPlayer(1),
-//            Chess::indexPlayer(8),
-//            Chess::indexPlayer(-1),
-//            Chess::indexPlayer(-4),
-//    };
+    auto players = {
+            Chess::indexPlayer(0),
+            Chess::indexPlayer(1),
+            Chess::indexPlayer(8),
+            Chess::indexPlayer(-1),
+            Chess::indexPlayer(-4), // draw against depth 4 sf
+            Chess::minOpponentMoves(),
+            Chess::maxOpponentMoves(),
+            Chess::lexicographically(true, true),
+            Chess::lexicographically(false, true),
+            Chess::lexicographically(true, false),
+            Chess::lexicographically(false, false),
+            Chess::alphabetically(true),
+            Chess::alphabetically(false),
+            Chess::randomPlayer(),
+    };
 //
 //    for (const auto& white : players) {
 //        for (const auto& black : players) {
@@ -48,41 +89,16 @@ int main(int argc, char** argv) {
         return result;
     };
 
-    bool hasStockfish = false;
 
     if (hasStockfish) {
-        auto limit = Chess::Stockfish::SearchLimit::nodes(1000000);
-        auto stockfishBad = Chess::stockfish(limit, 0);
-        auto stockfishGood = Chess::stockfish(limit, 20);
-        playGame(stockfishGood, stockfishBad);
-        playGame(stockfishBad, stockfishGood);
+        auto limit = Chess::Stockfish::SearchLimit::depth(4);
+        auto stockfishGood = Chess::stockfish(limit);
+        for (auto& white : players) {
+            playGame(white, stockfishGood);
+        }
 
         return 0;
     }
-
-
-    auto minOpp = Chess::minOpponentMoves();
-    auto maxOpp = Chess::maxOpponentMoves();
-    auto lexi1 = Chess::lexicographically(true, true);
-    auto lexi2 = Chess::lexicographically(false, true);
-    auto lexi3 = Chess::lexicographically(true, false);
-    auto lexi4 = Chess::lexicographically(false, false);
-    auto alpha = Chess::alphabetically(true);
-    auto alphaR = Chess::alphabetically(false);
-    auto rand = Chess::randomPlayer();
-
-//    playGame(minOpp, minOpp);
-//    playGame(maxOpp, minOpp);
-//    playGame(minOpp, maxOpp);
-    playGame(maxOpp, maxOpp);
-
-    std::vector<std::reference_wrapper<std::unique_ptr<Chess::Player>>> players = { lexi1, lexi2, lexi3, lexi4, alpha, alphaR};
-
-//    for (auto& w : players) {
-//        for (auto& b : players) {
-//            playGame(w.get(), b.get());
-//        }
-//    }
 
     return status;
 }

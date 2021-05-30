@@ -10,6 +10,8 @@ namespace util {
 }
 
 namespace Chess {
+    void setStockfishLocation(std::string s);
+
     class Stockfish {
     public:
         struct SearchLimit {

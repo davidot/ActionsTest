@@ -84,10 +84,14 @@ namespace Chess {
         };
     }
 
-    static constexpr const char* STOCKFISH_LOCATION = "stockfish.exe";
+    static std::string g_stockfish_location{};
+
+    void setStockfishLocation(std::string s) {
+        g_stockfish_location = std::move(s);
+    }
 
     Stockfish::Stockfish(Stockfish::SearchLimit limit, int difficulty) {
-        m_proc = util::SubProcess::create({STOCKFISH_LOCATION});
+        m_proc = util::SubProcess::create({g_stockfish_location});
         // TODO: maybe wrap in factory to ensure it started properly?
         ASSERT(m_proc);
 
@@ -95,7 +99,7 @@ namespace Chess {
         m_proc->writeTo("uci\n");
         std::string line;
         while (m_proc->readLine(line)) {
-            READ_LINE("Start up _" << line << "_\n");
+            READ_LINE("Start up _" << line);
             if (line.find("uciok") != std::string::npos) {
                 break;
             }
