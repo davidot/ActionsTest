@@ -6,11 +6,10 @@
 
 #include "Assertions.h"
 #include "StringUtil.h"
-#include <csignal>
 #include <cstdlib>
-#include <fcntl.h>
 #include <functional>
 #include <iostream>
+#include <spawn.h>
 #include <string>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -120,6 +119,12 @@ namespace util {
         }
         args[i] = nullptr;
 
+        posix_spawn_file_actions_t actions;
+        if (posix_spawn_file_actions_init(&actions)) {
+            perror("posix_spawn_file_actions_init");
+            return nullptr;
+        }
+
         int inPipe[2] = {-1, -1};
         if (pipe(inPipe) < 0) {
             perror("pipe");
@@ -137,79 +142,41 @@ namespace util {
             return nullptr;
         }
 
-        int startPipe[2] = {-1, -1};
-        if (pipe(startPipe) < 0) {
-            perror("pipe");
+        // Setup child operations
+        posix_spawn_file_actions_addclose(&actions, inPipe[pipeWrite]);
+        posix_spawn_file_actions_addclose(&actions, outPipe[pipeRead]);
+
+        posix_spawn_file_actions_adddup2(&actions, inPipe[pipeRead], STDIN_FILENO);
+        posix_spawn_file_actions_adddup2(&actions, outPipe[pipeWrite], STDOUT_FILENO);
+
+        pid_t pid;
+        if (posix_spawn(&pid, command[0].c_str(), &actions, nullptr, args, environ)) {
+            perror("posix_spawn");
+            std::cout << command[0] << '\n';
             CLOSE_PIPE(inPipe);
             CLOSE_PIPE(outPipe);
             return nullptr;
         }
 
-        pid_t pid = fork();
-        if (pid < 0) {
-            perror("fork");
-            CLOSE_PIPE(inPipe);
-            CLOSE_PIPE(outPipe);
+        close(inPipe[pipeRead]);
+        close(outPipe[pipeWrite]);
+
+        auto proc = std::make_unique<SubProcess>();
+        proc->m_procPid = pid;
+        proc->m_stdIn = inPipe[pipeWrite];
+        proc->m_stdOut = outPipe[pipeRead];
+
+        proc->running = true;
+
+        if (posix_spawn_file_actions_destroy(&actions)) {
+            perror("posix_spawn_file_actions_destroy");
+            // uh oh we just started it... try to stop and otherwise whatever
             ASSERT_NOT_REACHED();
-
+            proc->stop();
             return nullptr;
-        } else if (pid > 0) {
-            auto proc = std::make_unique<SubProcess>();
-            proc->m_procPid = pid;
-            proc->m_stdIn = inPipe[pipeWrite];
-            proc->m_stdOut = outPipe[pipeRead];
-
-            close(inPipe[pipeRead]);
-            close(outPipe[pipeWrite]);
-            close(startPipe[pipeWrite]);
-
-            char buf[9] = {};
-
-            ssize_t readStart = read(startPipe[pipeRead], buf, 8);
-
-            if (readStart != 0) {
-                if (readStart < 0) {
-                    perror("read");
-                    std::cerr << "Read fail!\n";
-                } else {
-                    std::cerr << "Failed to start: " << command[0] << '\n';
-                    std::string response(buf, readStart);
-                    ASSERT(response == "fail");
-                }
-
-                close(startPipe[pipeRead]);
-
-                close(inPipe[pipeWrite]);
-                close(outPipe[pipeRead]);
-
-                return nullptr;
-            }
-
-            proc->running = true;
-            close(startPipe[pipeRead]);
-
-            return proc;
         }
 
-        close(inPipe[pipeWrite]);
-        close(outPipe[pipeRead]);
-        close(startPipe[pipeRead]);
-
-        dup2(inPipe[pipeRead], STDIN_FILENO);
-        dup2(outPipe[pipeWrite], STDOUT_FILENO);
-
-        fcntl(startPipe[pipeWrite], F_SETFD, FD_CLOEXEC);
-
-        // child
-        if (execvp(command[0].c_str(), args) < 0) {
-            perror("execvp");
-            char buf[] = "fail";
-            write(startPipe[pipeWrite], buf, 4);
-            std::exit(-4);
-        }
-        ASSERT_NOT_REACHED();
-        std::exit(0);
-        return {};
+        return proc;
     }
 
 }
