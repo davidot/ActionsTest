@@ -16,6 +16,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#ifdef __APPLE__
+extern char **environ;
+#endif
+
 namespace util {
 
     SubProcess::~SubProcess() {
