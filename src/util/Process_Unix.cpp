@@ -6,7 +6,9 @@
 
 #include "Assertions.h"
 #include "StringUtil.h"
+#include <csignal>
 #include <cstdlib>
+#include <fcntl.h>
 #include <functional>
 #include <iostream>
 #include <spawn.h>
