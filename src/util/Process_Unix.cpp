@@ -39,10 +39,11 @@ namespace util {
         while (toWrite > 0) {
             ssize_t written = write(m_stdIn, head, toWrite);
             if (written < 0) {
-                if (written == -EPIPE) {
+                if (errno == EPIPE) {
                     running = false;
+                } else {
+                    perror("write");
                 }
-                perror("write");
                 return false;
             }
             toWrite -= written;
@@ -74,7 +75,7 @@ namespace util {
     }
 
     SubProcess::ProcessExit SubProcess::stop() {
-        if (running) {
+        if (!m_waitCalled) {
             running = false;
 
             // should trigger command ending
@@ -85,6 +86,8 @@ namespace util {
                 perror("waitpid");
             }
             close(m_stdOut);
+
+            m_waitCalled = true;
 
             if (!WIFEXITED(status)) {
                 std::cerr << "Child was stopped non normally?\n";
@@ -155,6 +158,7 @@ namespace util {
             std::cout << command[0] << '\n';
             CLOSE_PIPE(inPipe);
             CLOSE_PIPE(outPipe);
+            posix_spawn_file_actions_destroy(&actions);
             return nullptr;
         }
 

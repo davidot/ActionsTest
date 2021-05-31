@@ -47,6 +47,8 @@ namespace util {
         int m_stdIn = -1;
         int m_stdOut = -1;
 
+        bool m_waitCalled = false;
+
         std::optional<int> m_exitCode;
 #elif defined(WINDOWS_PROCESS)
         HANDLE m_childProc;
