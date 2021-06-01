@@ -79,38 +79,6 @@ namespace Chess {
         return Board::indexToSAN(fromPosition) + Board::indexToSAN(toPosition);
     }
 
-    Move Move::fromSANSquares(std::string_view vw, const Board& board) {
-        Flag flag = Flag::None;
-        if (vw.size() > 4) {
-            ASSERT(vw.size() == 5);
-            ASSERT(Piece::fromFEN(vw[4]).has_value());
-            Piece::Type promoType = Piece::fromFEN(vw[4])->type();
-            flag = promotionFromType(promoType);
-            vw.remove_suffix(1);
-        }
-        ASSERT(vw.size() == 4);
-        ASSERT(Board::SANToIndex(vw.substr(0, 2)).has_value());
-        ASSERT(Board::SANToIndex(vw.substr(2, 2)).has_value());
-        BoardIndex from = *Board::SANToIndex(vw.substr(0, 2));
-        BoardIndex to = *Board::SANToIndex(vw.substr(2, 2));
-
-        ASSERT(board.pieceAt(from).has_value());
-        auto p = board.pieceAt(from);
-        ASSERT(p->color() == board.colorToMove());
-
-        // TODO: parse move correctly
-        if (p->type() == Piece::Type::King) {
-            // check castle
-        } else if (p->type() == Piece::Type::Pawn) {
-            // check double push & en passant
-        }
-
-        // TODO: do we want this function?
-        ASSERT_NOT_REACHED();
-
-        return {from, to};
-    }
-
     Move::Flag Move::promotionFromType(Piece::Type tp) {
         switch (tp) {
             case Piece::Type::Queen:
