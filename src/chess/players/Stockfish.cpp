@@ -1,5 +1,6 @@
 #include "Stockfish.h"
-#include <iostream>
+#include <charconv>
+
 
 #include "../../util/Assertions.h"
 #include "../../util/Process.h"
@@ -8,6 +9,7 @@
 
 //#define STOCKFISH_DEBUG
 #ifdef STOCKFISH_DEBUG
+#include <iostream>
 #define READ_LINE(line) std::cout << "Stockfish -> " << line
 
 #define WRITE_LINE(line) std::cout << "Stockfish <- " << line
@@ -58,7 +60,7 @@ namespace Chess {
         std::string lastInfo;
         while (m_proc->readLine(line)) {
             READ_LINE(line);
-            if (line.find("seldepth") != std::string::npos) {
+            if (line.find("score") != std::string::npos) {
                 lastInfo = line;
             } else if (line.find("bestmove") != std::string::npos) {
                 break;
@@ -71,16 +73,31 @@ namespace Chess {
 
         auto parts = util::split(line, " ");
         ASSERT(parts.size() >= 2);
-        auto bestMove = parts[1];
 
-        // TODO: extract score
-        //        std::cout << "Got move: " << bestMove << " and score: \n" << lastInfo;
+        MoveResult result;
+        result.bestMove = parts[1];
 
-        std::cout << "Bestmove line: " << line << '\n';
+        auto infoParts = util::split(lastInfo, " ");
+        auto scoreIndex = std::find(infoParts.begin(), infoParts.end(), "score");
+        ASSERT(scoreIndex != infoParts.end());
+        ASSERT(std::next(scoreIndex, 2) != infoParts.end());
 
-        return {
-                std::string(bestMove),
-        };
+        std::advance(scoreIndex, 1);
+        if (*scoreIndex == "mate") {
+            result.checkmate = true;
+        }
+        ASSERT(result.checkmate || *scoreIndex == "cp");
+
+        std::advance(scoreIndex, 1);
+        if(auto [p, ec] = std::from_chars(scoreIndex->data(), scoreIndex->data() + scoreIndex->size(), result.value);
+                ec != std::errc()) {
+#ifdef STOCKFISH_DEBUG
+            std::cerr << "Failed from chars in stockfish score: " << p << '\n';
+#endif
+            ASSERT_NOT_REACHED();
+        }
+
+        return result;
     }
 
     static std::string g_stockfish_location{};

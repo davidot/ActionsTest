@@ -36,7 +36,8 @@ namespace Chess {
 
         struct MoveResult {
             std::string bestMove;
-            int32_t score;
+            bool checkmate;
+            int32_t value;
         };
 
         MoveResult bestMove(const Board& board) const;
