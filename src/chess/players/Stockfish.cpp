@@ -1,5 +1,6 @@
 #include "Stockfish.h"
 #include <charconv>
+#include <algorithm>
 
 
 #include "../../util/Assertions.h"
