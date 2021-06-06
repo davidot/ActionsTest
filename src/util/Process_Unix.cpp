@@ -42,6 +42,13 @@ namespace util {
             return false;
         }
 
+        // TODO: add some scope exit convenience maybe?
+        auto recoverSigaction = [&oldAct]() {
+          if (sigaction(SIGPIPE, &oldAct, nullptr) < 0) {
+              perror("sigaction");
+          }
+        };
+
         while (toWrite > 0) {
             ssize_t written = write(m_stdIn, head, toWrite);
             if (written < 0) {
@@ -50,15 +57,14 @@ namespace util {
                 } else {
                     perror("write");
                 }
+                recoverSigaction();
                 return false;
             }
             toWrite -= written;
             head += toWrite;
         }
 
-        if (sigaction(SIGPIPE, &oldAct, nullptr) < 0) {
-            perror("sigaction");
-        }
+        recoverSigaction();
         return true;
     }
 
